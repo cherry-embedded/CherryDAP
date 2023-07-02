@@ -3,6 +3,7 @@
 
 #include "usbd_core.h"
 #include "usbd_cdc.h"
+#include "usbd_msc.h"
 #include "chry_ringbuffer.h"
 
 extern chry_ringbuffer_t g_uartrx;

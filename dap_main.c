@@ -9,13 +9,22 @@
 #define CDC_OUT_EP 0x04
 #define CDC_INT_EP 0x85
 
+#define MSC_IN_EP  0x86
+#define MSC_OUT_EP 0x07
+
 #define USBD_VID           0xD6E7
 #define USBD_PID           0x3507
 #define USBD_MAX_POWER     500
 #define USBD_LANGID_STRING 1033
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
-#define USB_CONFIG_SIZE          (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN)
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN)
+#define INTF_NUM        3
+#else
+#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + MSC_DESCRIPTOR_LEN)
+#define INTF_NUM        4
+#endif
 
 #ifdef CONFIG_USB_HS
 #if DAP_PACKET_SIZE != 512
@@ -109,7 +118,7 @@ struct usb_msosv1_descriptor msosv1_desc = {
 const uint8_t cmsisdap_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
     /* Configuration 0 */
-    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x03, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
     /* Interface 0 */
     USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
     /* Endpoint OUT 1 */
@@ -117,6 +126,9 @@ const uint8_t cmsisdap_descriptor[] = {
     /* Endpoint IN 2 */
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+    MSC_DESCRIPTOR_INIT(0x03, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#endif
     /* String 0 (LANGID) */
     USB_LANGID_INIT(USBD_LANGID_STRING),
     /* String 1 (Manufacturer) */
@@ -349,6 +361,7 @@ static struct usbd_endpoint cdc_in_ep = {
 struct usbd_interface dap_intf;
 struct usbd_interface intf1;
 struct usbd_interface intf2;
+struct usbd_interface intf3;
 
 static void chry_dap_state_init(void)
 {
@@ -401,6 +414,10 @@ void chry_dap_init(void)
     usbd_add_interface(usbd_cdc_acm_init_intf(&intf2));
     usbd_add_endpoint(&cdc_out_ep);
     usbd_add_endpoint(&cdc_in_ep);
+
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+    usbd_add_interface(usbd_msc_init_intf(&intf3, MSC_OUT_EP, MSC_IN_EP));
+#endif
 #ifdef CONFIG_CHERRYDAP_USE_OS
     usb_osal_thread_create("chrysetup", 512, 10, chry_dap_thread_setup_thread, NULL);
 #else
@@ -582,3 +599,34 @@ void chry_dap_usb2uart_uart_send_complete(void)
 __WEAK void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
 {
 }
+
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+#define BLOCK_SIZE  512
+#define BLOCK_COUNT 10
+
+typedef struct
+{
+    uint8_t BlockSpace[BLOCK_SIZE];
+} BLOCK_TYPE;
+
+BLOCK_TYPE mass_block[BLOCK_COUNT];
+
+void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
+{
+    *block_num = 1000; //Pretend having so many buffer,not has actually.
+    *block_size = BLOCK_SIZE;
+}
+int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
+{
+    if (sector < 10)
+        memcpy(buffer, mass_block[sector].BlockSpace, length);
+    return 0;
+}
+
+int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
+{
+    if (sector < 10)
+        memcpy(mass_block[sector].BlockSpace, buffer, length);
+    return 0;
+}
+#endif

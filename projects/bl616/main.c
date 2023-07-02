@@ -1,6 +1,7 @@
 #include "board.h"
 #include "dap_main.h"
 #include "bflb_gpio.h"
+#include "usb2uart.h"
 
 int main(void)
 {
