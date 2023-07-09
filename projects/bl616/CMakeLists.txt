@@ -12,21 +12,20 @@ ${CMAKE_CURRENT_SOURCE_DIR}/../../DAP/Source/DAP.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../../DAP/Source/JTAG_DP.c 
 ${CMAKE_CURRENT_SOURCE_DIR}/../../DAP/Source/SW_DP.c 
 ${CMAKE_CURRENT_SOURCE_DIR}/../../CherryRB/chry_ringbuffer.c
-${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/core/usbd_core.c
-${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/class/cdc/usbd_cdc.c
-${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/class/msc/usbd_msc.c
 )
 
 sdk_add_include_directories(.)
 sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryRB)
 sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../..)
 sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../DAP/Include)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/common)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/core)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/osal)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/class/cdc)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/class/msc)
-sdk_add_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../CherryUSB/class/hub)
+
+set(CONFIG_CHERRYUSB_DEVICE 1)
+set(CONFIG_CHERRYUSB_DEVICE_CDC 1)
+add_subdirectory(../../CherryUSB CherryUSB)
+get_property(target_cherryusb_include_dirs TARGET cherryusb PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+sdk_add_include_directories(${target_cherryusb_include_dirs})
+target_link_libraries(cherryusb sdk_intf_lib)
+target_link_libraries(app cherryusb)
 
 sdk_add_compile_definitions(-DCONFIG_USB_HS)
 sdk_add_compile_definitions(-DCONFIG_CHERRYUSB)
