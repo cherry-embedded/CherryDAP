@@ -12,8 +12,8 @@
 #define MSC_IN_EP  0x86
 #define MSC_OUT_EP 0x07
 
-#define USBD_VID           0xD6E7
-#define USBD_PID           0x3507
+#define USBD_VID           0x0D28
+#define USBD_PID           0x0204
 #define USBD_MAX_POWER     500
 #define USBD_LANGID_STRING 1033
 
@@ -36,87 +36,126 @@
 #endif
 #endif
 
-#define WCID_VENDOR_CODE 0x01
+#define USBD_WINUSB_VENDOR_CODE 0x20
 
-__ALIGN_BEGIN const uint8_t WCID_StringDescriptor_MSOS[18] __ALIGN_END = {
-    ///////////////////////////////////////
-    /// MS OS string descriptor
-    ///////////////////////////////////////
-    0x12,                       /* bLength */
-    USB_DESCRIPTOR_TYPE_STRING, /* bDescriptorType */
-    /* MSFT100 */
-    'M', 0x00, 'S', 0x00, 'F', 0x00, 'T', 0x00, /* wcChar_7 */
-    '1', 0x00, '0', 0x00, '0', 0x00,            /* wcChar_7 */
-    WCID_VENDOR_CODE,                           /* bVendorCode */
-    0x00,                                       /* bReserved */
+#define USBD_WEBUSB_ENABLE 0
+#define USBD_BULK_ENABLE   1
+#define USBD_WINUSB_ENABLE 1
+
+/* WinUSB Microsoft OS 2.0 descriptor sizes */
+#define WINUSB_DESCRIPTOR_SET_HEADER_SIZE  10
+#define WINUSB_FUNCTION_SUBSET_HEADER_SIZE 8
+#define WINUSB_FEATURE_COMPATIBLE_ID_SIZE  20
+
+#define FUNCTION_SUBSET_LEN                160
+#define DEVICE_INTERFACE_GUIDS_FEATURE_LEN 132
+
+#define USBD_WINUSB_DESC_SET_LEN (WINUSB_DESCRIPTOR_SET_HEADER_SIZE + USBD_WEBUSB_ENABLE * FUNCTION_SUBSET_LEN + USBD_BULK_ENABLE * FUNCTION_SUBSET_LEN)
+
+__ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
+    WBVAL(WINUSB_DESCRIPTOR_SET_HEADER_SIZE), /* wLength */
+    WBVAL(WINUSB_SET_HEADER_DESCRIPTOR_TYPE), /* wDescriptorType */
+    0x00, 0x00, 0x03, 0x06, /* >= Win 8.1 */  /* dwWindowsVersion*/
+    WBVAL(USBD_WINUSB_DESC_SET_LEN),          /* wDescriptorSetTotalLength */
+#if (USBD_WEBUSB_ENABLE)
+    WBVAL(WINUSB_FUNCTION_SUBSET_HEADER_SIZE), // wLength
+    WBVAL(WINUSB_SUBSET_HEADER_FUNCTION_TYPE), // wDescriptorType
+    0,                                         // bFirstInterface USBD_WINUSB_IF_NUM
+    0,                                         // bReserved
+    WBVAL(FUNCTION_SUBSET_LEN),                // wSubsetLength
+    WBVAL(WINUSB_FEATURE_COMPATIBLE_ID_SIZE),  // wLength
+    WBVAL(WINUSB_FEATURE_COMPATIBLE_ID_TYPE),  // wDescriptorType
+    'W', 'I', 'N', 'U', 'S', 'B', 0, 0,        // CompatibleId
+    0, 0, 0, 0, 0, 0, 0, 0,                    // SubCompatibleId
+    WBVAL(DEVICE_INTERFACE_GUIDS_FEATURE_LEN), // wLength
+    WBVAL(WINUSB_FEATURE_REG_PROPERTY_TYPE),   // wDescriptorType
+    WBVAL(WINUSB_PROP_DATA_TYPE_REG_MULTI_SZ), // wPropertyDataType
+    WBVAL(42),                                 // wPropertyNameLength
+    'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0,
+    'I', 0, 'n', 0, 't', 0, 'e', 0, 'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0,
+    'G', 0, 'U', 0, 'I', 0, 'D', 0, 's', 0, 0, 0,
+    WBVAL(80), // wPropertyDataLength
+    '{', 0,
+    '9', 0, '2', 0, 'C', 0, 'E', 0, '6', 0, '4', 0, '6', 0, '2', 0, '-', 0,
+    '9', 0, 'C', 0, '7', 0, '7', 0, '-', 0,
+    '4', 0, '6', 0, 'F', 0, 'E', 0, '-', 0,
+    '9', 0, '3', 0, '3', 0, 'B', 0, '-',
+    0, '3', 0, '1', 0, 'C', 0, 'B', 0, '9', 0, 'C', 0, '5', 0, 'A', 0, 'A', 0, '3', 0, 'B', 0, '9', 0,
+    '}', 0, 0, 0, 0, 0
+#endif
+#if USBD_BULK_ENABLE
+    WBVAL(WINUSB_FUNCTION_SUBSET_HEADER_SIZE), /* wLength */
+    WBVAL(WINUSB_SUBSET_HEADER_FUNCTION_TYPE), /* wDescriptorType */
+    0,                                         /* bFirstInterface USBD_BULK_IF_NUM*/
+    0,                                         /* bReserved */
+    WBVAL(FUNCTION_SUBSET_LEN),                /* wSubsetLength */
+    WBVAL(WINUSB_FEATURE_COMPATIBLE_ID_SIZE),  /* wLength */
+    WBVAL(WINUSB_FEATURE_COMPATIBLE_ID_TYPE),  /* wDescriptorType */
+    'W', 'I', 'N', 'U', 'S', 'B', 0, 0,        /* CompatibleId*/
+    0, 0, 0, 0, 0, 0, 0, 0,                    /* SubCompatibleId*/
+    WBVAL(DEVICE_INTERFACE_GUIDS_FEATURE_LEN), /* wLength */
+    WBVAL(WINUSB_FEATURE_REG_PROPERTY_TYPE),   /* wDescriptorType */
+    WBVAL(WINUSB_PROP_DATA_TYPE_REG_MULTI_SZ), /* wPropertyDataType */
+    WBVAL(42),                                 /* wPropertyNameLength */
+    'D', 0, 'e', 0, 'v', 0, 'i', 0, 'c', 0, 'e', 0,
+    'I', 0, 'n', 0, 't', 0, 'e', 0, 'r', 0, 'f', 0, 'a', 0, 'c', 0, 'e', 0,
+    'G', 0, 'U', 0, 'I', 0, 'D', 0, 's', 0, 0, 0,
+    WBVAL(80), /* wPropertyDataLength */
+    '{', 0,
+    'C', 0, 'D', 0, 'B', 0, '3', 0, 'B', 0, '5', 0, 'A', 0, 'D', 0, '-', 0,
+    '2', 0, '9', 0, '3', 0, 'B', 0, '-', 0,
+    '4', 0, '6', 0, '6', 0, '3', 0, '-', 0,
+    'A', 0, 'A', 0, '3', 0, '6', 0, '-',
+    0, '1', 0, 'A', 0, 'A', 0, 'E', 0, '4', 0, '6', 0, '4', 0, '6', 0, '3', 0, '7', 0, '7', 0, '6', 0,
+    '}', 0, 0, 0, 0, 0
+#endif
 };
 
-__ALIGN_BEGIN const uint8_t WINUSB_WCIDDescriptor[40] __ALIGN_END = {
-    ///////////////////////////////////////
-    /// WCID descriptor
-    ///////////////////////////////////////
-    0x28, 0x00, 0x00, 0x00,                   /* dwLength */
-    0x00, 0x01,                               /* bcdVersion */
-    0x04, 0x00,                               /* wIndex */
-    0x01,                                     /* bCount */
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* bReserved_7 */
+#define USBD_NUM_DEV_CAPABILITIES (USBD_WEBUSB_ENABLE + USBD_WINUSB_ENABLE)
 
-    ///////////////////////////////////////
-    /// WCID function descriptor
-    ///////////////////////////////////////
-    0x00, /* bFirstInterfaceNumber */
-    0x01, /* bReserved */
-    /* WINUSB */
-    'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00, /* cCID_8 */
-    /*  */
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* cSubCID_8 */
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             /* bReserved_6 */
-};
+#define USBD_WEBUSB_DESC_LEN 24
+#define USBD_WINUSB_DESC_LEN 28
 
-__ALIGN_BEGIN const uint8_t WINUSB_IF0_WCIDProperties[142] __ALIGN_END = {
-    ///////////////////////////////////////
-    /// WCID property descriptor
-    ///////////////////////////////////////
-    0x8e, 0x00, 0x00, 0x00, /* dwLength */
-    0x00, 0x01,             /* bcdVersion */
-    0x05, 0x00,             /* wIndex */
-    0x01, 0x00,             /* wCount */
+#define USBD_BOS_WTOTALLENGTH (0x05 +                                      \
+                               USBD_WEBUSB_DESC_LEN * USBD_WEBUSB_ENABLE + \
+                               USBD_WINUSB_DESC_LEN * USBD_WINUSB_ENABLE)
 
-    ///////////////////////////////////////
-    /// registry propter descriptor
-    ///////////////////////////////////////
-    0x84, 0x00, 0x00, 0x00, /* dwSize */
-    0x01, 0x00, 0x00, 0x00, /* dwPropertyDataType */
-    0x28, 0x00,             /* wPropertyNameLength */
-    /* DeviceInterfaceGUID */
-    'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00,  /* wcName_20 */
-    'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00,  /* wcName_20 */
-    't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00,  /* wcName_20 */
-    'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00,  /* wcName_20 */
-    'U', 0x00, 'I', 0x00, 'D', 0x00, 0x00, 0x00, /* wcName_20 */
-    0x4e, 0x00, 0x00, 0x00,                      /* dwPropertyDataLength */
-    /* {CDB3B5AD-293B-4663-AA36-1AAE46463776} */
-    '{', 0x00, 'C', 0x00, 'D', 0x00, 'B', 0x00, /* wcData_39 */
-    '3', 0x00, 'B', 0x00, '5', 0x00, 'A', 0x00, /* wcData_39 */
-    'D', 0x00, '-', 0x00, '2', 0x00, '9', 0x00, /* wcData_39 */
-    '3', 0x00, 'B', 0x00, '-', 0x00, '4', 0x00, /* wcData_39 */
-    '6', 0x00, '6', 0x00, '3', 0x00, '-', 0x00, /* wcData_39 */
-    'A', 0x00, 'A', 0x00, '3', 0x00, '6', 0x00, /* wcData_39 */
-    '-', 0x00, '1', 0x00, 'A', 0x00, 'A', 0x00, /* wcData_39 */
-    'E', 0x00, '4', 0x00, '6', 0x00, '4', 0x00, /* wcData_39 */
-    '6', 0x00, '3', 0x00, '7', 0x00, '7', 0x00, /* wcData_39 */
-    '6', 0x00, '}', 0x00, 0x00, 0x00,           /* wcData_39 */
-};
-
-struct usb_msosv1_descriptor msosv1_desc = {
-    .string = WCID_StringDescriptor_MSOS,
-    .vendor_code = WCID_VENDOR_CODE,
-    .compat_id = WINUSB_WCIDDescriptor,
-    .comp_id_property = &WINUSB_IF0_WCIDProperties,
+__ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
+    0x05,                         /* bLength */
+    0x0f,                         /* bDescriptorType */
+    WBVAL(USBD_BOS_WTOTALLENGTH), /* wTotalLength */
+    USBD_NUM_DEV_CAPABILITIES,    /* bNumDeviceCaps */
+#if (USBD_WEBUSB_ENABLE)
+    USBD_WEBUSB_DESC_LEN,           /* bLength */
+    0x10,                           /* bDescriptorType */
+    USB_DEVICE_CAPABILITY_PLATFORM, /* bDevCapabilityType */
+    0x00,                           /* bReserved */
+    0x38, 0xB6, 0x08, 0x34,         /* PlatformCapabilityUUID */
+    0xA9, 0x09, 0xA0, 0x47,
+    0x8B, 0xFD, 0xA0, 0x76,
+    0x88, 0x15, 0xB6, 0x65,
+    WBVAL(0x0100), /* 1.00 */ /* bcdVersion */
+    USBD_WINUSB_VENDOR_CODE,  /* bVendorCode */
+    0,                        /* iLandingPage */
+#endif
+#if (USBD_WINUSB_ENABLE)
+    USBD_WINUSB_DESC_LEN,           /* bLength */
+    0x10,                           /* bDescriptorType */
+    USB_DEVICE_CAPABILITY_PLATFORM, /* bDevCapabilityType */
+    0x00,                           /* bReserved */
+    0xDF, 0x60, 0xDD, 0xD8,         /* PlatformCapabilityUUID */
+    0x89, 0x45, 0xC7, 0x4C,
+    0x9C, 0xD2, 0x65, 0x9D,
+    0x9E, 0x64, 0x8A, 0x9F,
+    0x00, 0x00, 0x03, 0x06, /* >= Win 8.1 */ /* dwWindowsVersion*/
+    WBVAL(USBD_WINUSB_DESC_SET_LEN),         /* wDescriptorSetTotalLength */
+    USBD_WINUSB_VENDOR_CODE,                 /* bVendorCode */
+    0,                                       /* bAltEnumCode */
+#endif
 };
 
 const uint8_t cmsisdap_descriptor[] = {
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_1, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
     /* Configuration 0 */
     USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
     /* Interface 0 */
@@ -392,6 +431,17 @@ static void chry_dap_setup_thread(void *arg)
 }
 #endif
 
+struct usb_msosv2_descriptor msosv2_desc = {
+    .vendor_code = USBD_WINUSB_VENDOR_CODE,
+    .compat_id = USBD_WinUSBDescriptorSetDescriptor,
+    .compat_id_len = USBD_WINUSB_DESC_SET_LEN,
+};
+
+struct usb_bos_descriptor bos_desc = {
+    .string = USBD_BinaryObjectStoreDescriptor,
+    .string_len = USBD_BOS_WTOTALLENGTH
+};
+
 void chry_dap_init(void)
 {
     chry_ringbuffer_init(&g_uartrx, uartrx_ringbuffer, CONFIG_UARTRX_RINGBUF_SIZE);
@@ -402,7 +452,8 @@ void chry_dap_init(void)
     chry_dap_state_init();
 
     usbd_desc_register(cmsisdap_descriptor);
-    usbd_msosv1_desc_register(&msosv1_desc);
+    usbd_bos_desc_register(&bos_desc);
+    usbd_msosv2_desc_register(&msosv2_desc);
 
     /*!< winusb */
     usbd_add_interface(&dap_intf);
