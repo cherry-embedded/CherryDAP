@@ -252,11 +252,6 @@ static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t USB_Request[DAP_PACKET_COU
 static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t USB_Response[DAP_PACKET_COUNT][DAP_PACKET_SIZE]; // Response Buffer
 static uint16_t USB_RespSize[DAP_PACKET_COUNT];                                                        // Response Size
 
-#ifdef CONFIG_CHERRYDAP_USE_OS
-usb_osal_sem_t dap_sem;
-void chry_dap_thread(void *arg);
-#endif
-
 volatile struct cdc_line_coding g_cdc_lincoding;
 volatile uint8_t config_uart = 0;
 volatile uint8_t config_uart_transfer = 0;
@@ -319,10 +314,6 @@ void dap_out_callback(uint8_t ep, uint32_t nbytes)
             USB_RequestIndexI = 0U;
         }
         USB_RequestCountI++;
-#ifdef CONFIG_CHERRYDAP_USE_OS
-        //osThreadFlagsSet(DAP_ThreadId, 0x01);
-        usb_osal_sem_give(dap_sem);
-#endif
     }
 
     // Start reception of next request packet
@@ -417,20 +408,6 @@ static void chry_dap_state_init(void)
     USB_ResponseIdle = 1U;
 }
 
-#ifdef CONFIG_CHERRYDAP_USE_OS
-static void chry_dap_setup_thread(void *arg)
-{
-    usbd_initialize();
-
-    dap_sem = usb_osal_sem_create(0);
-    usb_osal_thread_create("chrydap", 2048, 0, chry_dap_thread, NULL);
-
-    while (1) {
-        usb_osal_msleep(10000);
-    }
-}
-#endif
-
 struct usb_msosv2_descriptor msosv2_desc = {
     .vendor_code = USBD_WINUSB_VENDOR_CODE,
     .compat_id = USBD_WinUSBDescriptorSetDescriptor,
@@ -469,11 +446,7 @@ void chry_dap_init(void)
 #ifdef CONFIG_CHERRYDAP_USE_MSC
     usbd_add_interface(usbd_msc_init_intf(&intf3, MSC_OUT_EP, MSC_IN_EP));
 #endif
-#ifdef CONFIG_CHERRYDAP_USE_OS
-    usb_osal_thread_create("chrysetup", 512, 10, chry_dap_thread_setup_thread, NULL);
-#else
     usbd_initialize();
-#endif
 }
 
 void chry_dap_handle(void)
@@ -538,29 +511,12 @@ void chry_dap_handle(void)
     }
 }
 
-#ifdef CONFIG_CHERRYDAP_USE_OS
-void chry_dap_thread(void *arg)
-{
-    usbd_initialize();
-
-    while (1) {
-        //osThreadFlagsWait(0x81U, osFlagsWaitAny, osWaitForever);
-        usb_osal_sem_take(dap_sem, 0xffffffff);
-        chry_dap_handle();
-    }
-}
-#endif
-
 void usbd_cdc_acm_set_line_coding(uint8_t intf, struct cdc_line_coding *line_coding)
 {
     if (memcmp(line_coding, (uint8_t *)&g_cdc_lincoding, sizeof(struct cdc_line_coding)) != 0) {
         memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
-#ifdef CONFIG_CHERRYDAP_USE_OS
-
-#else
         config_uart = 1;
         config_uart_transfer = 0;
-#endif
     }
 }
 
@@ -596,8 +552,8 @@ void chry_dap_usb2uart_handle(void)
     */
 
     /* uartrx to usb tx */
-    if (chry_ringbuffer_get_used(&g_uartrx)) {
-        if (usbtx_idle_flag) {
+    if (usbtx_idle_flag) {
+        if (chry_ringbuffer_get_used(&g_uartrx)) {
             usbtx_idle_flag = 0;
             /* start first transfer */
             buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
@@ -606,8 +562,8 @@ void chry_dap_usb2uart_handle(void)
     }
 
     /* usbrx to uart tx */
-    if (chry_ringbuffer_get_used(&g_usbrx)) {
-        if (uarttx_idle_flag) {
+    if (uarttx_idle_flag) {
+        if (chry_ringbuffer_get_used(&g_usbrx)) {
             uarttx_idle_flag = 0;
             /* start first transfer */
             buffer = chry_ringbuffer_linear_read_setup(&g_usbrx, &size);
@@ -615,7 +571,7 @@ void chry_dap_usb2uart_handle(void)
         }
     }
 
-    /* we can write data into usb rx ringbuffer */
+    /* check whether usb rx ringbuffer have space to store */
     if (usbrx_idle_flag) {
         if (chry_ringbuffer_get_free(&g_usbrx) >= DAP_PACKET_SIZE) {
             usbrx_idle_flag = 0;
@@ -630,12 +586,10 @@ __WEAK void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_
 }
 
 /* called by user */
-void chry_dap_usb2uart_uart_send_complete(void)
+void chry_dap_usb2uart_uart_send_complete(uint32_t size)
 {
-    uint32_t size;
     uint8_t *buffer;
 
-    chry_ringbuffer_linear_read_setup(&g_usbrx, &size);
     chry_ringbuffer_linear_read_done(&g_usbrx, size);
 
     if (chry_ringbuffer_get_used(&g_usbrx)) {

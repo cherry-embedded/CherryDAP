@@ -18,6 +18,8 @@ static struct bflb_device_s *dma0_tx_chx = NULL;
 
 static struct bflb_rx_cycle_dma g_uart_rx_dma;
 
+volatile uint32_t g_uart_tx_transfer_length = 0;
+
 ATTR_TCM_SECTION void uart_rx_dma_copy(uint8_t *data, uint32_t len)
 {
     chry_ringbuffer_write(&g_uartrx, data, len);
@@ -39,13 +41,11 @@ ATTR_TCM_SECTION static void uart_rx_dma_complete(void *arg)
 
 ATTR_TCM_SECTION void uart_tx_dma_complete(void *arg)
 {
-    chry_dap_usb2uart_uart_send_complete();
+    chry_dap_usb2uart_uart_send_complete(g_uart_tx_transfer_length);
 }
 
 void uartx_preinit(void)
 {
-    GLB_Set_UART_CLK(ENABLE, HBN_UART_CLK_MUXPLL_160M, 0);
-
     uartx = bflb_device_get_by_name("uart1");
     dma0_rx_chx = bflb_device_get_by_name("dma0_ch0");
     dma0_tx_chx = bflb_device_get_by_name("dma0_ch1");
@@ -130,6 +130,7 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
     tx_transfers.src_addr = (uint32_t)data;
     tx_transfers.dst_addr = (uint32_t)DMA_ADDR_UART1_TDR;
     tx_transfers.nbytes = len;
+    g_uart_tx_transfer_length = len;
 
     // tx_llipool[0].control.WORD = bflb_dma_feature_control(dma0_tx_chx, DMA_CMD_GET_LLI_CONTROL, 0);
     // tx_llipool[0].src_addr = (uint32_t)data;
