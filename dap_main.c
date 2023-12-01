@@ -267,8 +267,8 @@ static volatile uint8_t usbrx_idle_flag = 0;
 static volatile uint8_t usbtx_idle_flag = 0;
 static volatile uint8_t uarttx_idle_flag = 0;
 
-chry_ringbuffer_t g_uartrx;
-chry_ringbuffer_t g_usbrx;
+USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_uartrx;
+USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_usbrx;
 
 void usbd_event_handler(uint8_t event)
 {

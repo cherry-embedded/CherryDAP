@@ -28,7 +28,7 @@ sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
-# sdk_compile_options("-O3")
+sdk_compile_options("-O3")
 
 generate_ses_project()
 

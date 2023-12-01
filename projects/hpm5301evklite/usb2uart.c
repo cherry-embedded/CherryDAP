@@ -44,10 +44,12 @@ void uart_isr(void)
     uint32_t uart_received_data_count;
     if (uart_is_rxline_idle(APP_UART)) {
         uart_clear_rxline_idle_flag(APP_UART);
-        dma_disable_channel(APP_UART_DMA_CONTROLLER, APP_UART_RX_DMA_CHN);
         uart_received_data_count = BUFF_SIZE - dma_get_remaining_transfer_size(APP_UART_DMA_CONTROLLER, APP_UART_RX_DMA_CHN);
-        chry_ringbuffer_write(&g_uartrx, dma_rx_buff, uart_received_data_count);
-        configure_uart_dma_transfer();
+        if (uart_received_data_count > 0) {
+            dma_disable_channel(APP_UART_DMA_CONTROLLER, APP_UART_RX_DMA_CHN);
+            chry_ringbuffer_write(&g_uartrx, dma_rx_buff, uart_received_data_count);
+            configure_uart_dma_transfer();
+        }
     }
 }
 SDK_DECLARE_EXT_ISR_M(APP_UART_IRQ, uart_isr)
@@ -121,31 +123,14 @@ static void configure_uart_dma_transfer(void)
 void uartx_preinit(void)
 {
     hpm_stat_t stat;
-    uart_config_t config = {0};
     board_init_uart(APP_UART);
     clock_set_source_divider(APP_UART_CLK_NAME, clk_src_pll1_clk0, 10);
     clock_add_to_group(APP_UART_CLK_NAME, 0);
-    uart_default_config(APP_UART, &config);
-    config.baudrate = 115200;
-    config.fifo_enable = true;
-    config.dma_enable = true;
-    config.src_freq_in_hz = clock_get_frequency(APP_UART_CLK_NAME);
-    config.rx_fifo_level = uart_rx_fifo_trg_not_empty; /* this config should not change */
-    config.tx_fifo_level = uart_tx_fifo_trg_not_full;
-    config.rxidle_config.detect_enable = true;
-    config.rxidle_config.detect_irq_enable = true;
-    config.rxidle_config.idle_cond = uart_rxline_idle_cond_rxline_logic_one;
-    config.rxidle_config.threshold = 10U; /* 20bit */
-    stat = uart_init(APP_UART, &config);
-    if (stat != status_success) {
-        printf("failed to initialize uart\n");
-        while (1) {
-        }
-    }
     intc_m_enable_irq_with_priority(APP_UART_IRQ, 2);
     intc_m_enable_irq_with_priority(APP_UART_DMA_IRQ, 1);
     dmamux_config(APP_UART_DMAMUX_CONTROLLER, APP_UART_TX_DMAMUX_CHN, APP_UART_TX_DMA_REQ, true);
     dmamux_config(APP_UART_DMAMUX_CONTROLLER, APP_UART_RX_DMAMUX_CHN, APP_UART_RX_DMA_REQ, true);
+    uart_clear_rxline_idle_flag(APP_UART);
 }
 
 void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
@@ -163,10 +148,11 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     config.tx_fifo_level = uart_tx_fifo_trg_not_full;
     config.rxidle_config.detect_enable = true;
     config.rxidle_config.detect_irq_enable = true;
-    config.rxidle_config.idle_cond = uart_rxline_idle_cond_rxline_logic_one;
+    config.rxidle_config.idle_cond = uart_rxline_idle_cond_state_machine_idle;
     config.rxidle_config.threshold = 10U; /* 20bit */
     uart_init(APP_UART, &config);
-
+    uart_clear_rxline_idle_flag(APP_UART);
+    configure_uart_dma_transfer();
 }
 
 void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
