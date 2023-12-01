@@ -58,7 +58,7 @@ This information includes:
 
 /// Processor Clock of the Cortex-M MCU used in the Debug Unit.
 /// This value is used to calculate the SWD/JTAG clock speed.
-#define CPU_CLOCK               300000000U      ///< Specifies the CPU Clock in Hz.
+#define CPU_CLOCK               36000000U      ///< Specifies the CPU Clock in Hz.
 
 /// Number of processor cycles for I/O Port write operations.
 /// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
@@ -66,7 +66,7 @@ This information includes:
 /// require 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
 /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
 /// required.
-#define IO_PORT_WRITE_CYCLES    2U              ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0.
+#define IO_PORT_WRITE_CYCLES    1U              ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0.
 
 /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -380,7 +380,7 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint8_t pin_index)
 __STATIC_INLINE void PORT_JTAG_SETUP (void) {
 
 
-    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
     HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
     HPM_IOC->PAD[PIN_TDO].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
@@ -399,10 +399,11 @@ __STATIC_INLINE void PORT_JTAG_SETUP (void) {
     gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
     gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_TDI_NUM);
     gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_LED_NUM);
-    // HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
-    // HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
-    // HPM_IOC->PAD[PIN_TDI].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
-    // HPM_IOC->PAD[PIN_nRESET].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
+    HPM_IOC->PAD[PIN_TDO].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TDI].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_nRESET].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
 }
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
@@ -465,7 +466,9 @@ __STATIC_INLINE void PORT_OFF (void) {
 \return Current status of the SWCLK/TCK DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN  (void) {
-    return gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TCK_NUM);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TCK_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** SWCLK/TCK I/O pin: Set Output to High
@@ -473,6 +476,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to high level.;
 */
 __STATIC_FORCEINLINE void     PIN_SWCLK_TCK_SET (void) {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TCK_NUM, true);
+    __asm volatile("fence io, io");
 }
 
 /** SWCLK/TCK I/O pin: Set Output to Low.
@@ -480,6 +484,7 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void     PIN_SWCLK_TCK_CLR (void) {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TCK_NUM, false);
+    __asm volatile("fence io, io");
 }
 
 
@@ -489,7 +494,9 @@ __STATIC_FORCEINLINE void     PIN_SWCLK_TCK_CLR (void) {
 \return Current status of the SWDIO/TMS DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN  (void) {
-    return gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** SWDIO/TMS I/O pin: Set Output to High.
@@ -497,6 +504,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_TMS_SET (void) {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM, true);
+    __asm volatile("fence io, io");
 }
 
 /** SWDIO/TMS I/O pin: Set Output to Low.
@@ -504,13 +512,16 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void     PIN_SWDIO_TMS_CLR (void) {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM, false);
+    __asm volatile("fence io, io");
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
 \return Current status of the SWDIO DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN      (void) {
-    return gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** SWDIO I/O pin: Set Output (used in SWD mode only).
@@ -523,6 +534,7 @@ __STATIC_FORCEINLINE void     PIN_SWDIO_OUT     (uint32_t bit) {
   else {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TMS_NUM, false);
   }
+  __asm volatile("fence io, io");
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -553,7 +565,9 @@ __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_DISABLE (void) {
 \return Current status of the TDI DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_TDI_IN  (void) {
-    return gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** TDI I/O pin: Set Output.
@@ -567,6 +581,7 @@ __STATIC_FORCEINLINE void     PIN_TDI_OUT (uint32_t bit) {
   else {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM, false);
   }
+  __asm volatile("fence io, io");
 }
 
 
@@ -576,7 +591,9 @@ __STATIC_FORCEINLINE void     PIN_TDI_OUT (uint32_t bit) {
 \return Current status of the TDO DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN  (void) {
-    return gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TDO_NUM);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_TDO_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 
@@ -648,6 +665,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT (uint32_t bit) {
 */
 __STATIC_INLINE void LED_RUNNING_OUT (uint32_t bit) {
     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, bit);
+    __asm volatile("fence io, io");
 }
 
 ///@}
