@@ -87,7 +87,7 @@ This information includes:
 /// Default communication speed on the Debug Access Port for SWD and JTAG mode.
 /// Used to initialize the default SWD/JTAG clock frequency.
 /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
-#define DAP_DEFAULT_SWJ_CLOCK   1000000U        ///< Default SWD/JTAG clock frequency in Hz.
+#define DAP_DEFAULT_SWJ_CLOCK   10000000U        ///< Default SWD/JTAG clock frequency in Hz.
 
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimize the communication performance with the
@@ -378,8 +378,6 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint8_t pin_index)
 
 
 __STATIC_INLINE void PORT_JTAG_SETUP (void) {
-
-
     HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
     HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
@@ -412,10 +410,25 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  - TDI, nTRST to HighZ mode (pins are unused in SWD mode).
 */
 __STATIC_INLINE void PORT_SWD_SETUP (void) {
-  HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-  HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-  HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
-  HPM_IOC->PAD[PIN_nRESET].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
+
+
+    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
+    HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_nRESET].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_LED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    gpiom_configure_pin_control_setting(PIN_TCK_NUM);
+    gpiom_configure_pin_control_setting(PIN_TMS_NUM);
+    gpiom_configure_pin_control_setting(PIN_nRESET_NUM);
+    gpiom_configure_pin_control_setting(PIN_LED_NUM);
+
+    gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_TCK_NUM);
+    gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
+    gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_LED_NUM);
+
+    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_nRESET].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -544,6 +557,8 @@ called prior \ref PIN_SWDIO_OUT function calls.
 __STATIC_FORCEINLINE void     PIN_SWDIO_OUT_ENABLE  (void) {
   HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
   HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
+  gpiom_configure_pin_control_setting(PIN_TMS_NUM);
+  gpio_set_pin_output(PIN_GPIO, PIN_PORT, PIN_TMS_NUM);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -579,7 +594,7 @@ __STATIC_FORCEINLINE void     PIN_TDI_OUT (uint32_t bit) {
      gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM, true);
   }
   else {
-    gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM, false);
+     gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_TDI_NUM, false);
   }
   __asm volatile("fence io, io");
 }
@@ -603,7 +618,9 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN  (void) {
 \return Current status of the nTRST DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN   (void) {
-  return (0U);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** nTRST I/O pin: Set Output.
@@ -612,7 +629,13 @@ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN   (void) {
            - 1: release JTAG TRST Test Reset.
 */
 __STATIC_FORCEINLINE void     PIN_nTRST_OUT  (uint32_t bit) {
-  ;
+    if(bit & 0x01) {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM, true);
+    }
+    else {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM, false);
+    }
+    __asm volatile("fence io, io");
 }
 
 // nRESET Pin I/O------------------------------------------
@@ -621,7 +644,9 @@ __STATIC_FORCEINLINE void     PIN_nTRST_OUT  (uint32_t bit) {
 \return Current status of the nRESET DAP hardware I/O pin.
 */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN  (void) {
-  return (0U);
+    uint32_t sta =  gpio_read_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM);
+    __asm volatile("fence io, io");
+    return sta;
 }
 
 /** nRESET I/O pin: Set Output.
@@ -630,7 +655,13 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN  (void) {
            - 1: release device hardware reset.
 */
 __STATIC_FORCEINLINE void     PIN_nRESET_OUT (uint32_t bit) {
-  ;
+    if(bit & 0x01) {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM, true);
+    }
+    else {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_nRESET_NUM, false);
+    }
+    __asm volatile("fence io, io");
 }
 
 ///@}
@@ -655,7 +686,13 @@ It is recommended to provide the following LEDs for status indication:
            - 0: Connect LED OFF: debugger is not connected to CMSIS-DAP Debug Unit.
 */
 __STATIC_INLINE void LED_CONNECTED_OUT (uint32_t bit) {
-  
+    if(bit & 0x01) {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, true);
+    }
+    else {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, false);
+    }
+    __asm volatile("fence io, io");
 }
 
 /** Debug Unit: Set status Target Running LED.
@@ -664,7 +701,12 @@ __STATIC_INLINE void LED_CONNECTED_OUT (uint32_t bit) {
            - 0: Target Running LED OFF: program execution in target stopped.
 */
 __STATIC_INLINE void LED_RUNNING_OUT (uint32_t bit) {
-    gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, bit);
+    if(bit & 0x01) {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, true);
+    }
+    else {
+       gpio_write_pin(PIN_GPIO, PIN_PORT, PIN_LED_NUM, false);
+    }
     __asm volatile("fence io, io");
 }
 
