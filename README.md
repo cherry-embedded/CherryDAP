@@ -45,9 +45,10 @@ make BL_SDK_BASE=<pwd of bouffalo_sdk prefix>/bouffalo_sdk CROSS_COMPILE=<pwd of
 ![hpm5301evklite](./assets/hpm5301evklite.png)
 
 - USB High speed
-- Support UART, use DMA
-
+- Support UART, use DMA(@[**RCSN** ](https://github.com/RCSN))
 - The 20PJTAG socket of the J5 interface is used by default. 
+- support  JTAG (@[**RCSN** ](https://github.com/RCSN))
+- support SWD (@[**Aladdin-Wang**](https://github.com/Aladdin-Wang))
 - for example, use hpm5301evklite debug hpm5300evk
 
 ![debug_5300evk](./assets/debug_5300evk.png)
