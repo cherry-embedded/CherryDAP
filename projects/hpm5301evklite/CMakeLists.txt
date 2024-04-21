@@ -3,16 +3,23 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(CONFIG_CHERRYUSB 1)
 set(CONFIG_USB_DEVICE 1)
-set(CONFIG_USB_DEVICE_CDC 1)
+set(CONFIG_DMA_MGR 1)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(hpm5300evklite_jtag_dap)
 
+# for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
 sdk_compile_definitions(-DCONFIG_USB_HS)
-sdk_compile_definitions(-DCONFIG_CHERRYUSB)
+sdk_inc(../../CherryUSB/common)
+sdk_inc(../../CherryUSB/core)
+sdk_inc(../../CherryUSB/class/cdc)
+sdk_inc(../../CherryUSB/class/msc)
+sdk_src(../../CherryUSB/core/usbd_core.c)
+sdk_src(../../CherryUSB/port/hpm/usb_dc_hpm.c)
+sdk_src(../../CherryUSB/class/cdc/usbd_cdc.c)
+
 
 sdk_inc(./)
 sdk_inc(../..)
