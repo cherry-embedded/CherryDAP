@@ -409,6 +409,7 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  - SWCLK, SWDIO, nRESET to output mode and set to default high level.
  - TDI, nTRST to HighZ mode (pins are unused in SWD mode).
 */
+#ifndef USE_SPI_SWD
 __STATIC_INLINE void PORT_SWD_SETUP (void) {
 
 
@@ -430,7 +431,9 @@ __STATIC_INLINE void PORT_SWD_SETUP (void) {
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
     HPM_IOC->PAD[PIN_nRESET].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
 }
-
+#else
+void PORT_SWD_SETUP(void);
+#endif
 /** Disable JTAG/SWD I/O Pins.
 Disables the DAP Hardware I/O pins which configures:
  - TCK/SWCLK, TMS/SWDIO, TDI, TDO, nTRST, nRESET to High-Z mode.
