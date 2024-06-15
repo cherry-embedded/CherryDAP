@@ -396,7 +396,7 @@ static uint32_t DAP_SWJ_Pins(const uint8_t *request, uint8_t *response) {
   return ((6U << 16) | 1U);
 }
 
-
+extern void set_swj_clock_frequency(uint32_t clock);
 // Process SWJ Clock command and prepare response
 //   request:  pointer to request data
 //   response: pointer to response data
@@ -417,7 +417,11 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     return ((4U << 16) | 1U);
   }
 
+#ifndef USE_SPI_SWD
   Set_Clock_Delay(clock);
+#else
+  set_swj_clock_frequency(clock);
+#endif
 
   *response = DAP_OK;
 #else

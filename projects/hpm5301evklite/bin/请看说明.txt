@@ -1,0 +1,5 @@
+1、对于spi_over_swd.bin固件，SPI只模拟SWD时序.
+对应的IO是hpm5301evklite的树莓派接口的SLCK<-->SWCLK,MOSI<--->SWDIO
+JTAG保持不变，还是使用GPIO模拟
+
+2、对于hpm5301_daplink.bin，均使用GPIO模拟SWD/JTAG, 对应的IO是调试接口的20P
