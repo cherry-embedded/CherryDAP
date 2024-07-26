@@ -3,6 +3,14 @@
 
 cmake_minimum_required(VERSION 3.13)
 
+option(CONFIG_USER_EXPANSION "Enable user expansion" OFF)
+
+option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
 
@@ -17,6 +25,11 @@ endif()
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(hpm5300evklite_dap)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    sdk_compile_options("-g")
+endif()
+
 
 # for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
 sdk_compile_definitions(-DCONFIG_USB_HS)
@@ -67,9 +80,10 @@ sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
-sdk_compile_options("-O3")
+
+if (CONFIG_USER_EXPANSION)
+    sdk_compile_definitions(-DCONFIG_USER_EXPANSION=1)
+    sdk_app_src(user_expansion.c)
+endif()
 
 generate_ses_project()
-
-
-
