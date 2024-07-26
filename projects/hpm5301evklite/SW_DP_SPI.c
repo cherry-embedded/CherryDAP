@@ -55,6 +55,7 @@ void SWJ_Sequence (uint32_t count, const uint8_t *data)
     uint32_t integer_val = (count / 8);
     uint32_t remaind_val = (count % 8);
     //printf("SWJ_Sequence %d\n", count);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
     spi_set_data_bits(SWD_SPI_BASE, 8);
     SWD_SPI_BASE->CTRL |= SPI_CTRL_RXFIFORST_MASK | SPI_CTRL_TXFIFORST_MASK;
@@ -101,6 +102,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
     spi_set_data_bits(SWD_SPI_BASE, 8);
     if (info & SWD_SEQUENCE_DIN) {
         spi_set_read_data_count(SWD_SPI_BASE, integer_val);
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
         spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_read_only);
         SWD_SPI_BASE->CMD = 0xFF;
         while ((SWD_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) == SPI_STATUS_RXEMPTY_MASK) {
@@ -123,6 +125,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
         }
     } else {
         spi_set_write_data_count(SWD_SPI_BASE, integer_val);
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
         spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
         SWD_SPI_BASE->CMD = 0xFF;
         for (n = 0; n < integer_val; n++) {
@@ -177,6 +180,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
     }
     host_data |= ((request & 0x0F) << 1) | (parity << 5);
     parity = 0;
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
     if (request & DAP_TRANSFER_RnW) {
         spi_set_data_bits(SWD_SPI_BASE, 8);
@@ -192,6 +196,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
     SWD_SPI_BASE->DATA = host_data;
     while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
     };
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_read_only);
     spi_set_data_bits(SWD_SPI_BASE, ack_width);
     SWD_SPI_BASE->CMD = 0xFF;
@@ -315,6 +320,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
         return ack;
     }
     /* Protocol error */
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
     spi_set_data_bits(SWD_SPI_BASE, 1);
     spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.swd_conf.turnaround + 32U + 1U);
