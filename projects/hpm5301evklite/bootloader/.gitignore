@@ -1,0 +1,119 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+# *.lib
+# *.a
+# *.la
+# *.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+.vscode/
+*.rar
+*.o
+*.d
+*.crf
+*.htm
+*.dep
+*.map
+*.bak
+*.lnp
+*.lst
+*.ini
+*.iex
+*.sct
+*.scvd
+*.uvguix
+*.dbg*
+*.uvguix.*
+.mxproject
+*.uvguit
+*.uvgui.*
+
+RTE/
+Templates/
+Examples/
+
+!*.uvoptx
+!*.h
+!*.c
+!*.ioc
+!*.axf
+!*.bin
+!*.hex
+
+JlinkLog.txt
+*.axf
+
+*.hex
+
+*.pkg
+
+Listings/*
+
+Objects/*
+*.uvoptx
+
+MDK-ARM/out/*
+
+MDK-ARM/tmp/*
+*.log
+
+build/
+
+*.idx
+
+.idea/
+
+cmake-build*
+
+projects/standard/Output/bin/app.bin
+projects/standard/Output/bin/res.bin
+projects/standard/Output/bin/xcfg.bin
+projects/standard/Output/bin/*.h
+projects/standard/Output/bin/app.dcf
+projects/standard/Output/bin/app.rv32
+projects/standard/Output/bin/map.txt
