@@ -8,6 +8,11 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(CherryUSB-UF2)
 
+sdk_compile_definitions(
+#        -DBOARD_SHOW_CLOCK=0
+        -DBOARD_SHOW_BANNER=0
+)
+
 sdk_app_src(src/main.c)
 sdk_app_src(src/msc_bootuf2.c)
 sdk_app_src(bootuf2/bootuf2.c)
