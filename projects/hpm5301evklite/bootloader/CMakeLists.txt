@@ -8,6 +8,8 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(CherryUSB-UF2)
 
+add_subdirectory(WS2812)
+
 sdk_compile_definitions(
 #        -DBOARD_SHOW_CLOCK=0
         -DBOARD_SHOW_BANNER=0
