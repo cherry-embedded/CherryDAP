@@ -223,24 +223,18 @@ static bool BOOT_Button_Pressed(void)
     bool current_state = gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3) == 1;
     static uint64_t now = 0;
 
-    if (current_state == true)
-    {
-        if (last_state == false)
-        {
+    if (current_state == true) {
+        if (last_state == false) {
             now = millis();
             last_state = true;
-        }
-        else
-        {
+        } else {
             if (millis() - now > 2000) // 长按2000ms
             {
                 last_state = false;
                 return true;
             }
         }
-    }
-    else
-    {
+    } else {
         last_state = false;
     }
     return false;
@@ -274,8 +268,7 @@ void HSP_Loop(void)
         Power_Set_TVCC_Voltage(3.3);
     }
 
-    if(BOOT_Button_Pressed())
-    {
+    if (BOOT_Button_Pressed()) {
         printf("Enter Bootloader\n");
         Power_Turn_Off();
 
