@@ -91,4 +91,11 @@ if (CONFIG_HSLINK_PRO_EXPANSION)
     sdk_app_src(HSLink_Pro_expansion.c)
 endif()
 
+# 执行完之后转换为uf2
+add_custom_command(
+        TARGET ${APP_ELF_NAME} POST_BUILD
+        COMMAND ${python_exec} ${CMAKE_CURRENT_SOURCE_DIR}/uf2conv.py -f 0x0A4D5048 -b 0x80020000 -c ${CMAKE_BINARY_DIR}/output/${APP_BIN_NAME} -o ${CMAKE_BINARY_DIR}/output/${APP_NAME}.uf2
+        COMMENT "Convert to UF2"
+)
+
 generate_ses_project()
