@@ -1,0 +1,78 @@
+name: HPM Build
+
+on:
+  push:
+    paths:
+      - '.github/workflows/HPM-build.yml'
+      - 'projects/hpm5301evklite/**'
+  pull_request:
+    paths:
+      - '.github/workflows/HPM-build.yml'
+      - 'projects/hpm5301evklite/**'
+
+  workflow_dispatch:
+
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: gregdavill/setup-riscv-gnu-toolchain@v2.0
+
+      # 创建riscv-none-elf-到riscv32-unknown-elf-的软链接
+      - name: Create riscv-none-elf- to riscv32-unknown-elf- symlink
+        run: |
+          sudo bash ./.github/workflows/create_riscv32_symlink.sh
+
+      - name: Install HPM SDK
+        run: |
+          cd ~
+          git clone https://github.com/hpmicro/sdk_env.git --recursive
+
+      - name: Create Python Venv
+        run: |
+          python3 -m venv ~/HPM_PYTHON
+          source ~/HPM_PYTHON/bin/activate
+          pip install pyyaml jinja2
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Build bootloader
+        run: |
+          cd projects/hpm5301evklite/bootloader
+          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_TOOLCHAIN_VARIANT=gcc
+          export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
+
+          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_xip -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
+          cmake --build ./build
+
+      - name: Upload bootloader
+        uses: actions/upload-artifact@v2
+        with:
+          name: bootloader
+          path: projects/hpm5301evklite/bootloader/build/output/demo.bin
+
+      - name: Build APP
+        run: |
+          cd projects/hpm5301evklite
+          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_TOOLCHAIN_VARIANT=gcc
+          export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
+
+          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_xip -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HSLINK_PRO_EXPANSION=ON -DCONFIG_SWDIO_DIR=IOC_PAD_PA30 . -B=./build
+          cmake --build ./build
+
+      - name: Upload APP
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: projects/hpm5301evklite/build/output/CherryDAP.uf2

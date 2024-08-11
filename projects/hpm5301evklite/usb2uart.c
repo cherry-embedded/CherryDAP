@@ -195,7 +195,7 @@ static hpm_stat_t board_uart_dma_config(void)
         chg_config.dst_addr =(uint32_t)&UART_BASE->THR;
         chg_config.en_dmamux = true;
         chg_config.dmamux_src = UART_TX_DMA;
-        chg_config.linked_ptr = NULL;
+        chg_config.linked_ptr = (uint32_t)NULL;
         dma_mgr_setup_channel(resource, &chg_config);
         dma_mgr_install_chn_tc_callback(resource, dma_channel_tc_callback, NULL);
         dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_TC);
