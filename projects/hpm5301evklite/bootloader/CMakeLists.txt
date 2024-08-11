@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.13)
 set(CONFIG_CHERRYUSB 1)
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_USB_DEVICE_MSC 1)
+set(CUSTOM_GCC_LINKER_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/flash_xip.ld
+)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 

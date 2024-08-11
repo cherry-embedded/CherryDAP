@@ -1,3 +1,5 @@
+#include "../../BL_Setting_Common.h"
+#include "WS2812.h"
 #include "bootuf2.h"
 #include "usb_config.h"
 #include <board.h>
@@ -6,7 +8,8 @@
 #include <hpm_l1c_drv.h>
 #include <usb_log.h>
 
-extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
+ATTR_PLACE_AT(".bl_setting")
+static BL_Setting_t bl_setting;
 
 static void jump_app(void)
 {
@@ -67,6 +70,41 @@ static void show_logo(void)
     printf("%s", str);
 }
 
+static void show_rainbow(void)
+{
+    for (int j = 0; j < 256; j++)
+    {
+        uint8_t r, g, b;
+        uint8_t pos = j & 255;
+        if (pos < 85)
+        {
+            r = pos * 3;
+            g = 255 - pos * 3;
+            b = 0;
+        }
+        else if (pos < 170)
+        {
+            pos -= 85;
+            r = 255 - pos * 3;
+            g = 0;
+            b = pos * 3;
+        }
+        else
+        {
+            pos -= 170;
+            r = 0;
+            g = pos * 3;
+            b = 255 - pos * 3;
+        }
+        for (size_t i = 0; i < WS2812_LED_NUM; i++)
+        {
+            WS2812_SetPixel(i, r, g, b);
+        }
+        WS2812_Update();
+        board_delay_ms(10); // 纯阻塞，好孩子别学
+    }
+}
+
 int main(void)
 {
     board_init();
@@ -74,7 +112,16 @@ int main(void)
     board_init_usb_pins();
     bootloader_button_init();
 
-    if (!bootloader_button_pressed() && app_valid())
+    if (bl_setting.magic != BL_SETTING_MAGIC)
+    {
+        memset(&bl_setting, 0x00, sizeof(bl_setting));
+        bl_setting.magic = BL_SETTING_MAGIC;
+    }
+
+    if (!bootloader_button_pressed() // 按键未按下
+        && app_valid()               // APP区合法
+        && bl_setting.is_update == 0 // 不需要进入bootloader
+    )
     {
         USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
         jump_app();
@@ -82,9 +129,12 @@ int main(void)
             ;
     }
 
+    WS2812_Init();
+
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     printf("cherry usb msc device sample.\n");
 
+    extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
     msc_bootuf2_init(0, CONFIG_HPM_USBD_BASE);
 
     while (1)
@@ -93,10 +143,15 @@ int main(void)
         {
             USB_LOG_INFO("Update success! Jump to application.\n");
 
+            // 关闭灯珠
+            WS2812_SetPixel(0, 0, 0, 0);
+            WS2812_Update();
+
             jump_app();
             while (1)
                 ;
         }
+        show_rainbow();
     }
     return 0;
 }
