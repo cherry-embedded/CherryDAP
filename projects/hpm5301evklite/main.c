@@ -32,6 +32,8 @@ int main(void)
     board_init_led_pins();
     board_init_usb_pins();
 
+    printf("version: %s\n", CONFIG_BUILD_VERSION);
+
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     uartx_preinit();
 

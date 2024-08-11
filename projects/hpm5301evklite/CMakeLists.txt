@@ -78,6 +78,12 @@ sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
 
+if(CONFIG_BUILD_VERSION)
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
+else ()
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="Debug")
+endif()
+
 if (CONFIG_HSLINK_PRO_EXPANSION)
     sdk_compile_definitions(-DCONFIG_HSLINK_PRO_EXPANSION=1)
     sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")

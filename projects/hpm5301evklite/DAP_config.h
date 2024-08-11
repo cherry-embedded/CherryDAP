@@ -170,7 +170,7 @@ static const char TargetBoardName    [] = TARGET_BOARD_NAME;
 __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
     static const char * Vendor = "CherryDAP";
     uint8_t len = strlen(Vendor);
-  for(uint32_t i = 0; i < strlen(Vendor); i++) {
+  for(uint32_t i = 0; i < len; i++) {
     str[i] = Vendor[i];
   }
   return len;
@@ -184,7 +184,7 @@ __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
 #ifdef PRODUCT_STRING
   static const char * Product = PRODUCT_STRING;
   uint8_t len = strlen(Product);
-  for(uint32_t i = 0; i < strlen(Product); i++) {
+  for(uint32_t i = 0; i < len; i++) {
     str[i] = Product[i];
   }
   return len;
@@ -201,7 +201,7 @@ __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
 __STATIC_INLINE uint8_t DAP_GetSerNumString (char *str) {
     extern char serial_number[32];
     uint8_t len = strlen(serial_number);
-    for(uint32_t i = 0; i < strlen(serial_number); i++) {
+    for(uint32_t i = 0; i < len; i++) {
         str[i] = serial_number[i];
     }
     return len;
@@ -280,8 +280,17 @@ __STATIC_INLINE uint8_t DAP_GetTargetBoardNameString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
-  (void)str;
-  return (0U);
+#ifdef CONFIG_BUILD_VERSION
+    const char * version = CONFIG_BUILD_VERSION;
+    uint8_t len = strlen(version);
+    for(uint32_t i = 0; i < len; i++) {
+        str[i] = version[i];
+    }
+    return len;
+#else
+    (void)str;
+    return (0U);
+#endif
 }
 
 ///@}

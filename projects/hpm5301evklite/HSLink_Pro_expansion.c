@@ -228,7 +228,7 @@ static bool BOOT_Button_Pressed(void)
             now = millis();
             last_state = true;
         } else {
-            if (millis() - now > 2000) // 长按2000ms
+            if (millis() - now > 1000) // 长按1000ms
             {
                 last_state = false;
                 return true;
