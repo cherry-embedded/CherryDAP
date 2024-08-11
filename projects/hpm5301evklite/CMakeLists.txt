@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-option(CONFIG_USER_EXPANSION "Enable user expansion" OFF)
+option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
 
 option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
@@ -85,9 +85,10 @@ sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
 
-if (CONFIG_USER_EXPANSION)
-    sdk_compile_definitions(-DCONFIG_USER_EXPANSION=1)
-    sdk_app_src(user_expansion.c)
+if (CONFIG_HSLINK_PRO_EXPANSION)
+    sdk_compile_definitions(-DCONFIG_HSLINK_PRO_EXPANSION=1)
+    sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
+    sdk_app_src(HSLink_Pro_expansion.c)
 endif()
 
 generate_ses_project()
