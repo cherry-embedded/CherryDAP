@@ -7,10 +7,10 @@
  *
  */
 
-#ifndef HPM5300EVKLITE_DAP_USER_EXPANSION_H
-#define HPM5300EVKLITE_DAP_USER_EXPANSION_H
+#ifndef HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H
+#define HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H
 
-#if CONFIG_USER_EXPANSION == 1
+#if CONFIG_HSLINK_PRO_EXPANSION == 1
 
 typedef enum {
     USER_ADC_VREF_CHANNEL = 11,
@@ -20,13 +20,13 @@ typedef enum {
 /**
  * @brief 外部扩展初始化
  */
-void USER_Expansion_Init(void);
+void HSP_Init(void);
 
 /**
  * @brief 外部扩展循环，放入主循环中
  */
-void USER_Expansion_Loop(void);
+void HSP_Loop(void);
 
 #endif
 
-#endif //HPM5300EVKLITE_DAP_USER_EXPANSION_H
+#endif //HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H

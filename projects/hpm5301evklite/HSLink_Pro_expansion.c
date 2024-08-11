@@ -7,13 +7,16 @@
 
 #include "hpm_common.h"
 #include <hpm_gpiom_drv.h>
-#include "USER_Expansion.h"
+#include <hpm_l1c_drv.h>
+#include <hpm_romapi.h>
+#include "HSLink_Pro_expansion.h"
 #include "board.h"
 #include "hpm_gptmr_drv.h"
 #include "hpm_gpio_drv.h"
 #include "hpm_adc16_drv.h"
+#include "hpm_mchtmr_drv.h"
 
-#if CONFIG_USER_EXPANSION == 1
+#if CONFIG_HSLINK_PRO_EXPANSION == 1
 
 const double ADC_REF = 3.3;
 
@@ -29,8 +32,9 @@ const uint8_t DEFAULT_PWM_DUTY = 50;
 const uint8_t DEFAULT_ADC_RUN_MODE = adc16_conv_mode_oneshot;
 const uint8_t DEFAULT_ADC_CYCLE = 20;
 
-
 static uint32_t pwm_current_reload;
+
+static uint64_t MCHTMR_CLK_FREQ = 0;
 
 static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
 {
@@ -98,13 +102,12 @@ static void Power_Set_TVCC_Voltage(double voltage)
     double dac = -voltage + (1974.0 / 395.0);
     if (dac < 0) {
         dac = 0;
-    }
-    else if (dac > 3.3) {
+    } else if (dac > 3.3) {
         dac = 3.3;
     }
 
     // 计算PWM占空比
-    uint8_t duty = (uint8_t) (dac / 3.3 * 100);
+    uint8_t duty = (uint8_t)(dac / 3.3 * 100);
     set_pwm_waveform_edge_aligned_duty(duty);
 }
 
@@ -131,7 +134,7 @@ static void ADC_Init()
     /* adc16 initialization */
     if (adc16_init(USER_ADC, &cfg) == status_success) {
         /* enable irq */
-//        intc_m_enable_irq_with_priority(BOARD_APP_ADC16_IRQn, 1);
+        //        intc_m_enable_irq_with_priority(BOARD_APP_ADC16_IRQn, 1);
     }
 }
 
@@ -188,17 +191,64 @@ static void TVCC_Init(void)
 ATTR_ALWAYS_INLINE
 static double Get_VREF_Voltage(void)
 {
-    return (double) Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535;
+    return (double)Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535;
 }
 
 ATTR_ALWAYS_INLINE
 static double Get_TVCC_Voltage(void)
 {
-    return (double) Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535;
+    return (double)Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535;
 }
 
-void USER_Expansion_Init(void)
+ATTR_ALWAYS_INLINE
+static void BOOT_Init(void)
 {
+    // PA03
+    HPM_IOC->PAD[IOC_PAD_PA03].FUNC_CTL = IOC_PA03_FUNC_CTL_GPIO_A_03;
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 3, gpiom_soc_gpio0);
+    gpio_set_pin_input(HPM_GPIO0, GPIO_OE_GPIOA, 3);
+    gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
+}
+
+static uint32_t millis(void)
+{
+    uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
+    return (uint32_t)(mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
+}
+
+static bool BOOT_Button_Pressed(void)
+{
+    static bool last_state = false;
+    bool current_state = gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3) == 1;
+    static uint64_t now = 0;
+
+    if (current_state == true)
+    {
+        if (last_state == false)
+        {
+            now = millis();
+            last_state = true;
+        }
+        else
+        {
+            if (millis() - now > 2000) // 长按2000ms
+            {
+                last_state = false;
+                return true;
+            }
+        }
+    }
+    else
+    {
+        last_state = false;
+    }
+    return false;
+}
+
+void HSP_Init(void)
+{
+    MCHTMR_CLK_FREQ = clock_get_frequency(clock_mchtmr0);
     // 初始化电源部分
     Power_Enable_Init();
     Power_PWM_Init();
@@ -207,22 +257,38 @@ void USER_Expansion_Init(void)
     ADC_Init();
     VREF_Init();
     TVCC_Init();
+
+    BOOT_Init();
 }
 
-void USER_Expansion_Loop(void)
+void HSP_Loop(void)
 {
     // 检测VREF电压
     double vref = Get_VREF_Voltage();
 
-    if (vref > 0.6)
-    {
+    if (vref > 0.6) {
         Power_Set_TVCC_Voltage(vref);
         Power_Turn_On();
-    }
-    else
-    {
+    } else {
         Power_Turn_Off();
         Power_Set_TVCC_Voltage(3.3);
+    }
+
+    if(BOOT_Button_Pressed())
+    {
+        printf("Enter Bootloader\n");
+        Power_Turn_Off();
+
+        l1c_dc_disable();
+
+        api_boot_arg_t boot_arg = {
+            .index = 0,
+            .peripheral = API_BOOT_PERIPH_AUTO,
+            .src = API_BOOT_SRC_PRIMARY,
+            .tag = API_BOOT_TAG,
+        };
+
+        ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
     }
 }
 
