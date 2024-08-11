@@ -274,6 +274,12 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 #include "hpm_csr_drv.h"
 #include "hpm_clock_drv.h"
 
+#define JTAG_SPI_BASE               HPM_SPI2
+#define JTAG_SPI_BASE_CLOCK_NAME    clock_spi2
+
+#define SWD_SPI_BASE               HPM_SPI1
+#define SWD_SPI_BASE_CLOCK_NAME    clock_spi1
+
 #define PIN_GPIOM_BASE    HPM_GPIOM
 #define PIN_GPIO          HPM_FGPIO
 
@@ -283,7 +289,7 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
     #define PIN_TDI                         IOC_PAD_PA05
     #define PIN_TDO                         IOC_PAD_PA04
 #else
-    #define PIN_TCK           IOC_PAD_PA27
+    #define PIN_TCK           IOC_PAD_PB11
     #define PIN_TMS           IOC_PAD_PA29
     #define PIN_TDI           IOC_PAD_PB13
     #define PIN_TDO           IOC_PAD_PB12
@@ -339,7 +345,7 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
     gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
-
+#if !defined(USE_SPI_JTAG) || (USE_SPI_JTAG  == 0) 
 __STATIC_INLINE void PORT_JTAG_SETUP (void) {
     HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
@@ -372,13 +378,16 @@ __STATIC_INLINE void PORT_JTAG_SETUP (void) {
     HPM_IOC->PAD[PIN_JTAG_TRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
     HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
 }
+#else
+void PORT_JTAG_SETUP(void);
+#endif
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
 Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  - SWCLK, SWDIO, nRESET to output mode and set to default high level.
  - TDI, nTRST to HighZ mode (pins are unused in SWD mode).
 */
-#ifndef USE_SPI_SWD
+#if !defined(USE_SPI_SWD) || (USE_SPI_SWD  == 0) 
 __STATIC_INLINE void PORT_SWD_SETUP (void) {
 
 

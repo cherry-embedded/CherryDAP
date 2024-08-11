@@ -417,7 +417,7 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     return ((4U << 16) | 1U);
   }
 
-#ifndef USE_SPI_SWD
+#if !defined(USE_SPI_SWD) && !defined(USE_SPI_JTAG)
   Set_Clock_Delay(clock);
 #else
   set_swj_clock_frequency(clock);
@@ -557,12 +557,12 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
 
   sequence_count = *request++;
   while (sequence_count--) {
-    sequence_info = *request++;
-    count = sequence_info & JTAG_SEQUENCE_TCK;
-    if (count == 0U) {
-      count = 64U;
-    }
-    count = (count + 7U) / 8U;
+      sequence_info = *request++;
+      count = sequence_info & JTAG_SEQUENCE_TCK;
+      if (count == 0U) {
+          count = 64U;
+      }
+      count = (count + 7U) / 8U;
 #if (DAP_JTAG != 0)
     JTAG_Sequence(sequence_info, request, response);
 #endif
