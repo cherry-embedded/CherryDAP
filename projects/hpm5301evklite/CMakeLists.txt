@@ -7,9 +7,7 @@ option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
 
 option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
-endif()
+set(APP_NAME "CherryDAP")
 
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
@@ -26,11 +24,6 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(hpm5300evklite_dap)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    sdk_compile_options("-g")
-endif()
-
-
 # for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
 sdk_compile_definitions(-DCONFIG_USB_HS)
 sdk_inc(../../CherryUSB/common)
@@ -42,7 +35,7 @@ sdk_src(../../CherryUSB/port/hpm/usb_dc_hpm.c)
 sdk_src(../../CherryUSB/class/cdc/usbd_cdc.c)
 
 # swj_clock default use keil swd frequency boost
-sdk_compile_definitions(-DBOOST_KEIL_SWD_FREQ=1)
+sdk_compile_definitions(-DBOOST_KEIL_SWD_FREQ=0)
 
 if(NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO AND (CONFIG_USE_HPM_BOARD_JTAG_GPIO EQUAL "1"))
 sdk_compile_definitions(-DUSE_HPM_BOARD_JTAG_GPIO=1)
