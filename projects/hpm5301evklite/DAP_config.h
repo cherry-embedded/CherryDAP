@@ -44,7 +44,9 @@ This information includes:
  - Optional information about a connected Target Device (for Evaluation Boards).
 */
 
-#include "stdint.h"                             
+#include <stdio.h>
+#include <hpm_romapi.h>
+#include "stdint.h"
 
 #ifndef   __STATIC_INLINE
 #define __STATIC_INLINE                        static inline
@@ -166,8 +168,12 @@ static const char TargetBoardName    [] = TARGET_BOARD_NAME;
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
-  (void)str;
-  return (0U);
+    static const char * Vendor = "CherryDAP";
+    uint8_t len = strlen(Vendor);
+  for(uint32_t i = 0; i < strlen(Vendor); i++) {
+    str[i] = Vendor[i];
+  }
+  return len;
 }
 
 /** Get Product Name string.
@@ -175,8 +181,17 @@ __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
-  (void)str;
-  return (0U);
+#ifdef PRODUCT_STRING
+  static const char * Product = PRODUCT_STRING;
+  uint8_t len = strlen(Product);
+  for(uint32_t i = 0; i < strlen(Product); i++) {
+    str[i] = Product[i];
+  }
+  return len;
+#else
+    (void)str;
+    return (0U);
+#endif
 }
 
 /** Get Serial Number string.
@@ -184,8 +199,12 @@ __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetSerNumString (char *str) {
-  (void)str;
-  return (0U);
+    extern char serial_number[32];
+    uint8_t len = strlen(serial_number);
+    for(uint32_t i = 0; i < strlen(serial_number); i++) {
+        str[i] = serial_number[i];
+    }
+    return len;
 }
 
 /** Get Target Device Vendor string.
