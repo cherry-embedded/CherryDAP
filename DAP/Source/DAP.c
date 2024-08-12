@@ -98,8 +98,7 @@ static uint8_t DAP_Info(uint8_t id, uint8_t *info) {
       length = DAP_GetSerNumString((char *)info);
       break;
     case DAP_ID_DAP_FW_VER:
-      length = (uint8_t)sizeof(DAP_FW_Ver);
-      memcpy(info, DAP_FW_Ver, length);
+      length = DAP_GetProductFirmwareVersionString((char *)info);
       break;
     case DAP_ID_DEVICE_VENDOR:
       length = DAP_GetTargetDeviceVendorString((char *)info);

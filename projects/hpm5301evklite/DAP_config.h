@@ -282,15 +282,14 @@ __STATIC_INLINE uint8_t DAP_GetTargetBoardNameString (char *str) {
 __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 #ifdef CONFIG_BUILD_VERSION
     const char * version = CONFIG_BUILD_VERSION;
+#else
+    const char * version = DAP_FW_VER;
+#endif
     uint8_t len = strlen(version);
     for(uint32_t i = 0; i < len; i++) {
         str[i] = version[i];
     }
     return len;
-#else
-    (void)str;
-    return (0U);
-#endif
 }
 
 ///@}
