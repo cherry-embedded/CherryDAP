@@ -24,6 +24,13 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(hpm5300evklite_dap)
 
+# 设置版本号
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
+    file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/.version BUILD_VERSION)
+    string(STRIP ${BUILD_VERSION} BUILD_VERSION)
+    set(CONFIG_BUILD_VERSION ${BUILD_VERSION})
+endif()
+
 # for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
 sdk_compile_definitions(-DCONFIG_USB_HS)
 sdk_inc(../../CherryUSB/common)
