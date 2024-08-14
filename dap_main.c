@@ -393,6 +393,9 @@ void usbd_event_handler(uint8_t event)
 
             usbd_ep_start_read(DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
             usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+
+            usbd_ep_start_read(HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
+
             break;
         case USBD_EVENT_SET_REMOTE_WAKEUP:
             break;
@@ -499,7 +502,9 @@ __WEAK void usbd_hid_custom_in_callback(uint8_t ep, uint32_t nbytes)
 __WEAK void usbd_hid_custom_out_callback(uint8_t ep, uint32_t nbytes)
 {
     USB_LOG_RAW("actual out len:%d\r\n", nbytes);
-    usbd_ep_start_read(HID_OUT_EP, read_buffer, 1024);
+    usbd_ep_start_read( ep, read_buffer, HID_PACKET_SIZE);
+    read_buffer[0] = 0x02; /* IN: report id */
+    usbd_ep_start_write(HID_IN_EP, read_buffer, nbytes);
 }
 
 static struct usbd_endpoint hid_custom_in_ep = {
