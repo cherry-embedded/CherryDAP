@@ -88,9 +88,9 @@ sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
 
 if (CONFIG_BUILD_VERSION)
-    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
+    sdk_compile_definitions(-DDAP_FW_VER="${CONFIG_BUILD_VERSION}")
 else ()
-    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="Debug")
+    sdk_compile_definitions(-DDAP_FW_VER="Debug")
 endif ()
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")

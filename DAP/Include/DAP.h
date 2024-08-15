@@ -30,10 +30,12 @@
 
 
 // DAP Firmware Version
+#ifndef DAP_FW_VER
 #ifdef  DAP_FW_V1
 #define DAP_FW_VER                      "1.3.0"
 #else
 #define DAP_FW_VER                      "2.1.1"
+#endif
 #endif
 
 // DAP Command IDs
