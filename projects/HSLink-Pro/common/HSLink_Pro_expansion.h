@@ -10,8 +10,6 @@
 #ifndef HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H
 #define HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H
 
-#if CONFIG_HSLINK_PRO_EXPANSION == 1
-
 typedef enum {
     USER_ADC_VREF_CHANNEL = 11,
     USER_ADC_TVCC_CHANNEL = 1,
@@ -26,7 +24,5 @@ void HSP_Init(void);
  * @brief 外部扩展循环，放入主循环中
  */
 void HSP_Loop(void);
-
-#endif
 
 #endif //HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H

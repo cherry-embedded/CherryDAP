@@ -16,8 +16,6 @@
 #include "hpm_adc16_drv.h"
 #include "hpm_mchtmr_drv.h"
 
-#if CONFIG_HSLINK_PRO_EXPANSION == 1
-
 const double ADC_REF = 3.3;
 
 GPTMR_Type *const USER_PWM = HPM_GPTMR0;
@@ -284,5 +282,3 @@ void HSP_Loop(void)
         ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
     }
 }
-
-#endif
