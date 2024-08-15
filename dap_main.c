@@ -2,6 +2,10 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
+#ifdef CONFIG_USE_HID_CONFIG
+#include "usbd_hid.h"
+#endif
+
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
 
@@ -12,19 +16,52 @@
 #define MSC_IN_EP  0x86
 #define MSC_OUT_EP 0x07
 
+#ifdef CONFIG_USE_HID_CONFIG
+#define HID_IN_EP  0x88
+#define HID_OUT_EP 0x09
+
+#ifdef CONFIG_USB_HS
+#define HID_PACKET_SIZE 1024
+#else
+#define HID_PACKET_SIZE 64
+#endif
+
+#endif
+
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204
 #define USBD_MAX_POWER     500
 #define USBD_LANGID_STRING 1033
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
-#ifndef CONFIG_CHERRYDAP_USE_MSC
-#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN)
-#define INTF_NUM        3
+
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+#define CONFIG_MSC_DESCRIPTOR_LEN CDC_ACM_DESCRIPTOR_LEN
+#define CONFIG_MSC_INTF_NUM       1
+#define MSC_INTF_NUM              (0x02 + 1)
 #else
-#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + MSC_DESCRIPTOR_LEN)
-#define INTF_NUM        4
+#define CONFIG_MSC_DESCRIPTOR_LEN 0
+#define CONFIG_MSC_INTF_NUM       0
+#define MSC_INTF_NUM              (0x02)
 #endif
+
+#ifdef CONFIG_USE_HID_CONFIG
+#define CONFIG_HID_DESCRIPTOR_LEN   (9 + 9 + 7 + 7)
+#define CONFIG_HID_INTF_NUM         1
+#define HID_CUSTOM_REPORT_DESC_SIZE 38
+#define HIDRAW_INTERVAL             4
+#define HID_INTF_NUM                (MSC_INTF_NUM + 1)
+
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[HID_PACKET_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[HID_PACKET_SIZE];
+#else
+#define CONFIG_HID_DESCRIPTOR_LEN 0
+#define CONFIG_HID_INTF_NUM       0
+#define HID_INTF_NUM              (MSC_INTF_NUM)
+#endif
+
+#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + CONFIG_MSC_DESCRIPTOR_LEN + CONFIG_HID_DESCRIPTOR_LEN)
+#define INTF_NUM        (2 + 1 + CONFIG_MSC_INTF_NUM + CONFIG_HID_INTF_NUM)
 
 #ifdef CONFIG_USB_HS
 #if DAP_PACKET_SIZE != 512
@@ -166,7 +203,43 @@ const uint8_t cmsisdap_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #ifdef CONFIG_CHERRYDAP_USE_MSC
-    MSC_DESCRIPTOR_INIT(0x03, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#endif
+#ifdef CONFIG_USE_HID_CONFIG
+    /************** Descriptor of Custom interface *****************/
+    0x09,                          /* bLength: Interface Descriptor size */
+    USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType: Interface descriptor type */
+    HID_INTF_NUM,                          /* bInterfaceNumber: Number of Interface */
+    0x00,                          /* bAlternateSetting: Alternate setting */
+    0x02,                          /* bNumEndpoints */
+    0x03,                          /* bInterfaceClass: HID */
+    0x01,                          /* bInterfaceSubClass : 1=BOOT, 0=no boot */
+    0x00,                          /* nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
+    0,                             /* iInterface: Index of string descriptor */
+    /******************** Descriptor of Custom HID ********************/
+    0x09,                    /* bLength: HID Descriptor size */
+    HID_DESCRIPTOR_TYPE_HID, /* bDescriptorType: HID */
+    0x11,                    /* bcdHID: HID Class Spec release number */
+    0x01,
+    0x00,                        /* bCountryCode: Hardware target country */
+    0x01,                        /* bNumDescriptors: Number of HID class descriptors to follow */
+    0x22,                        /* bDescriptorType */
+    HID_CUSTOM_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
+    0x00,
+    /******************** Descriptor of Custom in endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_IN_EP,                    /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,           /* bInterval: Polling Interval */
+    /******************** Descriptor of Custom out endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_OUT_EP,                   /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,       /* bInterval: Polling Interval */
 #endif
     /* String 0 (LANGID) */
     USB_LANGID_INIT(USBD_LANGID_STRING),
@@ -236,6 +309,33 @@ const uint8_t cmsisdap_descriptor[] = {
     0x00
 };
 
+#ifdef CONFIG_USE_HID_CONFIG
+/*!< custom hid report descriptor */
+static const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
+    /* USER CODE BEGIN 0 */
+    0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
+    0x09, 0x01,       /* USAGE (Vendor Usage 1) */
+    0xa1, 0x01,       /* COLLECTION (Application) */
+    0x85, 0x02,       /*   REPORT ID (0x02) */
+    0x09, 0x02,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,        /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (63) */
+    0x81, 0x02,       /*   INPUT (Data,Var,Abs) */
+    /* <___________________________________________________> */
+    0x85, 0x01,       /*   REPORT ID (0x01) */
+    0x09, 0x03,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03,   /*   REPORT_COUNT (63) */
+    0x91, 0x02,       /*   OUTPUT (Data,Var,Abs) */
+    /* USER CODE END 0 */
+    0xC0 /*     END_COLLECTION	             */
+};
+#endif
+
 static volatile uint16_t USB_RequestIndexI; // Request  Index In
 static volatile uint16_t USB_RequestIndexO; // Request  Index Out
 static volatile uint16_t USB_RequestCountI; // Request  Count In
@@ -293,6 +393,9 @@ void usbd_event_handler(uint8_t event)
 
             usbd_ep_start_read(DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
             usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+
+            usbd_ep_start_read(HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
+
             break;
         case USBD_EVENT_SET_REMOTE_WAKEUP:
             break;
@@ -388,10 +491,38 @@ static struct usbd_endpoint cdc_in_ep = {
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
+#ifdef CONFIG_USE_HID_CONFIG
+
+__WEAK void usbd_hid_custom_in_callback(uint8_t ep, uint32_t nbytes)
+{
+    USB_LOG_RAW("actual in len:%d\r\n", nbytes);
+//    custom_state = HID_STATE_IDLE;
+}
+
+__WEAK void usbd_hid_custom_out_callback(uint8_t ep, uint32_t nbytes)
+{
+    USB_LOG_RAW("actual out len:%d\r\n", nbytes);
+    usbd_ep_start_read( ep, read_buffer, HID_PACKET_SIZE);
+    read_buffer[0] = 0x02; /* IN: report id */
+    usbd_ep_start_write(HID_IN_EP, read_buffer, nbytes);
+}
+
+static struct usbd_endpoint hid_custom_in_ep = {
+    .ep_cb = usbd_hid_custom_in_callback,
+    .ep_addr = HID_IN_EP
+};
+
+static struct usbd_endpoint hid_custom_out_ep = {
+    .ep_cb = usbd_hid_custom_out_callback,
+    .ep_addr = HID_OUT_EP
+};
+#endif
+
 struct usbd_interface dap_intf;
 struct usbd_interface intf1;
 struct usbd_interface intf2;
 struct usbd_interface intf3;
+struct usbd_interface hid_intf;
 
 static void chry_dap_state_init(void)
 {
@@ -442,6 +573,13 @@ void chry_dap_init(void)
     usbd_add_interface(usbd_cdc_acm_init_intf(&intf2));
     usbd_add_endpoint(&cdc_out_ep);
     usbd_add_endpoint(&cdc_in_ep);
+
+#ifdef CONFIG_USE_HID_CONFIG
+    /*!< hid */
+    usbd_add_interface(usbd_hid_init_intf(&hid_intf, hid_custom_report_desc, HID_CUSTOM_REPORT_DESC_SIZE));
+    usbd_add_endpoint(&hid_custom_in_ep);
+    usbd_add_endpoint(&hid_custom_out_ep);
+#endif
 
 #ifdef CONFIG_CHERRYDAP_USE_MSC
     usbd_add_interface(usbd_msc_init_intf(&intf3, MSC_OUT_EP, MSC_IN_EP));
