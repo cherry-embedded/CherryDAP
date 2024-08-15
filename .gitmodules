@@ -4,3 +4,6 @@
 [submodule "CherryRB"]
 	path = CherryRB
 	url = https://github.com/cherry-embedded/CherryRB.git
+[submodule "projects/HSLink-Pro/WS2812"]
+	path = projects/HSLink-Pro/WS2812
+	url = https://github.com/HalfSweet/HPM_WS2812.git
