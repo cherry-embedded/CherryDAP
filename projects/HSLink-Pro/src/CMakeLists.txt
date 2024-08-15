@@ -97,7 +97,7 @@ endif ()
 sdk_compile_definitions(-DCONFIG_HSLINK_PRO_EXPANSION=1)
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
-sdk_app_src(HSLink_Pro_expansion.c)
+sdk_app_src(../common/HSLink_Pro_expansion.c)
 
 # 执行完之后转换为uf2
 add_custom_command(

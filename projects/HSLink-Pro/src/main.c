@@ -1,7 +1,7 @@
 #include <hpm_romapi.h>
 #include "board.h"
 #include "dap_main.h"
-#include "HSLink_Pro_expansion.h"
+#include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
 
 extern void uartx_preinit(void);
 
