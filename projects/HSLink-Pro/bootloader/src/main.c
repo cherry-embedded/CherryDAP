@@ -7,6 +7,7 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <usb_log.h>
+#include "HSLink_Pro_expansion.h"
 
 ATTR_PLACE_AT(".bl_setting")
 static BL_Setting_t bl_setting;
@@ -109,6 +110,7 @@ int main(void)
 {
     board_init();
     show_logo();
+    HSP_Init(); // 关闭电源输出，将电平修改为3.3V
     board_init_usb_pins();
     bootloader_button_init();
 
