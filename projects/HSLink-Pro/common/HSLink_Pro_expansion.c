@@ -74,13 +74,13 @@ static void Power_Enable_Init(void)
 }
 
 ATTR_ALWAYS_INLINE
-static void Power_Turn_On(void)
+static inline void Power_Turn_On(void)
 {
     gpio_write_pin(HPM_GPIO0, GPIO_DO_GPIOY, 0, 1);
 }
 
 ATTR_ALWAYS_INLINE
-static void Power_Turn_Off(void)
+static inline void Power_Turn_Off(void)
 {
     gpio_write_pin(HPM_GPIO0, GPIO_DO_GPIOY, 0, 0);
 }
@@ -175,33 +175,33 @@ static uint16_t Get_ADC_Value(USER_ADC_CHANNEL_t channel)
 }
 
 ATTR_ALWAYS_INLINE
-static void VREF_Init(void)
+static inline void VREF_Init(void)
 {
     // VREF 的输入是 PB08
     HPM_IOC->PAD[IOC_PAD_PB08].FUNC_CTL = IOC_PAD_FUNC_CTL_ANALOG_MASK;
 }
 
 ATTR_ALWAYS_INLINE
-static void TVCC_Init(void)
+static inline void TVCC_Init(void)
 {
     // TVCC 的输入是 PB09
     HPM_IOC->PAD[IOC_PAD_PB09].FUNC_CTL = IOC_PAD_FUNC_CTL_ANALOG_MASK;
 }
 
 ATTR_ALWAYS_INLINE
-static double Get_VREF_Voltage(void)
+static inline double Get_VREF_Voltage(void)
 {
     return (double)Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535;
 }
 
 ATTR_ALWAYS_INLINE
-static double Get_TVCC_Voltage(void)
+static double inline Get_TVCC_Voltage(void)
 {
     return (double)Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535;
 }
 
 ATTR_ALWAYS_INLINE
-static void BOOT_Init(void)
+static inline void BOOT_Init(void)
 {
     // PA03
     HPM_IOC->PAD[IOC_PAD_PA03].FUNC_CTL = IOC_PA03_FUNC_CTL_GPIO_A_03;
