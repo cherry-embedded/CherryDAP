@@ -394,7 +394,9 @@ void usbd_event_handler(uint8_t event)
             usbd_ep_start_read(DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
             usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
 
+#ifdef CONFIG_USE_HID_CONFIG
             usbd_ep_start_read(HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
+#endif
 
             break;
         case USBD_EVENT_SET_REMOTE_WAKEUP:
