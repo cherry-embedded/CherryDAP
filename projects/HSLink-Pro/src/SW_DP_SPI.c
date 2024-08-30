@@ -286,6 +286,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
                 };
             }
         }
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
         return ack;
     }
 
@@ -332,6 +333,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
             };
         }
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
         return ack;
     }
     /* Protocol error */
