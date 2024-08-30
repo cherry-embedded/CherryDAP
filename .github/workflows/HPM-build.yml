@@ -53,7 +53,7 @@ jobs:
           cmake --build ./build
 
       - name: Upload bootloader
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: bootloader
           path: projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin
@@ -70,7 +70,9 @@ jobs:
           cmake --build ./build
 
       - name: Upload APP
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: app
-          path: projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2, projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
+          path: |
+            projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2
+            projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
