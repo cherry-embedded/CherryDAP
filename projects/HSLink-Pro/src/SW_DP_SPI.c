@@ -45,7 +45,7 @@ void PORT_SWD_SETUP(void)
     HPM_IOC->PAD[SWDIO_DIR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
     gpiom_configure_pin_control_setting(SWDIO_DIR);
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR));
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1); // 默认SWDIO为输出
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0); // 默认SWDIO为输入
 
     swd_emulation_init();
 }
@@ -82,7 +82,7 @@ void SWJ_Sequence (uint32_t count, const uint8_t *data)
         while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
         };
     }
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
 }
 #endif
 
@@ -149,7 +149,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
             };
         }
     }
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
 }
 
 // SWD Transfer I/O
@@ -286,7 +286,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
                 };
             }
         }
-        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
         return ack;
     }
 
@@ -333,7 +333,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
             };
         }
-        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
         return ack;
     }
     /* Protocol error */
@@ -348,7 +348,7 @@ uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
         };
     }
     spi_set_data_bits(SWD_SPI_BASE, 1);
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
     return ack;
 }
 #endif
