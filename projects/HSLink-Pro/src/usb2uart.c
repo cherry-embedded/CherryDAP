@@ -6,21 +6,24 @@
 #include "hpm_sysctl_drv.h"
 #include "dap_main.h"
 
-#define UART_BASE                     BOARD_APP_UART_BASE
-#define UART_IRQ                      BOARD_APP_UART_IRQ
-#define UART_CLK_NAME                 BOARD_APP_UART_CLK_NAME
-#define UART_RX_DMA                   BOARD_APP_UART_RX_DMA_REQ
-#define UART_RX_DMA_RESOURCE_INDEX    (0U)
-#define UART_RX_DMA_BUFFER_SIZE       (8192U)
-#define UART_RX_DMA_BUFFER_COUNT      (5)
+#define UART_BASE                  BOARD_APP_UART_BASE
+#define UART_IRQ                   BOARD_APP_UART_IRQ
+#define UART_CLK_NAME              BOARD_APP_UART_CLK_NAME
+#define UART_RX_DMA                BOARD_APP_UART_RX_DMA_REQ
+#define UART_RX_DMA_RESOURCE_INDEX (0U)
+#define UART_RX_DMA_BUFFER_SIZE    (8192U)
+#define UART_RX_DMA_BUFFER_COUNT   (5)
 
-#define UART_TX_DMA                   BOARD_APP_UART_TX_DMA_REQ
-#define UART_TX_DMA_RESOURCE_INDEX    (1U)
-#define UART_TX_DMA_BUFFER_SIZE       (8192U)
+#define UART_TX_DMA                BOARD_APP_UART_TX_DMA_REQ
+#define UART_TX_DMA_RESOURCE_INDEX (1U)
+#define UART_TX_DMA_BUFFER_SIZE    (8192U)
 
-ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4) uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
-ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4) uint8_t uart_rx_buf[UART_RX_DMA_BUFFER_COUNT][UART_RX_DMA_BUFFER_SIZE];
-ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(8) dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT - 1];
+ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
+uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
+ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
+uint8_t uart_rx_buf[UART_RX_DMA_BUFFER_COUNT][UART_RX_DMA_BUFFER_SIZE];
+ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(8)
+dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT - 1];
 
 static dma_resource_t dma_resource_pools[2];
 volatile uint32_t g_uart_tx_transfer_length = 0;
@@ -53,7 +56,6 @@ void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
     }
 }
 
-
 void uart_isr(void)
 {
     uint32_t uart_received_data_count;
@@ -77,8 +79,6 @@ void uart_isr(void)
 }
 SDK_DECLARE_EXT_ISR_M(UART_IRQ, uart_isr)
 
-
-
 void uartx_preinit(void)
 {
     board_init_uart(UART_BASE);
@@ -93,7 +93,7 @@ void uartx_preinit(void)
 
 void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
 {
-    uart_config_t config = {0};
+    uart_config_t config = { 0 };
     uart_default_config(UART_BASE, &config);
     config.baudrate = line_coding->dwDTERate;
     config.parity = line_coding->bParityType;
@@ -128,7 +128,6 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
     dma_mgr_enable_channel(tx_resource);
 }
 
-
 static hpm_stat_t board_uart_rx_dma_restart(void)
 {
     dma_resource_t *resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
@@ -139,7 +138,7 @@ static hpm_stat_t board_uart_rx_dma_restart(void)
     resource->base->CHCTRL[resource->channel].LLPOINTER = addr;
     dma_mgr_set_chn_transize(resource, UART_RX_DMA_BUFFER_SIZE);
     dma_mgr_enable_channel(resource);
-    return  status_success;
+    return status_success;
 }
 static hpm_stat_t board_uart_dma_config(void)
 {
@@ -184,14 +183,14 @@ static hpm_stat_t board_uart_dma_config(void)
         dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_TC);
         dma_mgr_enable_dma_irq_with_priority(resource, 1);
     }
-     /* uart tx dma config */
+    /* uart tx dma config */
     resource = &dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX];
     if (dma_mgr_request_resource(resource) == status_success) {
         chg_config.src_mode = DMA_MGR_HANDSHAKE_MODE_NORMAL;
         chg_config.src_addr_ctrl = DMA_MGR_ADDRESS_CONTROL_INCREMENT;
         chg_config.dst_mode = DMA_MGR_HANDSHAKE_MODE_HANDSHAKE;
         chg_config.dst_addr_ctrl = DMA_ADDRESS_CONTROL_FIXED;
-        chg_config.dst_addr =(uint32_t)&UART_BASE->THR;
+        chg_config.dst_addr = (uint32_t)&UART_BASE->THR;
         chg_config.en_dmamux = true;
         chg_config.dmamux_src = UART_TX_DMA;
         chg_config.linked_ptr = (uint32_t)NULL;
@@ -202,4 +201,3 @@ static hpm_stat_t board_uart_dma_config(void)
     }
     return status_success;
 }
-

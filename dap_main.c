@@ -211,7 +211,7 @@ static const uint8_t config_descriptor[] = {
     /************** Descriptor of Custom interface *****************/
     0x09,                          /* bLength: Interface Descriptor size */
     USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType: Interface descriptor type */
-    HID_INTF_NUM,                          /* bInterfaceNumber: Number of Interface */
+    HID_INTF_NUM,                  /* bInterfaceNumber: Number of Interface */
     0x00,                          /* bAlternateSetting: Alternate setting */
     0x02,                          /* bNumEndpoints */
     0x03,                          /* bInterfaceClass: HID */
@@ -233,15 +233,15 @@ static const uint8_t config_descriptor[] = {
     USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
     HID_IN_EP,                    /* bEndpointAddress: Endpoint Address (IN) */
     0x03,                         /* bmAttributes: Interrupt endpoint */
-    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
-    HIDRAW_INTERVAL,           /* bInterval: Polling Interval */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
     /******************** Descriptor of Custom out endpoint ********************/
     0x07,                         /* bLength: Endpoint Descriptor size */
     USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
     HID_OUT_EP,                   /* bEndpointAddress: Endpoint Address (IN) */
     0x03,                         /* bmAttributes: Interrupt endpoint */
-    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
-    HIDRAW_INTERVAL,       /* bInterval: Polling Interval */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
 #endif
 };
 
@@ -261,7 +261,7 @@ static const uint8_t other_speed_config_descriptor[] = {
     /************** Descriptor of Custom interface *****************/
     0x09,                          /* bLength: Interface Descriptor size */
     USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType: Interface descriptor type */
-    HID_INTF_NUM,                          /* bInterfaceNumber: Number of Interface */
+    HID_INTF_NUM,                  /* bInterfaceNumber: Number of Interface */
     0x00,                          /* bAlternateSetting: Alternate setting */
     0x02,                          /* bNumEndpoints */
     0x03,                          /* bInterfaceClass: HID */
@@ -283,23 +283,23 @@ static const uint8_t other_speed_config_descriptor[] = {
     USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
     HID_IN_EP,                    /* bEndpointAddress: Endpoint Address (IN) */
     0x03,                         /* bmAttributes: Interrupt endpoint */
-    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
-    HIDRAW_INTERVAL,           /* bInterval: Polling Interval */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
     /******************** Descriptor of Custom out endpoint ********************/
     0x07,                         /* bLength: Endpoint Descriptor size */
     USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
     HID_OUT_EP,                   /* bEndpointAddress: Endpoint Address (IN) */
     0x03,                         /* bmAttributes: Interrupt endpoint */
-    WBVAL(HID_PACKET_SIZE),           /* wMaxPacketSize: 4 Byte max */
-    HIDRAW_INTERVAL,       /* bInterval: Polling Interval */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
 #endif
 };
 
 char *string_descriptors[] = {
-    (char[]){ 0x09, 0x04 },         /* Langid */
-    "CherryUSB",                            /* Manufacturer */
-    "CherryUSB CMSIS-DAP",                  /* Product */
-    "00000000000000000123456789ABCDEF",     /* Serial Number */
+    (char[]){ 0x09, 0x04 },             /* Langid */
+    "CherryUSB",                        /* Manufacturer */
+    "CherryUSB CMSIS-DAP",              /* Product */
+    "00000000000000000123456789ABCDEF", /* Serial Number */
 };
 
 static const uint8_t device_quality_descriptor[] = {
@@ -351,16 +351,16 @@ static const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0x09, 0x02,       /*   USAGE (Vendor Usage 1) */
     0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
     0x25, 0xff,       /*LOGICAL_MAXIMUM (255) */
-    0x75, 0x08,        /*   REPORT_SIZE (8) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
     0x96, 0xff, 0x03, /*   REPORT_COUNT (63) */
     0x81, 0x02,       /*   INPUT (Data,Var,Abs) */
     /* <___________________________________________________> */
     0x85, 0x01,       /*   REPORT ID (0x01) */
     0x09, 0x03,       /*   USAGE (Vendor Usage 1) */
     0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
-    0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
+    0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
     0x75, 0x08,       /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03,   /*   REPORT_COUNT (63) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (63) */
     0x91, 0x02,       /*   OUTPUT (Data,Var,Abs) */
     /* USER CODE END 0 */
     0xC0 /*     END_COLLECTION	             */
@@ -535,7 +535,7 @@ __WEAK void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbyt
 {
     (void)busid;
     USB_LOG_RAW("actual in len:%d\r\n", nbytes);
-//    custom_state = HID_STATE_IDLE;
+    //    custom_state = HID_STATE_IDLE;
 }
 
 __WEAK void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
@@ -610,8 +610,8 @@ void chry_dap_init(uint8_t busid, uint32_t reg_base)
     chry_dap_state_init();
 
     usbd_desc_register(0, &cmsisdap_descriptor);
-//    usbd_bos_desc_register(0, &bos_desc);
-//    usbd_msosv2_desc_register(0, &msosv2_desc);
+    //    usbd_bos_desc_register(0, &bos_desc);
+    //    usbd_msosv2_desc_register(0, &msosv2_desc);
 
     /*!< winusb */
     usbd_add_interface(0, &dap_intf);
