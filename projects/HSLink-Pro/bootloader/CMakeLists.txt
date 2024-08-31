@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 set(APP_NAME HSLink-Pro-Bootloader)
 
+set(CONFIG_DMA_MGR 1)
+
 set(CONFIG_CHERRYUSB 1)
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_USB_DEVICE_MSC 1)
