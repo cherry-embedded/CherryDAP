@@ -52,12 +52,6 @@ jobs:
           cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_xip -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
           cmake --build ./build
 
-      - name: Upload bootloader
-        uses: actions/upload-artifact@v4
-        with:
-          name: release
-          path: projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin
-
       - name: Build APP
         run: |
           cd projects/HSLink-Pro/src
@@ -69,21 +63,17 @@ jobs:
           cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_uf2 -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HSLINK_PRO_EXPANSION=ON -DCONFIG_SWDIO_DIR=IOC_PAD_PA30 . -B=./build
           cmake --build ./build
 
-      - name: Upload APP
-        uses: actions/upload-artifact@v4
-        with:
-          name: release
-          path: |
-            projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2
-            projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
-
       - name: Merge Bin
         run: |
           cd projects/HSLink-Pro
           python3 ./scripts/MergeBin.py -o . "./bootloader/build/output/HSLink-Pro-Bootloader.bin@0x00" "./src/build/output/HSLink-Pro.bin@0x1FC00"
       
-      - name: Upload merged bin
+      - name: Upload file
         uses: actions/upload-artifact@v4
         with:
           name: release
-          path: projects/HSLink-Pro/Merger.bin
+          path: |
+            projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin
+            projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2
+            projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
+            projects/HSLink-Pro/Merger.bin
