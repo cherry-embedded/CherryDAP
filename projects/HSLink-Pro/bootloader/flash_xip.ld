@@ -13,7 +13,7 @@ __bootloader_reserved_length__ = 512;
 
 MEMORY
 {
-    XPI0 (rx) : ORIGIN = 0x80000000, LENGTH = _flash_size
+    XPI0 (rx) : ORIGIN = 0x80000000, LENGTH = 128k
     ILM (wx) : ORIGIN = 0x00000000, LENGTH = 128K
     DLM (w) : ORIGIN = 0x00080000, LENGTH = 128K
     AHB_SRAM (w) : ORIGIN = 0xf0400000, LENGTH = 32K
