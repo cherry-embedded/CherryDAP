@@ -66,14 +66,23 @@ jobs:
       - name: Merge Bin
         run: |
           cd projects/HSLink-Pro
-          python3 ./scripts/MergerBin.py -o . "./bootloader/build/output/HSLink-Pro-Bootloader.bin@0x00" "./src/build/output/HSLink-Pro.bin@0x1FC00"
+          cp bootloader/build/output/HSLink-Pro-Bootloader.bin Merger.bin
+          dd if=src/build/output/HSLink-Pro.bin of=Merger.bin bs=1024 seek=127 conv=notrunc
+
+      - run: |
+          mkdir -p releases
+          cd releases
+          cp ../projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin HSLink-Pro-Bootloader.bin
+          cp ../projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2 HSLink-Pro.uf2
+          cp ../projects/HSLink-Pro/src/build/output/HSLink-Pro.bin HSLink-Pro.bin
+          cp ../projects/HSLink-Pro/Merger.bin Merger.bin
       
       - name: Upload file
         uses: actions/upload-artifact@v4
         with:
           name: release
           path: |
-            projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin
-            projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2
-            projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
-            projects/HSLink-Pro/Merger.bin
+            releases/HSLink-Pro-Bootloader.bin
+            releases/HSLink-Pro.uf2
+            releases/HSLink-Pro.bin
+            releases/Merger.bin
