@@ -86,7 +86,6 @@ void uartx_preinit(void)
     clock_add_to_group(UART_CLK_NAME, 0);
     intc_m_enable_irq_with_priority(UART_IRQ, 2);
     uart_clear_rxline_idle_flag(UART_BASE);
-    dma_mgr_init();
     if (board_uart_dma_config() != status_success) {
         return;
     }

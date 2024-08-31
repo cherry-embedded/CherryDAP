@@ -24,6 +24,8 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(HSLink-Pro)
 
+add_subdirectory(../WS2812 ${CMAKE_CURRENT_BINARY_DIR}/ws2812)
+
 # 设置版本号
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
     file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/.version BUILD_VERSION)
@@ -76,6 +78,8 @@ sdk_inc(.)
 sdk_inc(../../..)
 sdk_inc(../../../CherryRB)
 sdk_inc(../../../DAP/Include)
+
+sdk_inc(../common)
 
 sdk_app_src(../../../dap_main.c)
 sdk_app_src(../../../DAP/Source/DAP_vendor.c)

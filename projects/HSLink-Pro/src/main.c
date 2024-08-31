@@ -1,6 +1,8 @@
 #include <hpm_romapi.h>
+#include <hpm_dma_mgr.h>
 #include "board.h"
 #include "dap_main.h"
+#include "WS2812.h"
 #include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
 
 extern void uartx_preinit(void);
@@ -31,6 +33,7 @@ int main(void)
     serial_number_init();
     board_init_led_pins();
     board_init_usb_pins();
+    dma_mgr_init();
 
     printf("version: %s\n", DAP_FW_VER);
     extern char *string_descriptors[];
@@ -39,6 +42,7 @@ int main(void)
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     uartx_preinit();
 
+    WS2812_Init();
     HSP_Init();
 
     chry_dap_init(0, CONFIG_HPM_USBD_BASE);
