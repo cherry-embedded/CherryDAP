@@ -38,7 +38,7 @@ void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
     uint32_t link_addr = ptr->CHCTRL[channel].LLPOINTER;
     uint32_t rx_desc_size = (sizeof(rx_descriptors) / sizeof(dma_linked_descriptor_t));
     if (rx_resource->channel == channel) {
-        if (link_addr == NULL) {
+        if (link_addr == (uint32_t)NULL) {
             board_uart_rx_dma_restart();
             return;
         }
