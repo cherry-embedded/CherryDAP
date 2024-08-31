@@ -396,7 +396,7 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
             usbd_ep_start_read(0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
 
 #ifdef CONFIG_USE_HID_CONFIG
-            usbd_ep_start_read(HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
+            usbd_ep_start_read(0, HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
 #endif
 
             break;
@@ -500,18 +500,20 @@ static struct usbd_endpoint cdc_in_ep = {
 
 #ifdef CONFIG_USE_HID_CONFIG
 
-__WEAK void usbd_hid_custom_in_callback(uint8_t ep, uint32_t nbytes)
+__WEAK void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     USB_LOG_RAW("actual in len:%d\r\n", nbytes);
 //    custom_state = HID_STATE_IDLE;
 }
 
-__WEAK void usbd_hid_custom_out_callback(uint8_t ep, uint32_t nbytes)
+__WEAK void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     USB_LOG_RAW("actual out len:%d\r\n", nbytes);
-    usbd_ep_start_read( ep, read_buffer, HID_PACKET_SIZE);
+    usbd_ep_start_read(0, ep, read_buffer, HID_PACKET_SIZE);
     read_buffer[0] = 0x02; /* IN: report id */
-    usbd_ep_start_write(HID_IN_EP, read_buffer, nbytes);
+    usbd_ep_start_write(0, HID_IN_EP, read_buffer, nbytes);
 }
 
 static struct usbd_endpoint hid_custom_in_ep = {
