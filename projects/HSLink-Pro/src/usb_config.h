@@ -9,7 +9,7 @@
 
 #include "hpm_soc.h"
 
-#define CHERRYUSB_VERSION 0x001002
+//#define CHERRYUSB_VERSION 0x001002
 
 /* ================ USB common Configuration ================ */
 
@@ -130,6 +130,16 @@
 
 #ifndef CONFIG_USBHOST_MSC_TIMEOUT
 #define CONFIG_USBHOST_MSC_TIMEOUT 5000
+#endif
+
+/* ================ USB Device Port Configuration ================*/
+
+#ifndef CONFIG_USBDEV_MAX_BUS
+#define CONFIG_USBDEV_MAX_BUS 1 // for now, bus num must be 1 except hpm ip
+#endif
+
+#ifndef CONFIG_USBDEV_EP_NUM
+#define CONFIG_USBDEV_EP_NUM 16
 #endif
 
 /* ================ USB Device Port Configuration ================*/

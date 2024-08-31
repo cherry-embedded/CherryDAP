@@ -39,7 +39,7 @@ int main(void)
 
     HSP_Init();
 
-    chry_dap_init();
+    chry_dap_init(0, CONFIG_HPM_USBD_BASE);
     while (1) {
         chry_dap_handle();
         chry_dap_usb2uart_handle();

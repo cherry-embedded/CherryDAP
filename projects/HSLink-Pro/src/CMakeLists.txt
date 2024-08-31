@@ -40,7 +40,7 @@ sdk_inc(../../../CherryUSB/class/msc)
 sdk_inc(../../../CherryUSB/class/hid)
 sdk_src(../../../CherryUSB/core/usbd_core.c)
 sdk_src(../../../CherryUSB/port/hpm/usb_dc_hpm.c)
-sdk_src(../../../CherryUSB/class/cdc/usbd_cdc.c)
+sdk_src(../../../CherryUSB/class/cdc/usbd_cdc_acm.c)
 sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
 
 # swj_clock default use keil swd frequency boost

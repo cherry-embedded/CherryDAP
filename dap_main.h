@@ -9,7 +9,7 @@
 extern chry_ringbuffer_t g_uartrx;
 extern chry_ringbuffer_t g_usbrx;
 
-void chry_dap_init(void);
+void chry_dap_init(uint8_t busid, uint32_t base);
 void chry_dap_handle(void);
 void chry_dap_usb2uart_handle(void);
 
