@@ -134,7 +134,7 @@ int main(void)
     WS2812_Init();
 
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
-    printf("cherry usb msc device sample.\n");
+    printf("HSLink Pro UF2 Bootloader\n");
 
     extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
     msc_bootuf2_init(0, CONFIG_HPM_USBD_BASE);

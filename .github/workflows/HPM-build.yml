@@ -55,7 +55,7 @@ jobs:
       - name: Upload bootloader
         uses: actions/upload-artifact@v4
         with:
-          name: bootloader
+          name: release
           path: projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin
 
       - name: Build APP
@@ -72,7 +72,18 @@ jobs:
       - name: Upload APP
         uses: actions/upload-artifact@v4
         with:
-          name: app
+          name: release
           path: |
             projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2
             projects/HSLink-Pro/src/build/output/HSLink-Pro.bin
+
+      - name: Merge Bin
+        run: |
+          cd projects/HSLink-Pro
+          python3 ./scripts/MergeBin.py -o . "./bootloader/build/output/HSLink-Pro-Bootloader.bin@0x00" "./src/build/output/HSLink-Pro.bin@0x1FC00"
+      
+      - name: Upload merged bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: projects/HSLink-Pro/Merger.bin
