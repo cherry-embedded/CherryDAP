@@ -48,20 +48,10 @@ sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
 # swj_clock default use keil swd frequency boost
 sdk_compile_definitions(-DBOOST_KEIL_SWD_FREQ=0)
 
-if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO AND (CONFIG_USE_HPM_BOARD_JTAG_GPIO EQUAL "1"))
-    sdk_compile_definitions(-DUSE_HPM_BOARD_JTAG_GPIO=1)
-    sdk_compile_definitions(-DPIN_LED_CONNECTED=IOC_PAD_PA10)
-    sdk_compile_definitions(-DPIN_LED_RUNNING=IOC_PAD_PA10)
-    sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PA08)
-    sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PA08)
-    sdk_compile_definitions(-DLED_ACTIVE_LEVEL=1)
-else ()
-    sdk_compile_definitions(-DPIN_LED_CONNECTED=IOC_PAD_PA05)
-    sdk_compile_definitions(-DPIN_LED_RUNNING=IOC_PAD_PA05)
-    sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
-    sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
-    sdk_compile_definitions(-DLED_ACTIVE_LEVEL=1)
-endif ()
+sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
+sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
+
+sdk_compile_definitions(-DCONFIG_WS2812=1)
 
 if (CONFIG_SWDIO_DIR)
     sdk_compile_definitions(-DSWDIO_DIR=${CONFIG_SWDIO_DIR})
@@ -100,6 +90,7 @@ endif ()
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
 sdk_app_src(../common/HSLink_Pro_expansion.c)
+sdk_compile_options("-g")
 
 # 执行完之后转换为uf2
 add_custom_command(

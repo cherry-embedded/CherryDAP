@@ -9,6 +9,7 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <hpm_romapi.h>
+#include <WS2812.h>
 #include "HSLink_Pro_expansion.h"
 #include "board.h"
 #include "hpm_gptmr_drv.h"
@@ -33,6 +34,8 @@ const uint8_t DEFAULT_ADC_CYCLE = 20;
 static uint32_t pwm_current_reload;
 
 static uint64_t MCHTMR_CLK_FREQ = 0;
+
+volatile bool WS2812_Update_Flag = false;
 
 static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
 {
@@ -251,6 +254,8 @@ void HSP_Init(void)
     TVCC_Init();
 
     BOOT_Init();
+
+    WS2812_Init();
 }
 
 void HSP_Loop(void)
@@ -280,5 +285,10 @@ void HSP_Loop(void)
         };
 
         ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
+    }
+
+    if (WS2812_Update_Flag) {
+        WS2812_Update();
+        WS2812_Update_Flag = false;
     }
 }

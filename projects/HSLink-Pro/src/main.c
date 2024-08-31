@@ -39,11 +39,10 @@ int main(void)
     extern char *string_descriptors[];
     string_descriptors[3] = serial_number;
 
-    intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
-    uartx_preinit();
-
-    WS2812_Init();
     HSP_Init();
+
+    intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
+    uartx_preinit();
 
     chry_dap_init(0, CONFIG_HPM_USBD_BASE);
     while (1) {
