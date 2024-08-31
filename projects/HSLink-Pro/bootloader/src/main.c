@@ -107,6 +107,14 @@ static void show_rainbow(void)
     }
 }
 
+static void TurnOffLED(void)
+{
+    WS2812_SetPixel(0, 0, 0, 0);
+    WS2812_Update();
+    while (WS2812_IsBusy())
+        ;
+}
+
 int main(void)
 {
     board_init();
@@ -115,6 +123,7 @@ int main(void)
     HSP_Init(); // 关闭电源输出，将电平修改为3.3V
     board_init_usb_pins();
     bootloader_button_init();
+    WS2812_Init();
 
     if (bl_setting.magic != BL_SETTING_MAGIC)
     {
@@ -128,12 +137,11 @@ int main(void)
     )
     {
         USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
+        TurnOffLED();
         jump_app();
         while (1)
             ;
     }
-
-    WS2812_Init();
 
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     printf("HSLink Pro UF2 Bootloader\n");
@@ -146,11 +154,7 @@ int main(void)
         if (bootuf2_is_write_done())
         {
             USB_LOG_INFO("Update success! Jump to application.\n");
-
-            // 关闭灯珠
-            WS2812_SetPixel(0, 0, 0, 0);
-            WS2812_Update();
-
+            TurnOffLED();
             jump_app();
             while (1)
                 ;
