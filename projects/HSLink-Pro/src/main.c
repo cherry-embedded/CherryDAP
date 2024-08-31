@@ -33,6 +33,8 @@ int main(void)
     board_init_usb_pins();
 
     printf("version: %s\n", DAP_FW_VER);
+    extern char *string_descriptors[];
+    string_descriptors[3] = serial_number;
 
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     uartx_preinit();

@@ -31,6 +31,8 @@
 #define CONFIG_USB_ALIGN_SIZE 4
 #endif
 
+#define CONFIG_USBDEV_ADVANCE_DESC
+
 /* attribute data into no cache ram */
 #define USB_NOCACHE_RAM_SECTION __attribute__((section(".noncacheable")))
 
