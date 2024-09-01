@@ -18,8 +18,6 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
-#define SWD_SPI_BASE               BOARD_APP_SPI_BASE
-#define SWD_SPI_BASE_CLOCK_NAME    BOARD_APP_SPI_CLK_NAME
 #define SWD_SPI_SCLK_FREQ          (20000000UL)
 
 #define SWD_SPI_DMA           BOARD_APP_HDMA
@@ -371,36 +369,6 @@ static void swd_emulation_init(void)
     control_config.common_config.data_phase_fmt = spi_single_io_mode;
     control_config.common_config.dummy_cnt = spi_dummy_count_1;
     spi_control_init(SWD_SPI_BASE, &control_config, 1, 1);
-}
-
-void set_swj_clock_frequency(uint32_t clock)
-{
-    uint8_t div, sclk_div;
-    clk_src_t src_clock = clk_src_pll1_clk0; /* 800M */
-    if (clock >= 10000000) { /* clock >= 10M */
-        sclk_div = 0xFF; /* actual 80M*/
-        div = 10;
-    } else if ((clock >= 5000000) && (clock < 10000000)) { /* 5M <= clock < 10M */
-        sclk_div = 0xFF; /* actual 50M*/
-        div = 16;
-    } else if ((clock >= 2000000) && (clock < 5000000)) { /* 2M <= clock < 5M */
-        sclk_div = 1; /* actual 20M */
-        div = 10;
-    } else if ((clock >= 1000000) && (clock < 2000000)) { /* 1M <= clock < 2M */
-        sclk_div = 3; /* actual 10M */
-        div = 10;
-    } else if ((clock >= 500000) && (clock < 1000000)) { /* 500K <= clock < 1M */
-        sclk_div = 7; /* actual 5M */
-        div = 10;
-    } else if ((clock >= 200000) && (clock < 500000)) { /* 200K <= clock < 500K */
-        sclk_div = 19; /* actual 2M */
-        div = 10;
-    } else {
-        sclk_div = 39; /* actual 1M */
-        div = 10;
-    }
-    spi_master_set_sclk_div(SWD_SPI_BASE, sclk_div);
-    clock_set_source_divider(SWD_SPI_BASE_CLOCK_NAME, src_clock, div);
 }
 
 
