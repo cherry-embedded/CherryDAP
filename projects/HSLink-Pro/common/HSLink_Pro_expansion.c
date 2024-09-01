@@ -212,16 +212,6 @@ static inline void BOOT_Init(void)
     gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
 }
 
-ATTR_ALWAYS_INLINE
-static inline void SWDIO_DIR_Init(void)
-{
-    HPM_IOC->PAD[SWDIO_DIR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);;
-
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), gpiom_core0_fast);
-    gpio_set_pin_output(HPM_FGPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR));
-    gpio_write_pin(HPM_FGPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
-}
-
 static uint32_t millis(void)
 {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
@@ -262,8 +252,6 @@ void HSP_Init(void)
     ADC_Init();
     VREF_Init();
     TVCC_Init();
-
-    SWDIO_DIR_Init();
 
     BOOT_Init();
 
