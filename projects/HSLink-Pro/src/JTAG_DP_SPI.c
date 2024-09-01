@@ -86,6 +86,12 @@ void PORT_JTAG_SETUP(void)
     HPM_IOC->PAD[PIN_SINGLE_SPI_JTAG_TMS].PAD_CTL = IOC_PAD_PAD_CTL_SR_MASK | IOC_PAD_PAD_CTL_SPD_SET(3);
     gpiom_configure_pin_control_setting(PIN_SINGLE_SPI_JTAG_TMS);
     gpio_set_pin_output(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS));
+
+    HPM_IOC->PAD[SWDIO_DIR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    gpiom_configure_pin_control_setting(SWDIO_DIR);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR));
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1); // TMS引脚在JTAG下始终为输出
+
 #if defined(USE_GPIO_1_BIT) && (USE_GPIO_1_BIT == 1)
     gpiom_configure_pin_control_setting(PIN_JTAG_TCK);
     gpiom_configure_pin_control_setting(PIN_JTAG_TDO);

@@ -61,14 +61,14 @@ if (DEFINED CONFIG_USE_SPI_SWD AND (CONFIG_USE_SPI_SWD EQUAL "1"))
     sdk_compile_definitions(-DUSE_SPI_SWD=1)
     sdk_app_src(SW_DP_SPI.c)
 else ()
-    sdk_app_src(../../DAP/Source/SW_DP.c)
+    sdk_app_src(../../../DAP/Source/SW_DP.c)
 endif ()
 
 if (DEFINED CONFIG_USE_SPI_JTAG AND (CONFIG_USE_SPI_JTAG EQUAL "1"))
     sdk_compile_definitions(-DUSE_SPI_JTAG=1)
     sdk_app_src(JTAG_DP_SPI.c)
 else ()
-    sdk_app_src(../../DAP/Source/JTAG_DP.c)
+    sdk_app_src(../../../DAP/Source/JTAG_DP.c)
 endif ()
 
 
