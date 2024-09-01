@@ -17,7 +17,7 @@ set(CONFIG_USE_HPM_BOARD_JTAG_GPIO 0)
 
 if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPIO EQUAL "0"))
     set(CONFIG_USE_SPI_SWD 1)
-    set(CONFIG_USE_SPI_JTAG 0)
+    set(CONFIG_USE_SPI_JTAG 1)
 endif ()
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
@@ -64,6 +64,14 @@ else ()
     sdk_app_src(../../DAP/Source/SW_DP.c)
 endif ()
 
+if (DEFINED CONFIG_USE_SPI_JTAG AND (CONFIG_USE_SPI_JTAG EQUAL "1"))
+    sdk_compile_definitions(-DUSE_SPI_JTAG=1)
+    sdk_app_src(JTAG_DP_SPI.c)
+else ()
+    sdk_app_src(../../DAP/Source/JTAG_DP.c)
+endif ()
+
+
 sdk_inc(.)
 sdk_inc(../../..)
 sdk_inc(../../../CherryRB)
@@ -75,11 +83,11 @@ sdk_app_src(../../../dap_main.c)
 sdk_app_src(../../../DAP/Source/DAP_vendor.c)
 sdk_app_src(../../../DAP/Source/DAP.c)
 
-sdk_app_src(../../../DAP/Source/JTAG_DP.c)
 sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.c)
 sdk_app_src(usb2uart.c)
+sdk_app_src(dp_common.c)
 
 if (CONFIG_BUILD_VERSION)
     sdk_compile_definitions(-DDAP_FW_VER="${CONFIG_BUILD_VERSION}")
