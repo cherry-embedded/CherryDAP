@@ -6,15 +6,15 @@
 #include "hpm_sysctl_drv.h"
 #include "dap_main.h"
 
-#define UART_BASE                  BOARD_APP_UART_BASE
-#define UART_IRQ                   BOARD_APP_UART_IRQ
-#define UART_CLK_NAME              BOARD_APP_UART_CLK_NAME
-#define UART_RX_DMA                BOARD_APP_UART_RX_DMA_REQ
+#define UART_BASE                  HPM_UART2
+#define UART_IRQ                   IRQn_UART2
+#define UART_CLK_NAME              clock_uart2
+#define UART_RX_DMA                HPM_DMA_SRC_UART2_RX
 #define UART_RX_DMA_RESOURCE_INDEX (0U)
 #define UART_RX_DMA_BUFFER_SIZE    (8192U)
 #define UART_RX_DMA_BUFFER_COUNT   (5)
 
-#define UART_TX_DMA                BOARD_APP_UART_TX_DMA_REQ
+#define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
 #define UART_TX_DMA_RESOURCE_INDEX (1U)
 #define UART_TX_DMA_BUFFER_SIZE    (8192U)
 
@@ -81,7 +81,10 @@ SDK_DECLARE_EXT_ISR_M(UART_IRQ, uart_isr)
 
 void uartx_preinit(void)
 {
-    board_init_uart(UART_BASE);
+    // board_init_uart(UART_BASE);
+    HPM_IOC->PAD[IOC_PAD_PA09].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
+    HPM_IOC->PAD[IOC_PAD_PA08].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
+
     clock_set_source_divider(UART_CLK_NAME, clk_src_pll1_clk0, 8);
     clock_add_to_group(UART_CLK_NAME, 0);
     intc_m_enable_irq_with_priority(UART_IRQ, 2);
