@@ -52,7 +52,8 @@ int main(void)
 
     printf("version: %s\n", DAP_FW_VER);
     extern char *string_descriptors[];
-    string_descriptors[3] = serial_number;
+//    string_descriptors[3] = serial_number;
+    memcpy(string_descriptors[3], serial_number, 32);
 
     HSP_Init();
 
