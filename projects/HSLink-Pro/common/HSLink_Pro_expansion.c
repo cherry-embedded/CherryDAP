@@ -37,6 +37,8 @@ static uint64_t MCHTMR_CLK_FREQ = 0;
 
 volatile bool WS2812_Update_Flag = false;
 
+static const uint32_t CONFIG_P_EN = IOC_PAD_PA31;
+
 static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
 {
     gptmr_channel_config_t config;
@@ -77,13 +79,13 @@ static void Power_Enable_Init(void)
 ATTR_ALWAYS_INLINE
 static inline void Power_Turn_On(void)
 {
-    gpio_write_pin(HPM_GPIO0, GPIO_DO_GPIOY, 0, 1);
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 1);
 }
 
 ATTR_ALWAYS_INLINE
 static inline void Power_Turn_Off(void)
 {
-    gpio_write_pin(HPM_GPIO0, GPIO_DO_GPIOY, 0, 0);
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
 }
 
 static void Power_PWM_Init(void)
