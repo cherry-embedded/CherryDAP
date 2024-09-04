@@ -194,13 +194,13 @@ static inline void TVCC_Init(void)
 ATTR_ALWAYS_INLINE
 static inline double Get_VREF_Voltage(void)
 {
-    return (double)Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535;
+    return (double)Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
 static double inline Get_TVCC_Voltage(void)
 {
-    return (double)Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535;
+    return (double)Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
