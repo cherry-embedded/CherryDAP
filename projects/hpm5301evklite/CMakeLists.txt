@@ -60,13 +60,6 @@ else()
 sdk_app_src(../../DAP/Source/JTAG_DP.c)
 endif()
 
-if(CONFIG_USE_SPI_SWD)
-sdk_compile_definitions(-DUSE_SPI_SWD=1)
-sdk_app_src(SW_DP_SPI.c)
-else()
-sdk_app_src(../../DAP/Source/SW_DP.c)
-endif()
-
 sdk_inc(./)
 sdk_inc(../..)
 sdk_inc(../../CherryRB)
