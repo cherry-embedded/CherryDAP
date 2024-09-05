@@ -9,7 +9,7 @@ int main(void)
 
     uartx_preinit();
 
-    chry_dap_init();
+    chry_dap_init(0, 0x20072000);
     while (1) {
         chry_dap_handle();
         chry_dap_usb2uart_handle();
