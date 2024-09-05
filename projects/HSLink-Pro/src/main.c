@@ -1,0 +1,69 @@
+#include <hpm_romapi.h>
+#include <hpm_dma_mgr.h>
+#include <hpm_gpio_drv.h>
+#include <hpm_gpiom_drv.h>
+#include "board.h"
+#include "dap_main.h"
+#include "WS2812.h"
+#include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
+
+extern void uartx_preinit(void);
+
+char serial_number[32];
+
+static void serial_number_init(void)
+{
+#define OTP_CHIP_UUID_IDX_START (88U)
+#define OTP_CHIP_UUID_IDX_END   (91U)
+    uint32_t uuid_words[4];
+
+    uint32_t word_idx = 0;
+    for (uint32_t i = OTP_CHIP_UUID_IDX_START; i <= OTP_CHIP_UUID_IDX_END; i++) {
+        uuid_words[word_idx++] = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(i);
+    }
+
+    char chip_id[32];
+    sprintf(chip_id, "%08X%08X%08X%08X", uuid_words[0], uuid_words[1], uuid_words[2], uuid_words[3]);
+    memcpy(serial_number, chip_id, 32);
+
+    printf("Serial number: %s\n", serial_number);
+}
+
+ATTR_ALWAYS_INLINE
+static inline void SWDIO_DIR_Init(void)
+{
+    HPM_IOC->PAD[SWDIO_DIR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);;
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), gpiom_core0_fast);
+    gpio_set_pin_output(HPM_FGPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR));
+    gpio_write_pin(HPM_FGPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+}
+
+
+int main(void)
+{
+    board_init();
+    serial_number_init();
+    board_init_led_pins();
+    board_init_usb_pins();
+    dma_mgr_init();
+
+    SWDIO_DIR_Init();
+
+    printf("version: %s\n", DAP_FW_VER);
+    extern char *string_descriptors[];
+//    string_descriptors[3] = serial_number;
+    memcpy(string_descriptors[3], serial_number, 32);
+
+    HSP_Init();
+
+    intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
+    uartx_preinit();
+
+    chry_dap_init(0, CONFIG_HPM_USBD_BASE);
+    while (1) {
+        chry_dap_handle();
+        chry_dap_usb2uart_handle();
+        HSP_Loop();
+    }
+}

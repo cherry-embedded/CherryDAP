@@ -2,6 +2,10 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
+#ifdef CONFIG_USE_HID_CONFIG
+#include "usbd_hid.h"
+#endif
+
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
 
@@ -12,19 +16,52 @@
 #define MSC_IN_EP  0x86
 #define MSC_OUT_EP 0x07
 
+#ifdef CONFIG_USE_HID_CONFIG
+#define HID_IN_EP  0x88
+#define HID_OUT_EP 0x09
+
+#ifdef CONFIG_USB_HS
+#define HID_PACKET_SIZE 1024
+#else
+#define HID_PACKET_SIZE 64
+#endif
+
+#endif
+
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204
 #define USBD_MAX_POWER     500
 #define USBD_LANGID_STRING 1033
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
-#ifndef CONFIG_CHERRYDAP_USE_MSC
-#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN)
-#define INTF_NUM        3
+
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+#define CONFIG_MSC_DESCRIPTOR_LEN CDC_ACM_DESCRIPTOR_LEN
+#define CONFIG_MSC_INTF_NUM       1
+#define MSC_INTF_NUM              (0x02 + 1)
 #else
-#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + MSC_DESCRIPTOR_LEN)
-#define INTF_NUM        4
+#define CONFIG_MSC_DESCRIPTOR_LEN 0
+#define CONFIG_MSC_INTF_NUM       0
+#define MSC_INTF_NUM              (0x02)
 #endif
+
+#ifdef CONFIG_USE_HID_CONFIG
+#define CONFIG_HID_DESCRIPTOR_LEN   (9 + 9 + 7 + 7)
+#define CONFIG_HID_INTF_NUM         1
+#define HID_CUSTOM_REPORT_DESC_SIZE 38
+#define HIDRAW_INTERVAL             4
+#define HID_INTF_NUM                (MSC_INTF_NUM + 1)
+
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[HID_PACKET_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[HID_PACKET_SIZE];
+#else
+#define CONFIG_HID_DESCRIPTOR_LEN 0
+#define CONFIG_HID_INTF_NUM       0
+#define HID_INTF_NUM              (MSC_INTF_NUM)
+#endif
+
+#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + CONFIG_MSC_DESCRIPTOR_LEN + CONFIG_HID_DESCRIPTOR_LEN)
+#define INTF_NUM        (2 + 1 + CONFIG_MSC_INTF_NUM + CONFIG_HID_INTF_NUM)
 
 #ifdef CONFIG_USB_HS
 #if DAP_PACKET_SIZE != 512
@@ -154,9 +191,11 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
 #endif
 };
 
-const uint8_t cmsisdap_descriptor[] = {
+static const uint8_t device_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_1, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
-    /* Configuration 0 */
+};
+
+static const uint8_t config_descriptor[] = {
     USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
     /* Interface 0 */
     USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
@@ -166,75 +205,167 @@ const uint8_t cmsisdap_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #ifdef CONFIG_CHERRYDAP_USE_MSC
-    MSC_DESCRIPTOR_INIT(0x03, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #endif
-    /* String 0 (LANGID) */
-    USB_LANGID_INIT(USBD_LANGID_STRING),
-    /* String 1 (Manufacturer) */
-    0x14,                       /* bLength */
-    USB_DESCRIPTOR_TYPE_STRING, /* bDescriptorType */
-    'C', 0x00,                  /* wcChar0 */
-    'h', 0x00,                  /* wcChar1 */
-    'e', 0x00,                  /* wcChar2 */
-    'r', 0x00,                  /* wcChar3 */
-    'r', 0x00,                  /* wcChar4 */
-    'y', 0x00,                  /* wcChar5 */
-    'U', 0x00,                  /* wcChar6 */
-    'S', 0x00,                  /* wcChar7 */
-    'B', 0x00,                  /* wcChar8 */
-    /* String 2 (Product) */
-    0x28,                       // bLength
-    USB_DESCRIPTOR_TYPE_STRING, // bDescriptorType
-    'C', 0x00,                  // wcChar0
-    'h', 0x00,                  // wcChar1
-    'e', 0x00,                  // wcChar2
-    'r', 0x00,                  // wcChar3
-    'r', 0x00,                  // wcChar4
-    'y', 0x00,                  // wcChar5
-    'U', 0x00,                  // wcChar6
-    'S', 0x00,                  // wcChar7
-    'B', 0x00,                  // wcChar8
-    ' ', 0x00,                  // wcChar9
-    'C', 0x00,                  // wcChar10
-    'M', 0x00,                  // wcChar11
-    'S', 0x00,                  // wcChar12
-    'I', 0x00,                  // wcChar13
-    'S', 0x00,                  // wcChar14
-    '-', 0x00,                  // wcChar15
-    'D', 0x00,                  // wcChar16
-    'A', 0x00,                  // wcChar17
-    'P', 0x00,                  // wcChar18
-    /* String 3 (Serial Number) */
-    0x1A,                       // bLength
-    USB_DESCRIPTOR_TYPE_STRING, // bDescriptorType
-    '0', 0,                     // wcChar0
-    '1', 0,                     // wcChar1
-    '2', 0,                     // wcChar2
-    '3', 0,                     // wcChar3
-    '4', 0,                     // wcChar4
-    '5', 0,                     // wcChar5
-    'A', 0,                     // wcChar6
-    'B', 0,                     // wcChar7
-    'C', 0,                     // wcChar8
-    'D', 0,                     // wcChar9
-    'E', 0,                     // wcChar10
-    'F', 0,                     // wcChar11
-#ifdef CONFIG_USB_HS
-    /* Device Qualifier */
-    0x0a,
-    USB_DESCRIPTOR_TYPE_DEVICE_QUALIFIER,
-    0x10,
-    0x02,
-    0x00,
-    0x00,
-    0x00,
-    0x40,
+#ifdef CONFIG_USE_HID_CONFIG
+    /************** Descriptor of Custom interface *****************/
+    0x09,                          /* bLength: Interface Descriptor size */
+    USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType: Interface descriptor type */
+    HID_INTF_NUM,                  /* bInterfaceNumber: Number of Interface */
+    0x00,                          /* bAlternateSetting: Alternate setting */
+    0x02,                          /* bNumEndpoints */
+    0x03,                          /* bInterfaceClass: HID */
+    0x01,                          /* bInterfaceSubClass : 1=BOOT, 0=no boot */
+    0x00,                          /* nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
+    0,                             /* iInterface: Index of string descriptor */
+    /******************** Descriptor of Custom HID ********************/
+    0x09,                    /* bLength: HID Descriptor size */
+    HID_DESCRIPTOR_TYPE_HID, /* bDescriptorType: HID */
+    0x11,                    /* bcdHID: HID Class Spec release number */
     0x01,
+    0x00,                        /* bCountryCode: Hardware target country */
+    0x01,                        /* bNumDescriptors: Number of HID class descriptors to follow */
+    0x22,                        /* bDescriptorType */
+    HID_CUSTOM_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
     0x00,
+    /******************** Descriptor of Custom in endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_IN_EP,                    /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
+    /******************** Descriptor of Custom out endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_OUT_EP,                   /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
 #endif
-    /* End */
-    0x00
 };
+
+static const uint8_t other_speed_config_descriptor[] = {
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    /* Interface 0 */
+    USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
+    /* Endpoint OUT 2 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    /* Endpoint IN 1 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#ifdef CONFIG_CHERRYDAP_USE_MSC
+    MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#endif
+#ifdef CONFIG_USE_HID_CONFIG
+    /************** Descriptor of Custom interface *****************/
+    0x09,                          /* bLength: Interface Descriptor size */
+    USB_DESCRIPTOR_TYPE_INTERFACE, /* bDescriptorType: Interface descriptor type */
+    HID_INTF_NUM,                  /* bInterfaceNumber: Number of Interface */
+    0x00,                          /* bAlternateSetting: Alternate setting */
+    0x02,                          /* bNumEndpoints */
+    0x03,                          /* bInterfaceClass: HID */
+    0x01,                          /* bInterfaceSubClass : 1=BOOT, 0=no boot */
+    0x00,                          /* nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
+    0,                             /* iInterface: Index of string descriptor */
+    /******************** Descriptor of Custom HID ********************/
+    0x09,                    /* bLength: HID Descriptor size */
+    HID_DESCRIPTOR_TYPE_HID, /* bDescriptorType: HID */
+    0x11,                    /* bcdHID: HID Class Spec release number */
+    0x01,
+    0x00,                        /* bCountryCode: Hardware target country */
+    0x01,                        /* bNumDescriptors: Number of HID class descriptors to follow */
+    0x22,                        /* bDescriptorType */
+    HID_CUSTOM_REPORT_DESC_SIZE, /* wItemLength: Total length of Report descriptor */
+    0x00,
+    /******************** Descriptor of Custom in endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_IN_EP,                    /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
+    /******************** Descriptor of Custom out endpoint ********************/
+    0x07,                         /* bLength: Endpoint Descriptor size */
+    USB_DESCRIPTOR_TYPE_ENDPOINT, /* bDescriptorType: */
+    HID_OUT_EP,                   /* bEndpointAddress: Endpoint Address (IN) */
+    0x03,                         /* bmAttributes: Interrupt endpoint */
+    WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */
+    HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
+#endif
+};
+
+char *string_descriptors[] = {
+    (char[]){ 0x09, 0x04 },             /* Langid */
+    "CherryUSB",                        /* Manufacturer */
+    "CherryUSB CMSIS-DAP",              /* Product */
+    "00000000000000000123456789ABCDEF", /* Serial Number */
+};
+
+static const uint8_t device_quality_descriptor[] = {
+    USB_DEVICE_QUALIFIER_DESCRIPTOR_INIT(USB_2_1, 0x00, 0x00, 0x00, 0x01),
+};
+
+static const uint8_t *device_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return device_descriptor;
+}
+
+static const uint8_t *config_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return config_descriptor;
+}
+
+static const uint8_t *device_quality_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return device_quality_descriptor;
+}
+
+static const uint8_t *other_speed_config_descriptor_callback(uint8_t speed)
+{
+    (void)speed;
+    return other_speed_config_descriptor;
+}
+
+static const char *string_descriptor_callback(uint8_t speed, uint8_t index)
+{
+    (void)speed;
+
+    if (index >= (sizeof(string_descriptors) / sizeof(char *))) {
+        return NULL;
+    }
+    return string_descriptors[index];
+}
+
+#ifdef CONFIG_USE_HID_CONFIG
+/*!< custom hid report descriptor */
+static const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
+    /* USER CODE BEGIN 0 */
+    0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
+    0x09, 0x01,       /* USAGE (Vendor Usage 1) */
+    0xa1, 0x01,       /* COLLECTION (Application) */
+    0x85, 0x02,       /*   REPORT ID (0x02) */
+    0x09, 0x02,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (63) */
+    0x81, 0x02,       /*   INPUT (Data,Var,Abs) */
+    /* <___________________________________________________> */
+    0x85, 0x01,       /*   REPORT ID (0x01) */
+    0x09, 0x03,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (63) */
+    0x91, 0x02,       /*   OUTPUT (Data,Var,Abs) */
+    /* USER CODE END 0 */
+    0xC0 /*     END_COLLECTION	             */
+};
+#endif
 
 static volatile uint16_t USB_RequestIndexI; // Request  Index In
 static volatile uint16_t USB_RequestIndexO; // Request  Index Out
@@ -270,8 +401,9 @@ static volatile uint8_t uarttx_idle_flag = 0;
 USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_uartrx;
 USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_usbrx;
 
-void usbd_event_handler(uint8_t event)
+void usbd_event_handler(uint8_t busid, uint8_t event)
 {
+    (void)busid;
     switch (event) {
         case USBD_EVENT_RESET:
             usbrx_idle_flag = 0;
@@ -291,8 +423,13 @@ void usbd_event_handler(uint8_t event)
             /* setup first out ep read transfer */
             USB_RequestIdle = 0U;
 
-            usbd_ep_start_read(DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
-            usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+            usbd_ep_start_read(0, DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
+            usbd_ep_start_read(0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+
+#ifdef CONFIG_USE_HID_CONFIG
+            usbd_ep_start_read(0, HID_OUT_EP, read_buffer, HID_PACKET_SIZE);
+#endif
+
             break;
         case USBD_EVENT_SET_REMOTE_WAKEUP:
             break;
@@ -304,8 +441,9 @@ void usbd_event_handler(uint8_t event)
     }
 }
 
-void dap_out_callback(uint8_t ep, uint32_t nbytes)
+void dap_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     if (USB_Request[USB_RequestIndexI][0] == ID_DAP_TransferAbort) {
         DAP_TransferAbort = 1U;
     } else {
@@ -318,17 +456,18 @@ void dap_out_callback(uint8_t ep, uint32_t nbytes)
 
     // Start reception of next request packet
     if ((uint16_t)(USB_RequestCountI - USB_RequestCountO) != DAP_PACKET_COUNT) {
-        usbd_ep_start_read(DAP_OUT_EP, USB_Request[USB_RequestIndexI], DAP_PACKET_SIZE);
+        usbd_ep_start_read(0, DAP_OUT_EP, USB_Request[USB_RequestIndexI], DAP_PACKET_SIZE);
     } else {
         USB_RequestIdle = 1U;
     }
 }
 
-void dap_in_callback(uint8_t ep, uint32_t nbytes)
+void dap_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     if (USB_ResponseCountI != USB_ResponseCountO) {
         // Load data from response buffer to be sent back
-        usbd_ep_start_write(DAP_IN_EP, USB_Response[USB_ResponseIndexO], USB_RespSize[USB_ResponseIndexO]);
+        usbd_ep_start_write(0, DAP_IN_EP, USB_Response[USB_ResponseIndexO], USB_RespSize[USB_ResponseIndexO]);
         USB_ResponseIndexO++;
         if (USB_ResponseIndexO == DAP_PACKET_COUNT) {
             USB_ResponseIndexO = 0U;
@@ -339,29 +478,31 @@ void dap_in_callback(uint8_t ep, uint32_t nbytes)
     }
 }
 
-void usbd_cdc_acm_bulk_out(uint8_t ep, uint32_t nbytes)
+void usbd_cdc_acm_bulk_out(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     chry_ringbuffer_write(&g_usbrx, usb_tmpbuffer, nbytes);
     if (chry_ringbuffer_get_free(&g_usbrx) >= DAP_PACKET_SIZE) {
-        usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+        usbd_ep_start_read(0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
     } else {
         usbrx_idle_flag = 1;
     }
 }
 
-void usbd_cdc_acm_bulk_in(uint8_t ep, uint32_t nbytes)
+void usbd_cdc_acm_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
+    (void)busid;
     uint32_t size;
     uint8_t *buffer;
 
     chry_ringbuffer_linear_read_done(&g_uartrx, nbytes);
     if ((nbytes % DAP_PACKET_SIZE) == 0 && nbytes) {
         /* send zlp */
-        usbd_ep_start_write(CDC_IN_EP, NULL, 0);
+        usbd_ep_start_write(0, CDC_IN_EP, NULL, 0);
     } else {
         if (chry_ringbuffer_get_used(&g_uartrx)) {
             buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
-            usbd_ep_start_write(CDC_IN_EP, buffer, size);
+            usbd_ep_start_write(0, CDC_IN_EP, buffer, size);
         } else {
             usbtx_idle_flag = 1;
         }
@@ -388,10 +529,40 @@ static struct usbd_endpoint cdc_in_ep = {
     .ep_cb = usbd_cdc_acm_bulk_in
 };
 
+#ifdef CONFIG_USE_HID_CONFIG
+
+__WEAK void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
+    (void)busid;
+    USB_LOG_RAW("actual in len:%d\r\n", nbytes);
+    //    custom_state = HID_STATE_IDLE;
+}
+
+__WEAK void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
+    (void)busid;
+    USB_LOG_RAW("actual out len:%d\r\n", nbytes);
+    usbd_ep_start_read(0, ep, read_buffer, HID_PACKET_SIZE);
+    read_buffer[0] = 0x02; /* IN: report id */
+    usbd_ep_start_write(0, HID_IN_EP, read_buffer, nbytes);
+}
+
+static struct usbd_endpoint hid_custom_in_ep = {
+    .ep_cb = usbd_hid_custom_in_callback,
+    .ep_addr = HID_IN_EP
+};
+
+static struct usbd_endpoint hid_custom_out_ep = {
+    .ep_cb = usbd_hid_custom_out_callback,
+    .ep_addr = HID_OUT_EP
+};
+#endif
+
 struct usbd_interface dap_intf;
 struct usbd_interface intf1;
 struct usbd_interface intf2;
 struct usbd_interface intf3;
+struct usbd_interface hid_intf;
 
 static void chry_dap_state_init(void)
 {
@@ -419,7 +590,17 @@ struct usb_bos_descriptor bos_desc = {
     .string_len = USBD_BOS_WTOTALLENGTH
 };
 
-void chry_dap_init(void)
+const struct usb_descriptor cmsisdap_descriptor = {
+    .device_descriptor_callback = device_descriptor_callback,
+    .config_descriptor_callback = config_descriptor_callback,
+    .device_quality_descriptor_callback = device_quality_descriptor_callback,
+    .other_speed_descriptor_callback = other_speed_config_descriptor_callback,
+    .string_descriptor_callback = string_descriptor_callback,
+    .bos_descriptor = &bos_desc,
+    .msosv2_descriptor = &msosv2_desc,
+};
+
+void chry_dap_init(uint8_t busid, uint32_t reg_base)
 {
     chry_ringbuffer_init(&g_uartrx, uartrx_ringbuffer, CONFIG_UARTRX_RINGBUF_SIZE);
     chry_ringbuffer_init(&g_usbrx, usbrx_ringbuffer, CONFIG_USBRX_RINGBUF_SIZE);
@@ -428,25 +609,32 @@ void chry_dap_init(void)
 
     chry_dap_state_init();
 
-    usbd_desc_register(cmsisdap_descriptor);
-    usbd_bos_desc_register(&bos_desc);
-    usbd_msosv2_desc_register(&msosv2_desc);
+    usbd_desc_register(0, &cmsisdap_descriptor);
+    //    usbd_bos_desc_register(0, &bos_desc);
+    //    usbd_msosv2_desc_register(0, &msosv2_desc);
 
     /*!< winusb */
-    usbd_add_interface(&dap_intf);
-    usbd_add_endpoint(&dap_out_ep);
-    usbd_add_endpoint(&dap_in_ep);
+    usbd_add_interface(0, &dap_intf);
+    usbd_add_endpoint(0, &dap_out_ep);
+    usbd_add_endpoint(0, &dap_in_ep);
 
     /*!< cdc acm */
-    usbd_add_interface(usbd_cdc_acm_init_intf(&intf1));
-    usbd_add_interface(usbd_cdc_acm_init_intf(&intf2));
-    usbd_add_endpoint(&cdc_out_ep);
-    usbd_add_endpoint(&cdc_in_ep);
+    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf1));
+    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf2));
+    usbd_add_endpoint(0, &cdc_out_ep);
+    usbd_add_endpoint(0, &cdc_in_ep);
+
+#ifdef CONFIG_USE_HID_CONFIG
+    /*!< hid */
+    usbd_add_interface(0, usbd_hid_init_intf(0, &hid_intf, hid_custom_report_desc, HID_CUSTOM_REPORT_DESC_SIZE));
+    usbd_add_endpoint(0, &hid_custom_in_ep);
+    usbd_add_endpoint(0, &hid_custom_out_ep);
+#endif
 
 #ifdef CONFIG_CHERRYDAP_USE_MSC
-    usbd_add_interface(usbd_msc_init_intf(&intf3, MSC_OUT_EP, MSC_IN_EP));
+    usbd_add_interface(0, usbd_msc_init_intf(0, &intf3, MSC_OUT_EP, MSC_IN_EP));
 #endif
-    usbd_initialize();
+    usbd_initialize(busid, reg_base, usbd_event_handler);
 }
 
 void chry_dap_handle(void)
@@ -485,7 +673,7 @@ void chry_dap_handle(void)
         if (USB_RequestIdle) {
             if ((uint16_t)(USB_RequestCountI - USB_RequestCountO) != DAP_PACKET_COUNT) {
                 USB_RequestIdle = 0U;
-                usbd_ep_start_read(DAP_OUT_EP, USB_Request[USB_RequestIndexI], DAP_PACKET_SIZE);
+                usbd_ep_start_read(0, DAP_OUT_EP, USB_Request[USB_RequestIndexI], DAP_PACKET_SIZE);
             }
         }
 
@@ -505,14 +693,15 @@ void chry_dap_handle(void)
                 }
                 USB_ResponseCountO++;
                 USB_ResponseIdle = 0U;
-                usbd_ep_start_write(DAP_IN_EP, USB_Response[n], USB_RespSize[n]);
+                usbd_ep_start_write(0, DAP_IN_EP, USB_Response[n], USB_RespSize[n]);
             }
         }
     }
 }
 
-void usbd_cdc_acm_set_line_coding(uint8_t intf, struct cdc_line_coding *line_coding)
+void usbd_cdc_acm_set_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding)
 {
+    (void)busid;
     if (memcmp(line_coding, (uint8_t *)&g_cdc_lincoding, sizeof(struct cdc_line_coding)) != 0) {
         memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
         config_uart = 1;
@@ -520,8 +709,9 @@ void usbd_cdc_acm_set_line_coding(uint8_t intf, struct cdc_line_coding *line_cod
     }
 }
 
-void usbd_cdc_acm_get_line_coding(uint8_t intf, struct cdc_line_coding *line_coding)
+void usbd_cdc_acm_get_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding)
 {
+    (void)busid;
     memcpy(line_coding, (uint8_t *)&g_cdc_lincoding, sizeof(struct cdc_line_coding));
 }
 
@@ -557,7 +747,7 @@ void chry_dap_usb2uart_handle(void)
             usbtx_idle_flag = 0;
             /* start first transfer */
             buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
-            usbd_ep_start_write(CDC_IN_EP, buffer, size);
+            usbd_ep_start_write(0, CDC_IN_EP, buffer, size);
         }
     }
 
@@ -575,7 +765,7 @@ void chry_dap_usb2uart_handle(void)
     if (usbrx_idle_flag) {
         if (chry_ringbuffer_get_free(&g_usbrx) >= DAP_PACKET_SIZE) {
             usbrx_idle_flag = 0;
-            usbd_ep_start_read(CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+            usbd_ep_start_read(0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
         }
     }
 }
