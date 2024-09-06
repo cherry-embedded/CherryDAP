@@ -43,7 +43,6 @@ int main(void)
 {
     board_init();
     serial_number_init();
-    board_init_led_pins();
     board_init_usb_pins();
     dma_mgr_init();
 
