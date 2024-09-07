@@ -34,7 +34,7 @@ ATTR_PLACE_AT(".ahb_sram") uint8_t target_ack[4];
 
 static void swd_emulation_init(void);
 
-void PORT_SWD_SETUP(void)
+void SPI_PORT_SWD_SETUP(void)
 {
     board_init_spi_pins(SWD_SPI_BASE);
     HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_SR_MASK | IOC_PAD_PAD_CTL_SPD_SET(3);
@@ -50,7 +50,7 @@ void PORT_SWD_SETUP(void)
 //   data:   pointer to sequence bit data
 //   return: none
 #if ((DAP_SWD != 0) || (DAP_JTAG != 0))
-void SWJ_Sequence (uint32_t count, const uint8_t *data)
+void SPI_SWJ_Sequence (uint32_t count, const uint8_t *data)
 {
     uint32_t n;
     uint32_t integer_val = (count / 8);
@@ -87,7 +87,7 @@ void SWJ_Sequence (uint32_t count, const uint8_t *data)
 //   swdi:   pointer to SWDIO captured data
 //   return: none
 #if (DAP_SWD != 0)
-void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
+void SPI_SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
 {
     uint32_t count, integer_val, remaind_val, n = 0;
 
@@ -151,7 +151,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
 //   request: A[3:2] RnW APnDP
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
-uint8_t  SWD_Transfer(uint32_t request, uint32_t *data)
+uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
 {
     uint8_t ack = 0;
     uint32_t parity = 0;

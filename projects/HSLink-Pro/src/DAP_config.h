@@ -299,6 +299,14 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
     #define PIN_TDO           IOC_PAD_PB12
 #endif
 
+typedef enum {
+    PORT_MODE_GPIO = 0,
+    PORT_MODE_SPI = 1,
+}PORT_Mode_t;
+
+extern PORT_Mode_t SWD_Port_Mode;
+//extern PORT_Mode_t JTAG_Port_Mode;
+
 //**************************************************************************************************
 /**
 \defgroup DAP_Config_PortIO_gr CMSIS-DAP Hardware I/O Pin Access
@@ -349,102 +357,15 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
     gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
-#if !defined(USE_SPI_JTAG) || (USE_SPI_JTAG == 0)
-__STATIC_INLINE void PORT_JTAG_SETUP (void) {
-    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
-    HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-    HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-    HPM_IOC->PAD[PIN_TDO].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    HPM_IOC->PAD[PIN_JTAG_TRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-
-#ifdef PIN_LED_RUNNING
-    HPM_IOC->PAD[PIN_LED_RUNNING].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    gpiom_configure_pin_control_setting(PIN_LED_RUNNING);
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_RUNNING), GPIO_GET_PIN_INDEX(PIN_LED_RUNNING));
-    HPM_IOC->PAD[PIN_LED_RUNNING].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-#endif
-
-#ifdef PIN_LED_CONNECTED
-    HPM_IOC->PAD[PIN_LED_CONNECTED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    gpiom_configure_pin_control_setting(PIN_LED_CONNECTED);
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_CONNECTED), GPIO_GET_PIN_INDEX(PIN_LED_CONNECTED));
-#endif
-
-
-    gpiom_configure_pin_control_setting(PIN_TDO);
-    gpiom_configure_pin_control_setting(PIN_TCK);
-    gpiom_configure_pin_control_setting(PIN_TMS);
-    gpiom_configure_pin_control_setting(PIN_TDI);
-    gpiom_configure_pin_control_setting(PIN_JTAG_TRST);
-    gpiom_configure_pin_control_setting(PIN_SRST);
-
-    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
-
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1); // JTAG模式下SWDIO_DIR为高
-
-    HPM_IOC->PAD[PIN_TDO].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_TDI].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_JTAG_TRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-}
-#else
-void PORT_JTAG_SETUP(void);
-#endif
+__STATIC_INLINE void PORT_JTAG_SETUP(void){}
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
 Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  - SWCLK, SWDIO, nRESET to output mode and set to default high level.
  - TDI, nTRST to HighZ mode (pins are unused in SWD mode).
 */
-#if !defined(USE_SPI_SWD) || (USE_SPI_SWD == 0)
-__STATIC_INLINE void PORT_SWD_SETUP (void) {
-
-    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
-    HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-    HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-#ifdef PIN_LED_RUNNING
-    HPM_IOC->PAD[PIN_LED_RUNNING].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-#endif
-
-#ifdef PIN_LED_CONNECTED
-    HPM_IOC->PAD[PIN_LED_CONNECTED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-#endif
-
-#ifdef PIN_LED_RUNNING
-    HPM_IOC->PAD[PIN_LED_RUNNING].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    gpiom_configure_pin_control_setting(PIN_LED_RUNNING);
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_RUNNING), GPIO_GET_PIN_INDEX(PIN_LED_RUNNING));
-    HPM_IOC->PAD[PIN_LED_RUNNING].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-#endif
-
-#ifdef PIN_LED_CONNECTED
-    HPM_IOC->PAD[PIN_LED_CONNECTED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-    gpiom_configure_pin_control_setting(PIN_LED_CONNECTED);
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_CONNECTED), GPIO_GET_PIN_INDEX(PIN_LED_CONNECTED));
-#endif
-
-    gpiom_configure_pin_control_setting(PIN_TCK);
-    gpiom_configure_pin_control_setting(PIN_TMS);
-    gpiom_configure_pin_control_setting(PIN_SRST);
-  
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
-    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
-
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0); // 默认SWDIO为输入
-
-    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-    HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
-}
-#else
 void PORT_SWD_SETUP(void);
-#endif
+
 /** Disable JTAG/SWD I/O Pins.
 Disables the DAP Hardware I/O pins which configures:
  - TCK/SWCLK, TMS/SWDIO, TDI, TDO, nTRST, nRESET to High-Z mode.
