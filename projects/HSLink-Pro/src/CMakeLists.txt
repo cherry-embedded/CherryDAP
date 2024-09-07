@@ -53,9 +53,7 @@ sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
 
 sdk_compile_definitions(-DCONFIG_WS2812=1)
 
-if (CONFIG_SWDIO_DIR)
-    sdk_compile_definitions(-DSWDIO_DIR=${CONFIG_SWDIO_DIR})
-endif ()
+sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
 
 if (DEFINED CONFIG_USE_SPI_SWD AND (CONFIG_USE_SPI_SWD EQUAL "1"))
     sdk_compile_definitions(-DUSE_SPI_SWD=1)
