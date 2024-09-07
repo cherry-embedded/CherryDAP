@@ -67,13 +67,11 @@ static void set_pwm_waveform_edge_aligned_duty(uint8_t duty)
 
 static void Power_Enable_Init(void)
 {
-    // PY0 高电平有效
-    HPM_PIOC->PAD[IOC_PAD_PY00].FUNC_CTL = PIOC_PY00_FUNC_CTL_SOC_GPIO_Y_00;
-    HPM_IOC->PAD[IOC_PAD_PY00].FUNC_CTL = IOC_PY00_FUNC_CTL_GPIO_Y_00;
+    HPM_IOC->PAD[CONFIG_P_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
-    gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOY, 0, gpiom_soc_gpio0);
-    gpio_set_pin_output(HPM_GPIO0, GPIO_OE_GPIOY, 0);
-    gpio_write_pin(HPM_GPIO0, GPIO_DO_GPIOY, 0, 0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
 }
 
 ATTR_ALWAYS_INLINE

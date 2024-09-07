@@ -58,7 +58,7 @@ static const char DAP_FW_Ver [] = DAP_FW_VER;
 
 // Common clock delay calculation routine
 //   clock:    requested SWJ frequency in Hertz
-static void Set_Clock_Delay(uint32_t clock) {
+void Set_Clock_Delay(uint32_t clock) {
   uint32_t delay;
 
   if (clock >= MAX_SWJ_CLOCK(DELAY_FAST_CYCLES)) {
