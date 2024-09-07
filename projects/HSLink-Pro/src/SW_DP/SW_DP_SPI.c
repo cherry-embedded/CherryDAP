@@ -58,17 +58,21 @@ void SPI_SWJ_Sequence (uint32_t count, const uint8_t *data)
 //    printf("SWJ_Sequence %d\n", count);
     gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
-    spi_set_data_bits(SWD_SPI_BASE, 8);
     SWD_SPI_BASE->CTRL |= SPI_CTRL_RXFIFORST_MASK | SPI_CTRL_TXFIFORST_MASK;
     while (SWD_SPI_BASE->STATUS & (SPI_CTRL_RXFIFORST_MASK | SPI_CTRL_TXFIFORST_MASK)) {
     };
-    spi_set_write_data_count(SWD_SPI_BASE, integer_val);
-    SWD_SPI_BASE->CMD = 0xFF;
-    for (n = 0; n < integer_val; n++) {
-        SWD_SPI_BASE->DATA = *(data + n);
+    if (integer_val > 0)
+    {
+        spi_set_data_bits(SWD_SPI_BASE, 8);
+        spi_set_write_data_count(SWD_SPI_BASE, integer_val);
+        SWD_SPI_BASE->CMD = 0xFF;
+        for (n = 0; n < integer_val; n++) {
+            SWD_SPI_BASE->DATA = *(data + n);
+        }
+        while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
+        }
     }
-    while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
-    };
+
     if (remaind_val > 0) {
         spi_set_write_data_count(SWD_SPI_BASE, 1);
         spi_set_data_bits(SWD_SPI_BASE, remaind_val);
@@ -274,7 +278,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
                 SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
                 spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.transfer.idle_cycles);
                 SWD_SPI_BASE->CMD = 0xFF;
-                SWD_SPI_BASE->DATA = 0;
+                for (int i = 0; i < DAP_Data.transfer.idle_cycles; i++) {
+                    SWD_SPI_BASE->DATA = 0;
+                    while ((SWD_SPI_BASE->STATUS & SPI_STATUS_TXFULL_MASK) == SPI_STATUS_TXFULL_MASK) {
+                    };
+                }
                 while ((SWD_SPI_BASE->STATUS & SPI_STATUS_TXFULL_MASK) == SPI_STATUS_TXFULL_MASK) {
                 };
                 while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
