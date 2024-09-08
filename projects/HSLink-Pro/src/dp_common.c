@@ -8,8 +8,8 @@
 #include "DAP.h"
 #include "hpm_spi_drv.h"
 
-#define  SPI_MAX_SRC_CLOCK   80000000
-#define  SPI_MIN_SRC_CLOCK   60000000
+#define SPI_MAX_SRC_CLOCK 80000000
+#define SPI_MIN_SRC_CLOCK 60000000
 
 void set_swj_clock_frequency(uint32_t clock)
 {
@@ -22,19 +22,44 @@ void set_swj_clock_frequency(uint32_t clock)
     if (BOOST_KEIL_SWD_FREQ == 1) {
         sclk_freq_in_hz *= 10;
     }
+    PORT_Mode_t mode;
     if (DAP_Data.debug_port == DAP_PORT_SWD) {
         if (sclk_freq_in_hz < 1000000) {
-            SWD_Port_Mode = PORT_MODE_GPIO;
-            Set_Clock_Delay(sclk_freq_in_hz);
-            return;
+            mode = PORT_MODE_GPIO;
+        } else {
+            mode = PORT_MODE_SPI;
         }
-        SWD_Port_Mode = PORT_MODE_SPI;
+
+        // 判断是否需要切换模式
+        if (SWD_Port_Mode != mode) {
+            SWD_Port_Mode = mode;
+            PORT_SWD_SETUP();
+        }
+
         spi_base = SWD_SPI_BASE;
         clock_name = SWD_SPI_BASE_CLOCK_NAME;
     } else {
+        if (sclk_freq_in_hz < 1000000) {
+            mode = PORT_MODE_GPIO;
+        } else {
+            mode = PORT_MODE_SPI;
+        }
+
+        // 判断是否需要切换模式
+        if (JTAG_Port_Mode != mode) {
+            JTAG_Port_Mode = mode;
+            PORT_JTAG_SETUP();
+        }
+
         spi_base = JTAG_SPI_BASE;
         clock_name = JTAG_SPI_BASE_CLOCK_NAME;
     }
+
+    if (mode == PORT_MODE_GPIO) {
+        Set_Clock_Delay(sclk_freq_in_hz);
+        return;
+    }
+
     sclk_div = ((SPI_MAX_SRC_CLOCK / sclk_freq_in_hz) / 2) - 1; /* SCLK = SPI_SRC_CLOK / ((SCLK_DIV + 1) * 2)*/
     if (sclk_div <= 0xFE) {
         div = 10;

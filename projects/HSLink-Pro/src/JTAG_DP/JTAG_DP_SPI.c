@@ -70,7 +70,7 @@ static void jtag_emulation_init(void);
 #if (DAP_JTAG != 0)
 
 
-void PORT_JTAG_SETUP(void)
+void SPI_PORT_JTAG_SETUP(void)
 {
     clock_add_to_group(JTAG_SPI_BASE_CLOCK_NAME, 0);
     clock_set_source_divider(JTAG_SPI_BASE_CLOCK_NAME, clk_src_pll1_clk0, 10U); /* 80MHz */
@@ -107,7 +107,7 @@ void PORT_JTAG_SETUP(void)
 //   tdi:    pointer to TDI generated data
 //   tdo:    pointer to TDO captured data
 //   return: none
-void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
+void SPI_JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
     jtag_spi_sequece(info, tdi, tdo);
 }
 
@@ -142,7 +142,7 @@ static uint8_t JTAG_TransferSlow(uint32_t request, uint32_t *data)
 
 // JTAG Read IDCODE register
 //   return: value read
-uint32_t JTAG_ReadIDCode (void) {
+uint32_t SPI_JTAG_ReadIDCode (void) {
     uint8_t index = DAP_Data.jtag_dev.index;
     return jtag_spi_read_idcode(index);
 }
@@ -151,7 +151,7 @@ uint32_t JTAG_ReadIDCode (void) {
 // JTAG Write ABORT register
 //   data:   value to write
 //   return: none
-void JTAG_WriteAbort (uint32_t data) {
+void SPI_JTAG_WriteAbort (uint32_t data) {
     uint8_t index_count, index;
     index_count = DAP_Data.jtag_dev.count;
     index = DAP_Data.jtag_dev.index;
@@ -162,7 +162,7 @@ void JTAG_WriteAbort (uint32_t data) {
 // JTAG Set IR
 //   ir:     IR value
 //   return: none
-void JTAG_IR (uint32_t ir) {
+void SPI_JTAG_IR (uint32_t ir) {
   if (DAP_Data.fast_clock) {
     JTAG_IR_Fast(ir);
   } else {
@@ -175,7 +175,7 @@ void JTAG_IR (uint32_t ir) {
 //   request: A[3:2] RnW APnDP
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
-uint8_t  JTAG_Transfer(uint32_t request, uint32_t *data) {
+uint8_t  SPI_JTAG_Transfer(uint32_t request, uint32_t *data) {
   if (DAP_Data.fast_clock) {
     return JTAG_TransferFast(request, data);
   } else {
@@ -404,7 +404,7 @@ static void jtag_spi_ir_fast(uint32_t ir, uint16_t ir_before, uint8_t ir_length,
     }
     if (ir_length) {
         jtag_ir(ir, ir_length - 1); /* Set IR bits (except last) */
-        ir >>= (ir_length - 2);
+        ir >>= (ir_length - 1);
     }
     if (ir_after) {
         /* Set last IR bit */
@@ -457,13 +457,13 @@ static uint8_t jtag_spi_transfer_fast(uint32_t request, uint32_t *data, uint8_t 
     spi_set_read_data_count(JTAG_SPI_BASE, 1);
     spi_set_write_data_count(JTAG_SPI_BASE, 1);
     JTAG_SPI_BASE->CMD = 0xFF; /* Write a dummy byte */
-    JTAG_SPI_BASE->DATA = request;
+    JTAG_SPI_BASE->DATA = request >> 0x01;
     while ((JTAG_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) == SPI_STATUS_RXEMPTY_MASK) {
     };
     bit = JTAG_SPI_BASE->DATA;
     while (JTAG_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
     };
-    ack = ((bit & 0x01) << 1) | ((bit & 0x02) >> 0) | (bit & 0x04);
+    ack = ((bit & 0x01) << 1) | ((bit & 0x02) >> 1) | (bit & 0x04);
     if (ack != DAP_TRANSFER_OK) {
         gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), true);
         jtag_less_than_32bit_size_for_tck(1, 0xFFFFFFFF);
@@ -475,7 +475,7 @@ static uint8_t jtag_spi_transfer_fast(uint32_t request, uint32_t *data, uint8_t 
         val = 0;
         /* Get D0..D30 */
         spi_set_transfer_mode(JTAG_SPI_BASE, spi_trans_read_only);
-        spi_set_data_bits(JTAG_SPI_BASE, 32);
+        spi_set_data_bits(JTAG_SPI_BASE, 31);
         spi_set_read_data_count(JTAG_SPI_BASE, 1);
         spi_set_write_data_count(JTAG_SPI_BASE, 1);
         JTAG_SPI_BASE->CMD = 0xFF; /* Write a dummy byte */
@@ -548,9 +548,11 @@ static uint8_t jtag_spi_transfer_fast(uint32_t request, uint32_t *data, uint8_t 
         }
     }
 exit:
+    gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), 1);
     /* Update-DR */ 
     jtag_less_than_32bit_size_for_tck(1, 0);
     board_write_spi_cs(BOARD_SPI_CS_PIN, false);
+    gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), 0);
     /* Idle */
     jtag_less_than_32bit_size_for_tck(1, 0xFFFFFFFF);
 
@@ -559,6 +561,7 @@ exit:
         // DAP_Data.timestamp = TIMESTAMP_GET(); 
     }
 
+    gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), 0);
     /* Idle cycles */ 
     jtag_less_than_32bit_size_for_tck(idle_cycles, 0xFFFFFFFF);
     return ((uint8_t)ack);
@@ -609,9 +612,11 @@ static uint32_t jtag_spi_read_idcode (uint8_t index)
     while (JTAG_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
     };
     val |= bit << 31;
+    gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), 1);
     /* Update-DR */ 
     jtag_less_than_32bit_size_for_tck(1, 0);
     board_write_spi_cs(BOARD_SPI_CS_PIN, false);
+    gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS), GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS), 0);
     /* Idle */
     jtag_less_than_32bit_size_for_tck(1, 0xFFFFFFFF);
     return (val);
