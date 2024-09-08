@@ -32,6 +32,12 @@ void set_swj_clock_frequency(uint32_t clock)
         spi_base = SWD_SPI_BASE;
         clock_name = SWD_SPI_BASE_CLOCK_NAME;
     } else {
+         if (sclk_freq_in_hz < 1000000) {
+            JTAG_Port_Mode = PORT_MODE_GPIO;
+            Set_Clock_Delay(sclk_freq_in_hz);
+            return;
+        }
+        JTAG_Port_Mode = PORT_MODE_SPI;
         spi_base = JTAG_SPI_BASE;
         clock_name = JTAG_SPI_BASE_CLOCK_NAME;
     }

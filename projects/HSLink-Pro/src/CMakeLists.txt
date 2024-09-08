@@ -17,7 +17,7 @@ set(CONFIG_USE_HPM_BOARD_JTAG_GPIO 0)
 
 if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPIO EQUAL "0"))
     set(CONFIG_USE_SPI_SWD 1)
-    set(CONFIG_USE_SPI_JTAG 0)
+    set(CONFIG_USE_SPI_JTAG 1)
 endif ()
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
@@ -66,10 +66,12 @@ sdk_app_src(SW_DP/SW_DP_IO.c)
 
 if (DEFINED CONFIG_USE_SPI_JTAG AND (CONFIG_USE_SPI_JTAG EQUAL "1"))
     sdk_compile_definitions(-DUSE_SPI_JTAG=1)
-    sdk_app_src(JTAG_DP_SPI.c)
-else ()
-    sdk_app_src(../../../DAP/Source/JTAG_DP.c)
 endif ()
+
+sdk_app_inc(JTAG_DP)
+sdk_app_src(JTAG_DP/JTAG_DP.c)
+sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
+sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
 
 
 sdk_inc(.)

@@ -2,7 +2,7 @@
 
 PORT_Mode_t SWD_Port_Mode;
 
-void PORT_SWD_SETUP (void)
+void PORT_SWD_SETUP(void)
 {
     if (SWD_Port_Mode == PORT_MODE_SPI) {
         SPI_PORT_SWD_SETUP();
@@ -11,7 +11,7 @@ void PORT_SWD_SETUP (void)
     }
 }
 
-void SWJ_Sequence (uint32_t count, const uint8_t *data)
+void SWJ_Sequence(uint32_t count, const uint8_t *data)
 {
     if (SWD_Port_Mode == PORT_MODE_SPI) {
         SPI_SWJ_Sequence(count, data);

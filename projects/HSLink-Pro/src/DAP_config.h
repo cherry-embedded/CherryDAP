@@ -305,7 +305,7 @@ typedef enum {
 }PORT_Mode_t;
 
 extern PORT_Mode_t SWD_Port_Mode;
-//extern PORT_Mode_t JTAG_Port_Mode;
+extern PORT_Mode_t JTAG_Port_Mode;
 
 //**************************************************************************************************
 /**
@@ -357,7 +357,7 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
     gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
-__STATIC_INLINE void PORT_JTAG_SETUP(void){}
+void PORT_JTAG_SETUP(void);
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
 Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:

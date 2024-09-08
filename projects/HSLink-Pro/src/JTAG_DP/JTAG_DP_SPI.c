@@ -70,7 +70,7 @@ static void jtag_emulation_init(void);
 #if (DAP_JTAG != 0)
 
 
-void PORT_JTAG_SETUP(void)
+void SPI_PORT_JTAG_SETUP(void)
 {
     clock_add_to_group(JTAG_SPI_BASE_CLOCK_NAME, 0);
     clock_set_source_divider(JTAG_SPI_BASE_CLOCK_NAME, clk_src_pll1_clk0, 10U); /* 80MHz */
@@ -107,7 +107,7 @@ void PORT_JTAG_SETUP(void)
 //   tdi:    pointer to TDI generated data
 //   tdo:    pointer to TDO captured data
 //   return: none
-void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
+void SPI_JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
     jtag_spi_sequece(info, tdi, tdo);
 }
 
@@ -142,7 +142,7 @@ static uint8_t JTAG_TransferSlow(uint32_t request, uint32_t *data)
 
 // JTAG Read IDCODE register
 //   return: value read
-uint32_t JTAG_ReadIDCode (void) {
+uint32_t SPI_JTAG_ReadIDCode (void) {
     uint8_t index = DAP_Data.jtag_dev.index;
     return jtag_spi_read_idcode(index);
 }
@@ -151,7 +151,7 @@ uint32_t JTAG_ReadIDCode (void) {
 // JTAG Write ABORT register
 //   data:   value to write
 //   return: none
-void JTAG_WriteAbort (uint32_t data) {
+void SPI_JTAG_WriteAbort (uint32_t data) {
     uint8_t index_count, index;
     index_count = DAP_Data.jtag_dev.count;
     index = DAP_Data.jtag_dev.index;
@@ -162,7 +162,7 @@ void JTAG_WriteAbort (uint32_t data) {
 // JTAG Set IR
 //   ir:     IR value
 //   return: none
-void JTAG_IR (uint32_t ir) {
+void SPI_JTAG_IR (uint32_t ir) {
   if (DAP_Data.fast_clock) {
     JTAG_IR_Fast(ir);
   } else {
@@ -175,7 +175,7 @@ void JTAG_IR (uint32_t ir) {
 //   request: A[3:2] RnW APnDP
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
-uint8_t  JTAG_Transfer(uint32_t request, uint32_t *data) {
+uint8_t  SPI_JTAG_Transfer(uint32_t request, uint32_t *data) {
   if (DAP_Data.fast_clock) {
     return JTAG_TransferFast(request, data);
   } else {
