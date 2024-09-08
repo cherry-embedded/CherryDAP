@@ -404,7 +404,7 @@ static void jtag_spi_ir_fast(uint32_t ir, uint16_t ir_before, uint8_t ir_length,
     }
     if (ir_length) {
         jtag_ir(ir, ir_length - 1); /* Set IR bits (except last) */
-        ir >>= (ir_length - 2);
+        ir >>= (ir_length - 1);
     }
     if (ir_after) {
         /* Set last IR bit */
