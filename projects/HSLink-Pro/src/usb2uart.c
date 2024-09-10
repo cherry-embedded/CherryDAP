@@ -18,6 +18,7 @@
 #define UART_TX_DMA_RESOURCE_INDEX (1U)
 #define UART_TX_DMA_BUFFER_SIZE    (8192U)
 
+static uint32_t rb_write_pos = 0;
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
 uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
@@ -28,7 +29,6 @@ dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT - 1];
 static dma_resource_t dma_resource_pools[2];
 volatile uint32_t g_uart_tx_transfer_length = 0;
 static hpm_stat_t board_uart_dma_config(void);
-static hpm_stat_t board_uart_rx_dma_restart(void);
 
 void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
 {
@@ -41,13 +41,10 @@ void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
     uint32_t link_addr = ptr->CHCTRL[channel].LLPOINTER;
     uint32_t rx_desc_size = (sizeof(rx_descriptors) / sizeof(dma_linked_descriptor_t));
     if (rx_resource->channel == channel) {
-        if (link_addr == (uint32_t)NULL) {
-            board_uart_rx_dma_restart();
-            return;
-        }
         for (i = 0; i < rx_desc_size; i++) {
             if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i])) {
-                chry_ringbuffer_write(&g_uartrx, uart_rx_buf[i - 1], UART_RX_DMA_BUFFER_SIZE);
+                chry_ringbuffer_write(&g_uartrx, &uart_rx_buf[i][rb_write_pos], UART_RX_DMA_BUFFER_SIZE - rb_write_pos);
+                rb_write_pos = 0;
             }
         }
     }
@@ -69,8 +66,8 @@ void uart_isr(void)
         if (uart_received_data_count > 0) {
             for (i = 0; i < rx_desc_size; i++) {
                 if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i])) {
-                    chry_ringbuffer_write(&g_uartrx, uart_rx_buf[i], uart_received_data_count);
-                    board_uart_rx_dma_restart();
+                    chry_ringbuffer_write(&g_uartrx, &uart_rx_buf[i][rb_write_pos], uart_received_data_count - rb_write_pos);
+                    rb_write_pos += uart_received_data_count - rb_write_pos;
                     break;
                 }
             }
@@ -83,24 +80,23 @@ void usb2uart_handler (void)
 {
     dma_resource_t *rx_resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
     const uint32_t rx_desc_size = (sizeof(rx_descriptors) / sizeof(dma_linked_descriptor_t));
+    uint32_t uart_received_data_count = UART_RX_DMA_BUFFER_SIZE - dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel);
 
-    if (dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel) != UART_RX_DMA_BUFFER_SIZE)
+    if ((uart_received_data_count - rb_write_pos) > 0)
     {
         uint32_t level = disable_global_irq(CSR_MSTATUS_MIE_MASK);
         uint32_t link_addr = rx_resource->base->CHCTRL[rx_resource->channel].LLPOINTER;
-        uint32_t uart_received_data_count = UART_RX_DMA_BUFFER_SIZE - dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel);
-        if (uart_received_data_count > 0)
+
+        for (int i = 0; i < rx_desc_size; i++)
         {
-            for (int i = 0; i < rx_desc_size; i++)
+            if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]))
             {
-                if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]))
-                {
-                    chry_ringbuffer_write(&g_uartrx, uart_rx_buf[i], uart_received_data_count);
-                    board_uart_rx_dma_restart();
-                    break;
-                }
+                chry_ringbuffer_write(&g_uartrx, &uart_rx_buf[i][rb_write_pos], uart_received_data_count - rb_write_pos);
+                rb_write_pos += uart_received_data_count - rb_write_pos;
+                break;
             }
         }
+
         restore_global_irq(level);
     }
 }
@@ -157,18 +153,6 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
     dma_mgr_enable_channel(tx_resource);
 }
 
-static hpm_stat_t board_uart_rx_dma_restart(void)
-{
-    dma_resource_t *resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
-    dma_mgr_disable_channel(resource);
-    uint32_t addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf[0]);
-    dma_mgr_set_chn_dst_addr(resource, addr);
-    addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[0]);
-    resource->base->CHCTRL[resource->channel].LLPOINTER = addr;
-    dma_mgr_set_chn_transize(resource, UART_RX_DMA_BUFFER_SIZE);
-    dma_mgr_enable_channel(resource);
-    return status_success;
-}
 static hpm_stat_t board_uart_dma_config(void)
 {
     dma_mgr_chn_conf_t chg_config;
@@ -191,10 +175,10 @@ static hpm_stat_t board_uart_dma_config(void)
         chg_config.dmamux_src = UART_RX_DMA;
         for (i = 0; i < rx_desc_size; i++) {
             if (i < (rx_desc_size - 1)) {
-                chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf[i + 1]);
-                chg_config.linked_ptr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i + 1]);
+                chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf[i]);
+                chg_config.linked_ptr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]);
             } else {
-                chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf[1]);
+                chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf[0]);
                 chg_config.linked_ptr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[0]);
             }
             if (dma_mgr_config_linked_descriptor(resource, &chg_config, (dma_mgr_linked_descriptor_t *)&rx_descriptors[i]) != status_success) {
