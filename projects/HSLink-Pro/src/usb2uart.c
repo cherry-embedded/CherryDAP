@@ -79,6 +79,32 @@ void uart_isr(void)
 }
 SDK_DECLARE_EXT_ISR_M(UART_IRQ, uart_isr)
 
+void usb2uart_handler (void)
+{
+    dma_resource_t *rx_resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
+    const uint32_t rx_desc_size = (sizeof(rx_descriptors) / sizeof(dma_linked_descriptor_t));
+
+    if (dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel) != UART_RX_DMA_BUFFER_SIZE)
+    {
+        uint32_t level = disable_global_irq(CSR_MSTATUS_MIE_MASK);
+        uint32_t link_addr = rx_resource->base->CHCTRL[rx_resource->channel].LLPOINTER;
+        uint32_t uart_received_data_count = UART_RX_DMA_BUFFER_SIZE - dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel);
+        if (uart_received_data_count > 0)
+        {
+            for (int i = 0; i < rx_desc_size; i++)
+            {
+                if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]))
+                {
+                    chry_ringbuffer_write(&g_uartrx, uart_rx_buf[i], uart_received_data_count);
+                    board_uart_rx_dma_restart();
+                    break;
+                }
+            }
+        }
+        restore_global_irq(level);
+    }
+}
+
 void uartx_preinit(void)
 {
     // board_init_uart(UART_BASE);
