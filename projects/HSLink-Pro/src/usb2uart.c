@@ -16,15 +16,15 @@
 
 #define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
 #define UART_TX_DMA_RESOURCE_INDEX (1U)
-#define UART_TX_DMA_BUFFER_SIZE    (8192U)
+// #define UART_TX_DMA_BUFFER_SIZE    (8192U)
 
 static uint32_t rb_write_pos = 0;
-ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
-uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
+// ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
+// uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
 uint8_t uart_rx_buf[UART_RX_DMA_BUFFER_COUNT][UART_RX_DMA_BUFFER_SIZE];
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(8)
-dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT - 1];
+dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT];
 
 static dma_resource_t dma_resource_pools[2];
 volatile uint32_t g_uart_tx_transfer_length = 0;
