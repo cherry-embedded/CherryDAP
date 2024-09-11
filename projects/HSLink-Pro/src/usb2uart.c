@@ -87,13 +87,19 @@ void usb2uart_handler (void)
         uint32_t level = disable_global_irq(CSR_MSTATUS_MIE_MASK);
         uint32_t link_addr = rx_resource->base->CHCTRL[rx_resource->channel].LLPOINTER;
 
-        for (int i = 0; i < rx_desc_size; i++)
+        /* data may be preempted by interrupts, need to reread the count */
+        uart_received_data_count = UART_RX_DMA_BUFFER_SIZE - dma_get_remaining_transfer_size(rx_resource->base, rx_resource->channel);
+
+        if ((uart_received_data_count - rb_write_pos) > 0)
         {
-            if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]))
+            for (int i = 0; i < rx_desc_size; i++)
             {
-                chry_ringbuffer_write(&g_uartrx, &uart_rx_buf[i][rb_write_pos], uart_received_data_count - rb_write_pos);
-                rb_write_pos += uart_received_data_count - rb_write_pos;
-                break;
+                if (link_addr == core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptors[i]))
+                {
+                    chry_ringbuffer_write(&g_uartrx, &uart_rx_buf[i][rb_write_pos], uart_received_data_count - rb_write_pos);
+                    rb_write_pos += uart_received_data_count - rb_write_pos;
+                    break;
+                }
             }
         }
 
