@@ -1,6 +1,6 @@
 #include "SW_DP.h"
 
-PORT_Mode_t SWD_Port_Mode;
+PORT_Mode_t SWD_Port_Mode = PORT_MODE_SPI;
 
 void PORT_SWD_SETUP(void)
 {

@@ -197,13 +197,13 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
     spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
     if (request & DAP_TRANSFER_RnW) {
         spi_set_data_bits(SWD_SPI_BASE, 8);
-        ack_width = 4;
+        ack_width = 3 + DAP_Data.swd_conf.turnaround; /* trn max 4 periods */
     } else {
         for (i = 0; i < 32; i++) {
             parity += (((*data) >> i) & 0x01);
         }
         spi_set_data_bits(SWD_SPI_BASE, 8);
-        ack_width = 5;
+        ack_width = DAP_Data.swd_conf.turnaround + 3 + DAP_Data.swd_conf.turnaround; /* trn + ack + trn*/
     }
     SWD_SPI_BASE->CMD = 0xFF;
     SWD_SPI_BASE->DATA = host_data;
@@ -218,7 +218,8 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
     ack = SWD_SPI_BASE->DATA;
     while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
     };
-    ack >>= 1;
+    ack >>= DAP_Data.swd_conf.turnaround;
+    ack = ack & 0x07;
     if (ack == DAP_TRANSFER_OK) { /* OK response */
         /* Data transfer */
         if (request & DAP_TRANSFER_RnW) {
@@ -274,31 +275,31 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
             SWD_SPI_BASE->DATA = parity;
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
             };
-            /* Capture Timestamp */
-            if (request & DAP_TRANSFER_TIMESTAMP) {
-                DAP_Data.timestamp = TIMESTAMP_GET();
-            }
-            if (DAP_Data.transfer.idle_cycles > 0) {
-                gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
-                SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
-                SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
-                spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.transfer.idle_cycles);
-                SWD_SPI_BASE->CMD = 0xFF;
-                for (int i = 0; i < DAP_Data.transfer.idle_cycles; i++) {
-                    SWD_SPI_BASE->DATA = 0;
-                    while ((SWD_SPI_BASE->STATUS & SPI_STATUS_TXFULL_MASK) == SPI_STATUS_TXFULL_MASK) {
-                    };
-                }
+        }
+        gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+        /* Capture Timestamp */
+        if (request & DAP_TRANSFER_TIMESTAMP) {
+            DAP_Data.timestamp = TIMESTAMP_GET();
+        }
+        if (DAP_Data.transfer.idle_cycles > 0) {
+            gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+            SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
+            SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+            spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.transfer.idle_cycles);
+            SWD_SPI_BASE->CMD = 0xFF;
+            for (int i = 0; i < DAP_Data.transfer.idle_cycles; i++) {
+                SWD_SPI_BASE->DATA = 0;
                 while ((SWD_SPI_BASE->STATUS & SPI_STATUS_TXFULL_MASK) == SPI_STATUS_TXFULL_MASK) {
                 };
-                while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
-                };
             }
+            while ((SWD_SPI_BASE->STATUS & SPI_STATUS_TXFULL_MASK) == SPI_STATUS_TXFULL_MASK) {
+            };
+            while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
+            };
         }
         gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
         return ack;
     }
-
     /* WAIT or FAULT response */
     if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
         gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
