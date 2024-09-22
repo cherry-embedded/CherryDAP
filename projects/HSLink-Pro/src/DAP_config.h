@@ -615,6 +615,9 @@ __STATIC_FORCEINLINE void     PIN_nRESET_OUT (uint32_t bit) {
     }
     else {
        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), false);
+       extern uint8_t software_reset(void);
+       uint8_t ret = software_reset();
+        (void)ret;
     }
     __asm volatile("fence io, io");
 }
