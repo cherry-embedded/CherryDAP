@@ -109,4 +109,4 @@ add_custom_command(
         COMMENT "Convert to UF2"
 )
 
-#generate_ses_project()
+generate_ide_projects()
