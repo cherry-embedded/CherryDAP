@@ -88,7 +88,6 @@ sdk_app_src(../../../DAP/Source/DAP.c)
 sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.c)
-sdk_app_src(usb2uart.c)
 sdk_app_src(dp_common.c)
 
 if (CONFIG_BUILD_VERSION)
@@ -96,6 +95,9 @@ if (CONFIG_BUILD_VERSION)
 else ()
     sdk_compile_definitions(-DDAP_FW_VER="Debug")
 endif ()
+
+sdk_app_src(USB2UART/usb2uart.c)
+sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 #sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)

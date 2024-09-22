@@ -6,9 +6,7 @@
 #include "dap_main.h"
 #include "WS2812.h"
 #include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
-
-extern void uartx_preinit(void);
-extern void usb2uart_handler (void);
+#include "usb2uart.h"
 
 char serial_number[32];
 

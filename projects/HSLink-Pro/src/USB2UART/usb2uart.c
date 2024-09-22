@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <hpm_gpiom_soc_drv.h>
+#include <hpm_gpio_drv.h>
+#include <hpm_gpiom_drv.h>
 #include "board.h"
 #include "hpm_uart_drv.h"
 #include "hpm_debug_console.h"
 #include "hpm_dma_mgr.h"
 #include "hpm_sysctl_drv.h"
 #include "dap_main.h"
+#include "usb2uart.h"
 
 #define UART_BASE                  HPM_UART2
 #define UART_IRQ                   IRQn_UART2
@@ -110,8 +114,19 @@ void usb2uart_handler (void)
 void uartx_preinit(void)
 {
     // board_init_uart(UART_BASE);
-    HPM_IOC->PAD[IOC_PAD_PA09].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
-    HPM_IOC->PAD[IOC_PAD_PA08].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
+    HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
+    HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
+
+    HPM_IOC->PAD[PIN_UART_DTR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_UART_RTS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), 1); // 默认输出高电平
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), 1); // 默认输出高电平
 
     clock_set_source_divider(UART_CLK_NAME, clk_src_pll1_clk0, 8);
     clock_add_to_group(UART_CLK_NAME, 0);
@@ -219,4 +234,18 @@ static hpm_stat_t board_uart_dma_config(void)
         dma_mgr_enable_dma_irq_with_priority(resource, 1);
     }
     return status_success;
+}
+
+void usbd_cdc_acm_set_dtr(uint8_t busid, uint8_t intf, bool dtr)
+{
+    (void)busid;
+    (void)intf;
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), !dtr);
+}
+
+void usbd_cdc_acm_set_rts(uint8_t busid, uint8_t intf, bool rts)
+{
+    (void)busid;
+    (void)intf;
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), !rts);
 }
