@@ -14,6 +14,7 @@
 #define SPI_MID_SRC_CLOCK  (60000000U)
 #define SPI_MIN_SRC_CLOCK  (50000000U)
 #define SPI_MIN_SCLK_CLOCK (20000000U)
+
 void set_swj_clock_frequency(uint32_t clock)
 {
     int freq_list[clock_source_general_source_end] = {0};
@@ -59,7 +60,7 @@ void set_swj_clock_frequency(uint32_t clock)
         }
     } else {
         sclk_div = 0xFF;
-        for (clock_source = (clock_source_t)0; clock_source < clock_source_general_source_end; clock_source++) {
+        for (clock_source = (clock_source_t) 0; clock_source < clock_source_general_source_end; clock_source++) {
             pll_clk = get_frequency_for_source(clock_source);
             div = pll_clk / sclk_freq_in_hz;
             /* The division factor ranges from 1 to 256 as any integer */
@@ -80,7 +81,7 @@ void set_swj_clock_frequency(uint32_t clock)
         /* Find the best spi clock frequency */
         for (i = 0; i < clock_source_general_source_end; i++) {
             if (best_freq == freq_list[i]) {
-                pll_clk = get_frequency_for_source((clock_source_t)i);
+                pll_clk = get_frequency_for_source((clock_source_t) i);
                 src_clock = MAKE_CLK_SRC(CLK_SRC_GROUP_COMMON, i);
                 div = pll_clk / best_freq;
                 break;

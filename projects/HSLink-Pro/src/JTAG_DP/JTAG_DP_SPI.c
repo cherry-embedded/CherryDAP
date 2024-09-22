@@ -41,7 +41,7 @@
 
 #define USE_GPIO_1_BIT         0
 
-#define PIN_JTAG_GPIO          HPM_FGPIO
+#define PIN_JTAG_GPIO          HPM_GPIO0
 
 #define JTAG_SPI_DMA                HPM_HDMA
 #define JTAG_SPI_DMAMUX             HPM_DMAMUX

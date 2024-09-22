@@ -354,7 +354,7 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
 {
     gpiom_set_pin_controller(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_soc_gpio0);
     gpiom_enable_pin_visibility(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_soc_gpio0);
-    gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
+//    gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
 void PORT_JTAG_SETUP(void);
@@ -388,6 +388,12 @@ __STATIC_INLINE void PORT_OFF (void) {
 
     HPM_IOC->PAD[PIN_JTAG_TRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
     HPM_IOC->PAD[PIN_JTAG_TRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    HPM_IOC->PAD[IOC_PAD_PA27].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
+    HPM_IOC->PAD[IOC_PAD_PA27].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); // SWD SPI SCLK
+    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27));
+    gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27));
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27), gpiom_soc_gpio0);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
