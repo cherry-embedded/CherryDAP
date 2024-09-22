@@ -284,7 +284,7 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 #define SWD_SPI_BASE_CLOCK_NAME    clock_spi1
 
 #define PIN_GPIOM_BASE    HPM_GPIOM
-#define PIN_GPIO          HPM_FGPIO
+#define PIN_GPIO          HPM_GPIO0
 #define PIN_SWDIO_DIR_GPIO HPM_GPIO0
 
 #if defined(USE_HPM_BOARD_JTAG_GPIO) && (USE_HPM_BOARD_JTAG_GPIO == 1)
@@ -352,8 +352,8 @@ Configures the DAP Hardware I/O pins for JTAG mode:
 */
 __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
 {
-    gpiom_set_pin_controller(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_core0_fast);
-    gpiom_enable_pin_visibility(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_core0_fast);
+    gpiom_set_pin_controller(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_soc_gpio0);
+    gpiom_enable_pin_visibility(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index), gpiom_soc_gpio0);
     gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
