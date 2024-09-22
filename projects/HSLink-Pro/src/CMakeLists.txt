@@ -92,13 +92,13 @@ sdk_app_src(usb2uart.c)
 sdk_app_src(dp_common.c)
 
 if (CONFIG_BUILD_VERSION)
-    sdk_compile_definitions(-DDAP_FW_VER="2.1.1")
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
 else ()
-    sdk_compile_definitions(-DDAP_FW_VER="Debug")
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="Debug")
 endif ()
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
-#sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
+sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
 sdk_app_src(../common/HSLink_Pro_expansion.c)
 sdk_compile_options("-g")
 

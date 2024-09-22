@@ -169,8 +169,10 @@ static const char TargetBoardName    [] = TARGET_BOARD_NAME;
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
-    (void)str;
-    return (0U);
+    const char vendor[] = "CherryUSB";
+    uint8_t len = (uint8_t)strlen(vendor);
+    memcpy(str, vendor, len);
+    return len;
 }
 
 /** Get Product Name string.
@@ -178,8 +180,10 @@ __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
-    (void)str;
-    return (0U);
+    const char product[] = "HSLink Pro";
+    uint8_t len = (uint8_t)strlen(product);
+    memcpy(str, product, len);
+    return len;
 }
 
 /** Get Serial Number string.
@@ -264,8 +268,10 @@ __STATIC_INLINE uint8_t DAP_GetTargetBoardNameString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
-    (void)str;
-    return (0U);
+    const char version[] = CONFIG_BUILD_VERSION;
+    uint8_t len = (uint8_t)strlen(version);
+    memcpy(str, version, len);
+    return len;
 }
 
 ///@}
