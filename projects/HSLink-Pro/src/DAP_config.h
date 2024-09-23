@@ -180,7 +180,7 @@ __STATIC_INLINE uint8_t DAP_GetVendorString (char *str) {
 \return String length (including terminating NULL character) or 0 (no string).
 */
 __STATIC_INLINE uint8_t DAP_GetProductString (char *str) {
-    const char product[] = "HSLink Pro";
+    const char product[] = "Cherry CMSIS-DAP";
     uint8_t len = (uint8_t)strlen(product);
     memcpy(str, product, len);
     return len;
