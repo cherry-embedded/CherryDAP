@@ -47,7 +47,7 @@ int main(void)
 
     SWDIO_DIR_Init();
 
-    printf("version: %s\n", DAP_FW_VER);
+    printf("version: " CONFIG_BUILD_VERSION "\n");
     extern char *string_descriptors[];
     memcpy(string_descriptors[3], serial_number, 32);
 
