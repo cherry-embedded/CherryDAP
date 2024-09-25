@@ -210,6 +210,11 @@ static inline void BOOT_Init(void)
     gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 3, gpiom_soc_gpio0);
     gpio_set_pin_input(HPM_GPIO0, GPIO_OE_GPIOA, 3);
     gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
+
+    HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), 1);
 }
 
 static uint32_t millis(void)
