@@ -116,13 +116,6 @@ __STATIC_INLINE void chry_dap_init(uint8_t busid, uint32_t reg_base)
     usbd_add_endpoint(0, &cdc_out_ep);
     usbd_add_endpoint(0, &cdc_in_ep);
 
-//#ifdef CONFIG_USE_HID_CONFIG
-//    /*!< hid */
-//    usbd_add_interface(0, usbd_hid_init_intf(0, &hid_intf, hid_custom_report_desc, HID_CUSTOM_REPORT_DESC_SIZE));
-//    usbd_add_endpoint(0, &hid_custom_in_ep);
-//    usbd_add_endpoint(0, &hid_custom_out_ep);
-//#endif
-
 #ifdef CONFIG_CHERRYDAP_USE_MSC
     usbd_add_interface(0, usbd_msc_init_intf(0, &intf3, MSC_OUT_EP, MSC_IN_EP));
 #endif
