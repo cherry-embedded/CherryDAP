@@ -88,17 +88,18 @@ sdk_app_src(../../../DAP/Source/DAP.c)
 sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.c)
-sdk_app_src(usb2uart.c)
 sdk_app_src(dp_common.c)
 
 if (CONFIG_BUILD_VERSION)
-    sdk_compile_definitions(-DDAP_FW_VER="2.1.1")
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
 else ()
-    sdk_compile_definitions(-DDAP_FW_VER="Debug")
+    sdk_compile_definitions(-DCONFIG_BUILD_VERSION="Debug")
 endif ()
 
 sdk_app_src(swd_host/swd_host.c)
 sdk_app_inc(swd_host)
+sdk_app_src(USB2UART/usb2uart.c)
+sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
@@ -112,4 +113,4 @@ add_custom_command(
         COMMENT "Convert to UF2"
 )
 
-#generate_ses_project()
+generate_ide_projects()
