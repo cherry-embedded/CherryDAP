@@ -96,11 +96,13 @@ else ()
     sdk_compile_definitions(-DCONFIG_BUILD_VERSION="Debug")
 endif ()
 
+sdk_app_src(swd_host/swd_host.c)
+sdk_app_inc(swd_host)
 sdk_app_src(USB2UART/usb2uart.c)
 sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
-#sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
+sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
 sdk_app_src(../common/HSLink_Pro_expansion.c)
 sdk_compile_options("-g")
 

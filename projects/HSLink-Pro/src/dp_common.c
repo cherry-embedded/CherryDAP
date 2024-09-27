@@ -8,6 +8,7 @@
 #include "DAP.h"
 #include "hpm_spi_drv.h"
 #include "hpm_clock_drv.h"
+#include "swd_host.h"
 #include <stdlib.h>
 
 #define SPI_MAX_SRC_CLOCK  (80000000U)
@@ -90,4 +91,22 @@ void set_swj_clock_frequency(uint32_t clock)
     }
     spi_master_set_sclk_div(spi_base, sclk_div);
     clock_set_source_divider(clock_name, src_clock, div);
+}
+
+// Use the CMSIS-Core definition if available.
+#if !defined(SCB_AIRCR_PRIGROUP_Pos)
+#define SCB_AIRCR_PRIGROUP_Pos              8U                                            /*!< SCB AIRCR: PRIGROUP Position */
+#define SCB_AIRCR_PRIGROUP_Msk             (7UL << SCB_AIRCR_PRIGROUP_Pos)                /*!< SCB AIRCR: PRIGROUP Mask */
+#endif
+
+uint8_t software_reset(void)
+{
+    if (DAP_Data.debug_port != DAP_PORT_SWD) {
+        return 1;
+    }
+    uint8_t ret = 0;
+    uint32_t val;
+    ret |= swd_read_word(NVIC_AIRCR, &val);
+    ret |= swd_write_word(NVIC_AIRCR, VECTKEY | (val & SCB_AIRCR_PRIGROUP_Msk) | SYSRESETREQ);
+    return ret;
 }
