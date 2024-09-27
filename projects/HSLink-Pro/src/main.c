@@ -7,6 +7,7 @@
 #include "WS2812.h"
 #include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
 #include "usb2uart.h"
+#include "usb_configuration.h"
 
 char serial_number[32];
 
@@ -56,7 +57,8 @@ int main(void)
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
     uartx_preinit();
 
-    chry_dap_init(0, CONFIG_HPM_USBD_BASE);
+    USB_Configuration();
+
     while (1) {
         chry_dap_handle();
         chry_dap_usb2uart_handle();

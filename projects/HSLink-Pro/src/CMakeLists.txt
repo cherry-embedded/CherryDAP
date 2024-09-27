@@ -73,7 +73,6 @@ sdk_app_src(JTAG_DP/JTAG_DP.c)
 sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
 sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
 
-
 sdk_inc(.)
 sdk_inc(../../..)
 sdk_inc(../../../CherryRB)
@@ -104,6 +103,14 @@ sdk_app_inc(USB2UART)
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
 sdk_app_src(../common/HSLink_Pro_expansion.c)
+
+file(GLOB_RECURSE HID_COMM_SRC
+        "HID_COMM/*.c"
+)
+sdk_app_src(${HID_COMM_SRC})
+sdk_app_inc(HID_COMM)
+sdk_app_src(usb_configuration.c)
+
 sdk_compile_options("-g")
 
 # 执行完之后转换为uf2
