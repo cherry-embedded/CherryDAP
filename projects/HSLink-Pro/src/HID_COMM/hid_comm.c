@@ -4,13 +4,13 @@
 
 #include "hid_comm.h"
 #include "usbd_core.h"
-
 #include "dap_main.h"
+
+#ifdef CONFIG_USE_HID_CONFIG
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[HID_PACKET_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[HID_PACKET_SIZE];
 
-#ifdef CONFIG_USE_HID_CONFIG
 /*!< custom hid report descriptor */
 const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
         /* USER CODE BEGIN 0 */
@@ -44,18 +44,15 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
         /* USER CODE END 0 */
         0xC0 /*     END_COLLECTION	             */
 };
-#endif
 
-#ifdef CONFIG_USE_HID_CONFIG
-
-__WEAK void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void) busid;
     USB_LOG_RAW("actual in len:%d\r\n", nbytes);
     //    custom_state = HID_STATE_IDLE;
 }
 
-__WEAK void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void) busid;
     USB_LOG_RAW("actual out len:%d\r\n", nbytes);
@@ -73,5 +70,5 @@ struct usbd_endpoint hid_custom_out_ep = {
         .ep_cb = usbd_hid_custom_out_callback,
         .ep_addr = HID_OUT_EP
 };
-#endif
 
+#endif
