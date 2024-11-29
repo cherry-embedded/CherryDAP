@@ -272,7 +272,7 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 #define PIN_TMS      12
 #define PIN_TDI      14
 #define PIN_TDO      16
-#define PIN_nRESET    24
+#define PIN_nRESET   17
 
 extern struct bflb_device_s *g_gpio;
 
