@@ -1,10 +1,12 @@
-name: HPM Build
+name: HSLinkPro Pipeline
 
 on:
   push:
     paths:
       - '.github/workflows/HPM-build.yml'
       - 'projects/HSLink-Pro/**'
+    tags:
+      - 'HSLinkPro*'
   pull_request:
     paths:
       - '.github/workflows/HPM-build.yml'
@@ -23,15 +25,10 @@ jobs:
 
       - uses: gregdavill/setup-riscv-gnu-toolchain@v2.0
 
-      # 创建riscv-none-elf-到riscv32-unknown-elf-的软链接
-      - name: Create riscv-none-elf- to riscv32-unknown-elf- symlink
-        run: |
-          sudo bash ./.github/workflows/create_riscv32_symlink.sh
-
       - name: Install HPM SDK
         run: |
           cd ~
-          git clone https://github.com/hpmicro/sdk_env.git --recursive
+          git clone https://github.com/hpmicro/hpm_sdk.git --recursive
 
       - name: Create Python Venv
         run: |
@@ -44,23 +41,23 @@ jobs:
       - name: Build bootloader
         run: |
           cd projects/HSLink-Pro/bootloader
-          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
-          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_BASE=~/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=/home/runner/work/_temp/.setup-riscv-gnu-toolchain
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
-          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_xip -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
+          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_xip -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
           cmake --build ./build
 
       - name: Build APP
         run: |
           cd projects/HSLink-Pro/src
-          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
-          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_BASE=~/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=/home/runner/work/_temp/.setup-riscv-gnu-toolchain
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
-          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_uf2 -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
+          cmake -GNinja -DBOARD=hpm5301evklite -DHPM_BUILD_TYPE=flash_uf2 -DCMAKE_BUILD_TYPE=release -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
           cmake --build ./build
 
       - name: Merge Bin
@@ -80,9 +77,31 @@ jobs:
       - name: Upload file
         uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: build-artifact
           path: |
             releases/HSLink-Pro-Bootloader.bin
             releases/HSLink-Pro.uf2
             releases/HSLink-Pro.bin
             releases/Merger.bin
+      
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Download release
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+          path: releases
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'releases/*'
+          # tag: ${{ github.ref }}
+          allowUpdates: true

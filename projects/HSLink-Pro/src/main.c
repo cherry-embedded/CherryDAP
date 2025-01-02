@@ -43,13 +43,12 @@ int main(void)
 {
     board_init();
     serial_number_init();
-    board_init_usb_pins();
+    board_init_usb(HPM_USB0);
     dma_mgr_init();
 
     SWDIO_DIR_Init();
 
     printf("version: " CONFIG_BUILD_VERSION "\n");
-    extern char *string_descriptors[];
     memcpy(string_descriptors[3], serial_number, 32);
 
     HSP_Init();
