@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2024 HalfSweet
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * SPDX-License-Identifier: Apache-2.0
  *
  */
 
@@ -212,6 +212,31 @@ static inline void BOOT_Init(void)
     gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
 }
 
+ATTR_ALWAYS_INLINE
+static inline void Port_Enable_Init(void)
+{
+    // PA04
+    HPM_IOC->PAD[IOC_PAD_PA04].FUNC_CTL = IOC_PA04_FUNC_CTL_GPIO_A_04;
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 4, gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_OE_GPIOA, 4);
+
+    // TODO：后期加入上位机之后再默认关闭，目前默认打开
+    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
+}
+
+ATTR_ALWAYS_INLINE
+static inline void Port_Enable(void)
+{
+    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
+}
+
+ATTR_ALWAYS_INLINE
+static inline void Port_Disable(void)
+{
+    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 0);
+}
+
 static uint32_t millis(void)
 {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
@@ -246,6 +271,7 @@ void HSP_Init(void)
     MCHTMR_CLK_FREQ = clock_get_frequency(clock_mchtmr0);
     // 初始化电源部分
     Power_Enable_Init();
+    Port_Enable_Init();
     Power_PWM_Init();
 
     // 初始化ADC部分
@@ -263,12 +289,14 @@ void HSP_Loop(void)
     // 检测VREF电压
     double vref = Get_VREF_Voltage();
 
-    if (vref > 0.6) {
+    if (vref > 1.6) {
         Power_Set_TVCC_Voltage(vref);
         Power_Turn_On();
+        Port_Enable();
     } else {
         Power_Turn_Off();
         Power_Set_TVCC_Voltage(3.3);
+//        Port_Disable();
     }
 
     if (BOOT_Button_Pressed()) {
