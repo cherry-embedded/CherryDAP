@@ -42,6 +42,7 @@ jobs:
         run: |
           cd projects/HSLink-Pro/bootloader
           export HPM_SDK_BASE=~/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=/home/runner/work/_temp/.setup-riscv-gnu-toolchain
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
@@ -52,6 +53,7 @@ jobs:
         run: |
           cd projects/HSLink-Pro/src
           export HPM_SDK_BASE=~/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=/home/runner/work/_temp/.setup-riscv-gnu-toolchain
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
