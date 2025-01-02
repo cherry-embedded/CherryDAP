@@ -28,7 +28,7 @@ jobs:
       - name: Install HPM SDK
         run: |
           cd ~
-          git clone https://github.com/hpmicro/sdk_env.git --recursive
+          git clone https://github.com/hpmicro/hpm_sdk.git --recursive
 
       - name: Create Python Venv
         run: |
@@ -41,8 +41,7 @@ jobs:
       - name: Build bootloader
         run: |
           cd projects/HSLink-Pro/bootloader
-          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
-          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_BASE=~/hpm_sdk
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
@@ -52,8 +51,7 @@ jobs:
       - name: Build APP
         run: |
           cd projects/HSLink-Pro/src
-          export HPM_SDK_BASE=~/sdk_env/hpm_sdk
-          export GNURISCV_TOOLCHAIN_PATH=~/risv32-unknown-elf
+          export HPM_SDK_BASE=~/hpm_sdk
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
