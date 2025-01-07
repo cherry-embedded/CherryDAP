@@ -7,3 +7,6 @@
 [submodule "projects/HSLink-Pro/WS2812"]
 	path = projects/HSLink-Pro/WS2812
 	url = https://github.com/HalfSweet/HPM_WS2812.git
+[submodule "projects/HSLink-Pro/cJSON"]
+	path = projects/HSLink-Pro/cJSON
+	url = https://github.com/DaveGamble/cJSON.git
