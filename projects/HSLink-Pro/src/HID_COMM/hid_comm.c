@@ -11,13 +11,32 @@
 #include "cJSON.h"
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_read_buffer[HID_PACKET_SIZE];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE] = {0x02};
 
 typedef enum
 {
     HID_STATE_BUSY = 0,
     HID_STATE_DONE,
 } HID_State_t;
+
+typedef int8_t (*HID_Command_Handler_t)(char *res, const cJSON *root);
+
+typedef struct
+{
+    const char *command;
+    HID_Command_Handler_t handler;
+} HID_Command_t;
+
+typedef enum
+{
+    HID_RESPONSE_SUCCESS = 0,
+    HID_RESPONSE_FAILED,
+} HID_Response_t;
+
+const char *response_str[] = {
+    "success",
+    "failed"
+};
 
 static volatile HID_State_t HID_ReadState = HID_STATE_BUSY;
 
@@ -58,6 +77,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void) busid;
+    (void)ep;
     USB_LOG_DBG("actual in len:%d\r\n", nbytes);
     // custom_state = HID_STATE_IDLE;
 }
@@ -77,6 +97,39 @@ struct usbd_endpoint hid_custom_in_ep = {
 struct usbd_endpoint hid_custom_out_ep = {
     .ep_cb = usbd_hid_custom_out_callback,
     .ep_addr = HID_OUT_EP
+};
+
+static void Add_ResponseState(cJSON *response, HID_Response_t state)
+{
+    cJSON_AddStringToObject(response, "state", response_str[state]);
+}
+
+static int8_t Hello(char *res, const cJSON *root)
+{
+    (void) root;
+    int8_t ret = -1;
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "serial", string_descriptors[3]);
+    cJSON_AddStringToObject(response, "model", "HSLink-Pro");
+    cJSON_AddStringToObject(response, "version", CONFIG_BUILD_VERSION);
+    cJSON_AddStringToObject(response, "bootloader", "1.0.0"); // 以后再改
+
+    char *response_str = cJSON_PrintUnformatted(response);
+    if (response_str == NULL)
+    {
+        USB_LOG_ERR("Hello command print json failed\n");
+        goto exit;
+    }
+
+    strcpy(res, response_str);
+    ret = 0;
+exit:
+    cJSON_Delete(response);
+    return ret;
+}
+
+static const HID_Command_t hid_command[] = {
+    {"Hello", Hello}
 };
 
 void HID_Handle(void)
@@ -102,41 +155,42 @@ void HID_Handle(void)
         goto exit;
     }
 
-    // name的内容为Hello
-    if (strcmp(name->valuestring, "Hello") == 0)
+    // 先清空HID_write_buffer中其他数据
+    memset(HID_write_buffer + 1, '\0', HID_PACKET_SIZE - 1);
+
+    // 遍历hid_command，找到对应的处理函数
+    for (size_t i = 0; i < sizeof(hid_command) / sizeof(hid_command[0]); i++)
     {
-        USB_LOG_DBG("Hello\n");
-        // 构建返回的json
-        /* json
+        if (strcmp(name->valuestring, hid_command[i].command) == 0)
         {
-            "serial": "123456",
-            "model": "HSLink-Pro",
-            "version": "1.0.0",
-            "bootloader": "1.0.0"
+            USB_LOG_DBG("command %s found\n", name->valuestring);
+            char *res = (char *) (HID_write_buffer + 1); // 第一个字节为Report ID
+            if (hid_command[i].handler(res, root) < 0)
+            {
+                // 失败
+                USB_LOG_ERR("command %s failed\n", hid_command[i].command);
+
+                cJSON *fail = cJSON_CreateObject();
+                Add_ResponseState(fail, HID_RESPONSE_FAILED);
+                char *response_str = cJSON_PrintUnformatted(fail);
+                strcpy(res, response_str);
+                cJSON_Delete(fail);
+            }
+            goto exit;;
         }
-         */
-
-        cJSON *response = cJSON_CreateObject();
-        cJSON_AddStringToObject(response, "serial", string_descriptors[3]);
-        cJSON_AddStringToObject(response, "model", "HSLink-Pro");
-        cJSON_AddStringToObject(response, "version", CONFIG_BUILD_VERSION);
-        cJSON_AddStringToObject(response, "bootloader", "1.0.0"); // 以后再改
-
-        // 将json转为字符串填充到HID_write_buffer中
-        char *response_str = cJSON_PrintUnformatted(response);
-        memset(HID_write_buffer, '\0',HID_PACKET_SIZE);
-        HID_write_buffer[0] = 0x02;
-
-        if (strlen(response_str) > HID_PACKET_SIZE - 1)
-        {
-            USB_LOG_ERR("response too long\n");
-            goto exit;
-        }
-        memcpy(HID_write_buffer + 1, response_str, strlen(response_str));
-        cJSON_Delete(response);
     }
 
+    // 进入此处说明未找到对应的处理函数
+    USB_LOG_ERR("command %s not found\n", name->valuestring);
+    cJSON *fail = cJSON_CreateObject();
+    Add_ResponseState(fail, HID_RESPONSE_FAILED);
+    cJSON_AddStringToObject(fail, "message", "command not found");
+    char *response_str = cJSON_PrintUnformatted(fail);
+    strcpy((char *) (HID_write_buffer + 1), response_str);
+    cJSON_Delete(fail);
+
 exit:
+    printf("%s\n", HID_write_buffer + 1);
     cJSON_Delete(root);
     HID_ReadState = HID_STATE_BUSY;
     usbd_ep_start_write(0,HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
