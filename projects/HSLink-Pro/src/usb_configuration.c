@@ -60,6 +60,9 @@ static void _usbd_event_handler(uint8_t busid, uint8_t event)
         case USBD_EVENT_CONFIGURED:
             usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);
             break;
+        case USBD_EVENT_RESET:
+            HID_write_buffer[0] = 0x02;
+            break;
         default:
             break;
     }

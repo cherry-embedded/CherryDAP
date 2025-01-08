@@ -11,7 +11,7 @@
 #include "cJSON.h"
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_read_buffer[HID_PACKET_SIZE];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE] = {0x02};
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE];
 
 typedef enum
 {
@@ -77,7 +77,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void) busid;
-    (void)ep;
+    (void) ep;
     USB_LOG_DBG("actual in len:%d\r\n", nbytes);
     // custom_state = HID_STATE_IDLE;
 }
@@ -176,7 +176,7 @@ void HID_Handle(void)
                 strcpy(res, response_str);
                 cJSON_Delete(fail);
             }
-            goto exit;;
+            goto exit;
         }
     }
 
@@ -190,7 +190,6 @@ void HID_Handle(void)
     cJSON_Delete(fail);
 
 exit:
-    printf("%s\n", HID_write_buffer + 1);
     cJSON_Delete(root);
     HID_ReadState = HID_STATE_BUSY;
     usbd_ep_start_write(0,HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
