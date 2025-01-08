@@ -20,9 +20,7 @@
 #define HID_PACKET_SIZE 64
 #endif
 
-#endif
 
-#ifdef CONFIG_USE_HID_CONFIG
 #define HID_IN_EP  0x88
 #define HID_OUT_EP 0x09
 
@@ -32,9 +30,6 @@
 #define HID_PACKET_SIZE 64
 #endif
 
-#endif
-
-#ifdef CONFIG_USE_HID_CONFIG
 #define CONFIG_HID_DESCRIPTOR_LEN   (9 + 9 + 7 + 7)
 #define CONFIG_HID_INTF_NUM         1
 #define HID_CUSTOM_REPORT_DESC_SIZE 53
@@ -90,6 +85,12 @@ extern struct usbd_endpoint hid_custom_in_ep;
 extern struct usbd_endpoint hid_custom_out_ep;
 
 extern const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE];
+
+extern uint8_t HID_read_buffer[];
+extern uint8_t HID_write_buffer[];
+
+void HID_Handle(void);
+
 #endif
 
 #endif //HSLINK_PRO_HID_COMM_H

@@ -1,3 +1,4 @@
+#include <hid_comm.h>
 #include <hpm_romapi.h>
 #include <hpm_dma_mgr.h>
 #include <hpm_gpio_drv.h>
@@ -39,6 +40,7 @@ static inline void SWDIO_DIR_Init(void)
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
 }
 
+[[noreturn]] // make compiler happy
 int main(void)
 {
     board_init();
@@ -63,5 +65,8 @@ int main(void)
         chry_dap_usb2uart_handle();
         usb2uart_handler();
         HSP_Loop();
+#ifdef CONFIG_USE_HID_CONFIG
+        HID_Handle();
+#endif
     }
 }

@@ -8,36 +8,36 @@
 #define INTF_NUM        (2 + 1 + CONFIG_MSC_INTF_NUM + CONFIG_HID_INTF_NUM)
 
 static const uint8_t config_descriptor[] = {
-        USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
-        /* Interface 0 */
-        USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
-        /* Endpoint OUT 2 */
-        USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-        /* Endpoint IN 1 */
-        USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-        CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    /* Interface 0 */
+    USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
+    /* Endpoint OUT 2 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    /* Endpoint IN 1 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #ifdef CONFIG_CHERRYDAP_USE_MSC
         MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #endif
 #ifdef CONFIG_USE_HID_CONFIG
-        HID_DESC()
+    HID_DESC()
 #endif
 };
 
 static const uint8_t other_speed_config_descriptor[] = {
-        USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
-        /* Interface 0 */
-        USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
-        /* Endpoint OUT 2 */
-        USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-        /* Endpoint IN 1 */
-        USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-        CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, INTF_NUM, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
+    /* Interface 0 */
+    USB_INTERFACE_DESCRIPTOR_INIT(0x00, 0x00, 0x02, 0xFF, 0x00, 0x00, 0x02),
+    /* Endpoint OUT 2 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    /* Endpoint IN 1 */
+    USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
+    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #ifdef CONFIG_CHERRYDAP_USE_MSC
         MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #endif
 #ifdef CONFIG_USE_HID_CONFIG
-        HID_DESC()
+    HID_DESC()
 #endif
 };
 
@@ -51,6 +51,20 @@ const uint8_t *other_speed_config_descriptor_callback(uint8_t speed)
 {
     (void) speed;
     return other_speed_config_descriptor;
+}
+
+static void _usbd_event_handler(uint8_t busid, uint8_t event)
+{
+    switch (event)
+    {
+        case USBD_EVENT_CONFIGURED:
+            usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);
+            break;
+        default:
+            break;
+    }
+    extern void usbd_event_handler(uint8_t busid, uint8_t event);
+    usbd_event_handler(busid, event);
 }
 
 void USB_Configuration(void)
@@ -83,6 +97,5 @@ void USB_Configuration(void)
 #ifdef CONFIG_CHERRYDAP_USE_MSC
     usbd_add_interface(0, usbd_msc_init_intf(0, &intf3, MSC_OUT_EP, MSC_IN_EP));
 #endif
-    extern void usbd_event_handler(uint8_t busid, uint8_t event);
-    usbd_initialize(0, HPM_USB0_BASE, usbd_event_handler);
+    usbd_initialize(0, HPM_USB0_BASE, _usbd_event_handler);
 }
