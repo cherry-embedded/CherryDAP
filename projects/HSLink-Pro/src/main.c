@@ -9,6 +9,7 @@
 #include "HSLink_Pro_expansion.h"
 #include "usb2uart.h"
 #include "usb_configuration.h"
+#include "setting.h"
 
 char serial_number[32];
 
@@ -52,6 +53,8 @@ int main(void)
 
     printf("version: " CONFIG_BUILD_VERSION "\n");
     memcpy(string_descriptors[3], serial_number, 32);
+
+    Setting_Init();
 
     HSP_Init();
 
