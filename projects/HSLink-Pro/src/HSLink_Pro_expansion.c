@@ -16,6 +16,9 @@
 #include "hpm_gpio_drv.h"
 #include "hpm_adc16_drv.h"
 #include "hpm_mchtmr_drv.h"
+#include "setting.h"
+#include "eeprom_emulation.h"
+#include "hpm_nor_flash.h"
 
 const double ADC_REF = 3.3;
 
@@ -71,7 +74,7 @@ static void Power_Enable_Init(void)
 
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), gpiom_soc_gpio0);
     gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN));
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), HSLink_Setting.power.enable);
 }
 
 ATTR_ALWAYS_INLINE
@@ -221,20 +224,31 @@ static inline void Port_Enable_Init(void)
     gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 4, gpiom_soc_gpio0);
     gpio_set_pin_output(HPM_GPIO0, GPIO_OE_GPIOA, 4);
 
-    // TODO：后期加入上位机之后再默认关闭，目前默认打开
-    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
+    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, HSLink_Setting.power.port_on);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Enable(void)
+static inline void Port_Turn_Enable(void)
 {
     gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Disable(void)
+static inline void Port_Turn_Disable(void)
 {
     gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 0);
+}
+
+ATTR_ALWAYS_INLINE
+static inline void Power_Trun(bool on)
+{
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), on);
+}
+
+ATTR_ALWAYS_INLINE
+static inline void Port_Turn(bool on)
+{
+    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, on);
 }
 
 static uint32_t millis(void)
@@ -292,11 +306,11 @@ void HSP_Loop(void)
     if (vref > 1.6) {
         Power_Set_TVCC_Voltage(vref);
         Power_Turn_On();
-        Port_Enable();
+        Port_Turn_Enable();
     } else {
-        Power_Turn_Off();
-        Power_Set_TVCC_Voltage(3.3);
-//        Port_Disable();
+        Power_Trun(HSLink_Setting.power.power_on);
+        Power_Set_TVCC_Voltage(HSLink_Setting.power.voltage); // TVCC恢复默认设置
+        Port_Turn(HSLink_Setting.power.port_on);
     }
 
     if (BOOT_Button_Pressed()) {

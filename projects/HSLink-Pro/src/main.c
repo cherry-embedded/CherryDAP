@@ -6,7 +6,7 @@
 #include "board.h"
 #include "dap_main.h"
 #include "WS2812.h"
-#include "projects/HSLink-Pro/common/HSLink_Pro_expansion.h"
+#include "HSLink_Pro_expansion.h"
 #include "usb2uart.h"
 #include "usb_configuration.h"
 

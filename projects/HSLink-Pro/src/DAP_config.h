@@ -305,14 +305,6 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
     #define PIN_TDO           IOC_PAD_PB12
 #endif
 
-typedef enum {
-    PORT_MODE_GPIO = 0,
-    PORT_MODE_SPI = 1,
-}PORT_Mode_t;
-
-extern PORT_Mode_t SWD_Port_Mode;
-extern PORT_Mode_t JTAG_Port_Mode;
-
 //**************************************************************************************************
 /**
 \defgroup DAP_Config_PortIO_gr CMSIS-DAP Hardware I/O Pin Access

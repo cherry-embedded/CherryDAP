@@ -1,10 +1,7 @@
-//
-// Created by HalfSweet on 24-9-25.
-//
-
 #include "hid_comm.h"
 #include "usbd_core.h"
 #include "dap_main.h"
+#include "setting.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
 
@@ -128,8 +125,91 @@ exit:
     return ret;
 }
 
+static int8_t settings(char *res, const cJSON *root)
+{
+    int8_t ret = -1;
+    cJSON *response = cJSON_CreateObject();
+    cJSON *data = cJSON_GetObjectItem(root, "data");
+    if (data == NULL)
+    {
+        const char *message = "data object not found";
+        USB_LOG_ERR("%s\n", message);
+        cJSON_AddStringToObject(response, "message", message);
+        goto fail;
+    }
+
+    HSLink_Setting.boost = (bool) cJSON_GetObjectItem(data, "boost")->valueint;
+    char *swd = cJSON_GetObjectItem(data, "swd_port_mode")->valuestring;
+    if (strcmp(swd, "spi") == 0)
+    {
+        HSLink_Setting.swd_port_mode = PORT_MODE_SPI;
+    }
+    else
+    {
+        // 其它任何字段都当作GPIO处理
+        HSLink_Setting.swd_port_mode = PORT_MODE_GPIO;
+    }
+
+    char *jtag = cJSON_GetObjectItem(data, "jtag_port_mode")->valuestring;
+    if (strcmp(jtag, "spi") == 0)
+    {
+        HSLink_Setting.jtag_port_mode = PORT_MODE_SPI;
+    }
+    else
+    {
+        // 其它任何字段都当作GPIO处理
+        HSLink_Setting.jtag_port_mode = PORT_MODE_GPIO;
+    }
+
+    cJSON *power = cJSON_GetObjectItem(data, "power");
+    HSLink_Setting.power.enable = (bool) cJSON_GetObjectItem(power, "enable")->valueint;
+    HSLink_Setting.power.voltage = cJSON_GetObjectItem(power, "voltage")->valuedouble;
+    HSLink_Setting.power.power_on = (bool) cJSON_GetObjectItem(power, "power_on")->valueint;
+    HSLink_Setting.power.port_on = (bool) cJSON_GetObjectItem(power, "port_on")->valueint;
+
+    int reset_size = cJSON_GetArraySize(cJSON_GetObjectItem(data, "reset"));
+    cJSON *reset_array = cJSON_GetObjectItem(data, "reset");
+    HSLink_Setting.reset = 0;
+    for (int i = 0; i < reset_size; i++)
+    {
+        cJSON *reset = cJSON_GetArrayItem(reset_array, i);
+        if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) != 1 && strcmp(reset->valuestring, "nrst") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_NRST);
+        }
+        else if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) != 1 && strcmp(reset->valuestring, "por") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_POR);
+        }
+        else if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) != 1 && strcmp(reset->valuestring,
+                     "arm_swd_soft") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT);
+        }
+    }
+
+    HSLink_Setting.led = (bool) cJSON_GetObjectItem(data, "led")->valueint;
+    HSLink_Setting.led_brightness = cJSON_GetObjectItem(data, "led_brightness")->valueint;
+
+
+    Add_ResponseState(response, HID_RESPONSE_SUCCESS);
+    cJSON_AddStringToObject(response, "message", "settings success");
+    ret = 0;
+    goto exit;
+fail:
+    Add_ResponseState(response, HID_RESPONSE_FAILED);
+    // 错误原因由错误的分支自行填充
+    // cJSON_AddStringToObject(response, "message", "settings failed");
+exit:
+    char *response_str = cJSON_PrintUnformatted(response);
+    strcpy(res, response_str);
+    cJSON_Delete(response);
+    return ret;
+}
+
 static const HID_Command_t hid_command[] = {
-    {"Hello", Hello}
+    {"Hello", Hello},
+    {"settings", settings}
 };
 
 void HID_Handle(void)
@@ -144,7 +224,7 @@ void HID_Handle(void)
     if (root == NULL)
     {
         USB_LOG_ERR("parse json failed\n");
-        goto exit;
+        goto fail;
     }
 
     // 取出key为"name"的值
@@ -152,7 +232,7 @@ void HID_Handle(void)
     if (name == NULL)
     {
         USB_LOG_ERR("get name failed\n");
-        goto exit;
+        goto fail;
     }
 
     // 先清空HID_write_buffer中其他数据
@@ -180,6 +260,7 @@ void HID_Handle(void)
         }
     }
 
+fail:
     // 进入此处说明未找到对应的处理函数
     USB_LOG_ERR("command %s not found\n", name->valuestring);
     cJSON *fail = cJSON_CreateObject();
