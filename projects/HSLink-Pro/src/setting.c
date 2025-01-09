@@ -19,14 +19,16 @@ HSLink_Setting_t HSLink_Setting = {
     .led_brightness = 0,
 };
 
+#define APP_OFFSET (0x20000)
 #define SETTING_E2P_RX_SIZE        (512)
 #define SETTING_E2P_BLOCK_SIZE_MAX (32)
 #define SETTING_E2P_ERASE_SIZE     (4096)
 #define SETTING_E2P_SECTOR_CNT     (32)
 #define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)
-#define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - SETTING_E2P_MANEGE_SIZE * 2)
+#define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - APP_OFFSET - SETTING_E2P_MANEGE_SIZE * 2)
 
-static const uint32_t setting_eeprom_id = 114514;
+static const char * e2p_name = "HSP";
+static uint32_t setting_eeprom_id;
 static e2p_t e2p;
 
 static uint32_t setting_e2p_read(uint8_t *buf, uint32_t addr, uint32_t size)
@@ -61,6 +63,7 @@ void Setting_Init(void)
 
     nor_flash_init(&e2p.nor_config);
     e2p_config(&e2p);
+    setting_eeprom_id = e2p_generate_id(e2p_name);
     e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
 }
 

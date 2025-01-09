@@ -195,7 +195,7 @@ static int8_t settings(char *res, const cJSON *root)
     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
     cJSON_AddStringToObject(response, "message", "settings success");
     ret = 0;
-    Setting_Save();
+    // Setting_Save();
     goto exit;
 fail:
     Add_ResponseState(response, HID_RESPONSE_FAILED);
