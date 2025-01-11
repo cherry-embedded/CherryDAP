@@ -119,6 +119,7 @@ static int8_t Hello(char *res, const cJSON *root)
     }
 
     strcpy(res, response_str);
+    cJSON_free(response_str);
     ret = 0;
 exit:
     cJSON_Delete(response);
@@ -204,6 +205,7 @@ fail:
 exit:
     char *response_str = cJSON_PrintUnformatted(response);
     strcpy(res, response_str);
+    cJSON_free(response_str);
     cJSON_Delete(response);
     return ret;
 }
@@ -255,6 +257,7 @@ void HID_Handle(void)
                 Add_ResponseState(fail, HID_RESPONSE_FAILED);
                 char *response_str = cJSON_PrintUnformatted(fail);
                 strcpy(res, response_str);
+                cJSON_free(response_str);
                 cJSON_Delete(fail);
             }
             goto exit;
@@ -269,6 +272,7 @@ fail:
     cJSON_AddStringToObject(fail, "message", "command not found");
     char *response_str = cJSON_PrintUnformatted(fail);
     strcpy((char *) (HID_write_buffer + 1), response_str);
+    cJSON_free(response_str);
     cJSON_Delete(fail);
 
 exit:
