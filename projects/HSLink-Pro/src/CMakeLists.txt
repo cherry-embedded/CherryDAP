@@ -116,9 +116,14 @@ sdk_app_src(usb_configuration.c)
 
 sdk_compile_options("-g")
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../cJSON ${CMAKE_CURRENT_BINARY_DIR}/cJSON)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../cJSON)
-target_link_libraries(${APP_ELF_NAME} cjson)
+#cjson
+sdk_app_inc(../cJSON)
+sdk_app_src(../cJSON/cJSON.c)
+sdk_app_src(../cJSON/cJSON_Utils.c)
+
+#tlsf
+sdk_app_inc(tlsf)
+sdk_app_src(tlsf/tlsf.c)
 
 # 执行完之后转换为uf2
 add_custom_command(
