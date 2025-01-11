@@ -16,7 +16,7 @@
 #define UART_RX_DMA                HPM_DMA_SRC_UART2_RX
 #define UART_RX_DMA_RESOURCE_INDEX (0U)
 #define UART_RX_DMA_BUFFER_SIZE    (8192U)
-#define UART_RX_DMA_BUFFER_COUNT   (5)
+#define UART_RX_DMA_BUFFER_COUNT   (3)
 
 #define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
 #define UART_TX_DMA_RESOURCE_INDEX (1U)

@@ -2,6 +2,7 @@
 #include "usbd_core.h"
 #include "dap_main.h"
 #include "setting.h"
+#include "usb_configuration.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
 
@@ -106,7 +107,7 @@ static int8_t Hello(char *res, const cJSON *root)
     (void) root;
     int8_t ret = -1;
     cJSON *response = cJSON_CreateObject();
-    cJSON_AddStringToObject(response, "serial", string_descriptors[3]);
+    cJSON_AddStringToObject(response, "serial", serial_number);
     cJSON_AddStringToObject(response, "model", "HSLink-Pro");
     cJSON_AddStringToObject(response, "version", CONFIG_BUILD_VERSION);
     cJSON_AddStringToObject(response, "bootloader", "1.0.0"); // 以后再改
@@ -191,7 +192,6 @@ static int8_t settings(char *res, const cJSON *root)
 
     HSLink_Setting.led = (bool) cJSON_GetObjectItem(data, "led")->valueint;
     HSLink_Setting.led_brightness = cJSON_GetObjectItem(data, "led_brightness")->valueint;
-
 
     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
     cJSON_AddStringToObject(response, "message", "settings success");

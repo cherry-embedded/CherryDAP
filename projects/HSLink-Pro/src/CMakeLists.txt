@@ -21,6 +21,7 @@ if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPI
 endif ()
 
 set(CONFIG_EEPROM_EMULATION 1)
+set(HEAP_SIZE 0x8000)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
@@ -125,6 +126,9 @@ sdk_app_src(cJSON/cJSON_Utils.c)
 #tlsf
 sdk_app_inc(tlsf)
 sdk_app_src(tlsf/tlsf.c)
+
+sdk_app_src(malloc.c)
+sdk_ld_options(-Wl,--wrap=_malloc_r,--wrap=_free_r,--wrap=_realloc_r)
 
 # 执行完之后转换为uf2
 add_custom_command(
