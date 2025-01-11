@@ -17,6 +17,9 @@ HSLink_Setting_t HSLink_Setting = {
     .reset = RESET_NRST,
     .led = false,
     .led_brightness = 0,
+    .hardware = {
+        0, 0, 0
+    }
 };
 
 #define APP_OFFSET (0x20000)
@@ -27,7 +30,7 @@ HSLink_Setting_t HSLink_Setting = {
 #define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)
 #define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - APP_OFFSET - SETTING_E2P_MANEGE_SIZE * 2)
 
-static const char * e2p_name = "HSP";
+static const char *e2p_name = "HSP";
 static uint32_t setting_eeprom_id;
 static e2p_t e2p;
 
@@ -72,7 +75,7 @@ void Setting_Init(void)
     e2p_config(&e2p);
     setting_eeprom_id = e2p_generate_id(e2p_name);
     HSLink_Setting_t temp;
-    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&temp);
+    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &temp);
     if (temp.magic != SETTING_MAGIC)
     {
         // 第一次烧录，使用默认设置
@@ -89,7 +92,7 @@ void Setting_Save(void)
 {
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     HSLink_Setting.magic = SETTING_MAGIC;
-    e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
+    e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &HSLink_Setting);
     print_param();
     enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }

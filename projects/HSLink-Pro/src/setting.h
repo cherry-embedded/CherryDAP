@@ -38,6 +38,13 @@ typedef struct
     uint8_t reset; //这是一个Bitmap，用来存储多种设置，每一位的功能见Setting_ResetBit_t
     bool led;
     uint8_t led_brightness;
+
+    struct
+    {
+        uint8_t major;
+        uint8_t minor;
+        uint8_t patch;
+    } hardware;
 } HSLink_Setting_t;
 
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;

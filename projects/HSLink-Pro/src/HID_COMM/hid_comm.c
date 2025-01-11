@@ -111,6 +111,16 @@ static int8_t Hello(char *res, const cJSON *root)
     cJSON_AddStringToObject(response, "model", "HSLink-Pro");
     cJSON_AddStringToObject(response, "version", CONFIG_BUILD_VERSION);
     cJSON_AddStringToObject(response, "bootloader", "1.0.0"); // 以后再改
+    char hw_ver[16];
+    if (HSLink_Setting.hardware.major == 0 && HSLink_Setting.hardware.minor == 0 && HSLink_Setting.hardware.patch == 0)
+    {
+        strcpy(hw_ver, "unknown");
+    }
+    else
+    {
+        sprintf(hw_ver, "%d.%d.%d", HSLink_Setting.hardware.major, HSLink_Setting.hardware.minor, HSLink_Setting.hardware.patch);
+    }
+    cJSON_AddStringToObject(response, "hardware", hw_ver);
 
     char *response_str = cJSON_PrintUnformatted(response);
     if (response_str == NULL)
