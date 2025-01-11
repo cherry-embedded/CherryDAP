@@ -30,6 +30,7 @@ typedef enum
 
 typedef struct
 {
+    uint32_t magic;
     bool boost;
     PORT_Mode_t swd_port_mode;
     PORT_Mode_t jtag_port_mode;
@@ -38,6 +39,8 @@ typedef struct
     bool led;
     uint8_t led_brightness;
 } HSLink_Setting_t;
+
+static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
 

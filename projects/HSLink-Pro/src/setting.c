@@ -46,6 +46,12 @@ static void setting_e2p_erase(uint32_t start_addr, uint32_t size)
     nor_flash_erase(&e2p.nor_config, start_addr, size);
 }
 
+static void print_param(void)
+{
+    printf("magic: %08X\n", HSLink_Setting.magic);
+    printf("boost: %d\n", HSLink_Setting.boost);
+}
+
 void Setting_Init(void)
 {
     e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
@@ -65,13 +71,25 @@ void Setting_Init(void)
     nor_flash_init(&e2p.nor_config);
     e2p_config(&e2p);
     setting_eeprom_id = e2p_generate_id(e2p_name);
-    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
+    HSLink_Setting_t temp;
+    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&temp);
+    if (temp.magic != SETTING_MAGIC)
+    {
+        // 第一次烧录，使用默认设置
+        printf("First boot, use default setting\n");
+        Setting_Save();
+        return;
+    }
+    memcpy(&HSLink_Setting, &temp, sizeof(HSLink_Setting_t));
+    print_param();
     enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }
 
 void Setting_Save(void)
 {
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
+    HSLink_Setting.magic = SETTING_MAGIC;
     e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
+    print_param();
     enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }
