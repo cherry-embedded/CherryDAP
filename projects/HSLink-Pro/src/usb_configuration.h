@@ -6,4 +6,6 @@
  */
 void USB_Configuration(void);
 
+extern char serial_number[];
+
 #endif //HSLINK_PRO_USB_CONFIGURATION_H

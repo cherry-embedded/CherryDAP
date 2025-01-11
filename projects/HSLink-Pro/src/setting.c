@@ -61,13 +61,17 @@ void Setting_Init(void)
     e2p.config.flash_write = setting_e2p_write;
     e2p.config.flash_erase = setting_e2p_erase;
 
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
     nor_flash_init(&e2p.nor_config);
     e2p_config(&e2p);
     setting_eeprom_id = e2p_generate_id(e2p_name);
     e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
+    enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }
 
 void Setting_Save(void)
 {
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
     e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *)&HSLink_Setting);
+    enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }

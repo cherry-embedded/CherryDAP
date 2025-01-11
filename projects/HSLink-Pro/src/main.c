@@ -11,8 +11,6 @@
 #include "usb_configuration.h"
 #include "setting.h"
 
-char serial_number[32];
-
 static void serial_number_init(void)
 {
 #define OTP_CHIP_UUID_IDX_START (88U)
@@ -24,10 +22,7 @@ static void serial_number_init(void)
         uuid_words[word_idx++] = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(i);
     }
 
-    char chip_id[32];
-    sprintf(chip_id, "%08X%08X%08X%08X", uuid_words[0], uuid_words[1], uuid_words[2], uuid_words[3]);
-    memcpy(serial_number, chip_id, 32);
-
+    sprintf(serial_number, "%08X%08X%08X%08X", uuid_words[0], uuid_words[1], uuid_words[2], uuid_words[3]);
     printf("Serial number: %s\n", serial_number);
 }
 
@@ -45,22 +40,20 @@ static inline void SWDIO_DIR_Init(void)
 int main(void)
 {
     board_init();
+    board_delay_ms(500);
     serial_number_init();
     board_init_usb(HPM_USB0);
     dma_mgr_init();
 
     SWDIO_DIR_Init();
 
-    printf("version: " CONFIG_BUILD_VERSION "\n");
-    memcpy(string_descriptors[3], serial_number, 32);
-
     Setting_Init();
 
+    printf("version: " CONFIG_BUILD_VERSION "\n");
     HSP_Init();
 
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
     uartx_preinit();
-
     USB_Configuration();
 
     while (1) {
