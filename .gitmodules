@@ -10,3 +10,6 @@
 [submodule "projects/HSLink-Pro/src/tlsf"]
 	path = projects/HSLink-Pro/src/tlsf
 	url = https://github.com/mattconte/tlsf.git
+[submodule "projects/HSLink-Pro/src/cJSON"]
+	path = projects/HSLink-Pro/src/cJSON
+	url = https://github.com/DaveGamble/cJSON.git

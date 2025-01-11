@@ -116,10 +116,11 @@ sdk_app_src(usb_configuration.c)
 
 sdk_compile_options("-g")
 
+sdk_ld_options("-lm")
 #cjson
-sdk_app_inc(../cJSON)
-sdk_app_src(../cJSON/cJSON.c)
-sdk_app_src(../cJSON/cJSON_Utils.c)
+sdk_app_inc(cJSON)
+sdk_app_src(cJSON/cJSON.c)
+sdk_app_src(cJSON/cJSON_Utils.c)
 
 #tlsf
 sdk_app_inc(tlsf)
