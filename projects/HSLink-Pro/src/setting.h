@@ -1,5 +1,6 @@
 #ifndef SETTING_H
 #define SETTING_H
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -11,7 +12,6 @@ typedef enum
 
 typedef struct
 {
-    bool enable;
     double voltage;
     bool power_on;
     bool port_on;
@@ -45,13 +45,23 @@ typedef struct
         uint8_t minor;
         uint8_t patch;
     } hardware;
+
+    char nickname[128];
 } HSLink_Setting_t;
 
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void Setting_Init(void);
 void Setting_Save(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif //SETTING_H

@@ -111,6 +111,7 @@ static int8_t Hello(char *res, const cJSON *root)
     cJSON_AddStringToObject(response, "model", "HSLink-Pro");
     cJSON_AddStringToObject(response, "version", CONFIG_BUILD_VERSION);
     cJSON_AddStringToObject(response, "bootloader", "1.0.0"); // 以后再改
+    cJSON_AddStringToObject(response, "nickname", HSLink_Setting.nickname);
     char hw_ver[16];
     if (HSLink_Setting.hardware.major == 0 && HSLink_Setting.hardware.minor == 0 && HSLink_Setting.hardware.patch == 0)
     {
@@ -118,7 +119,8 @@ static int8_t Hello(char *res, const cJSON *root)
     }
     else
     {
-        sprintf(hw_ver, "%d.%d.%d", HSLink_Setting.hardware.major, HSLink_Setting.hardware.minor, HSLink_Setting.hardware.patch);
+        sprintf(hw_ver, "%d.%d.%d", HSLink_Setting.hardware.major, HSLink_Setting.hardware.minor,
+                HSLink_Setting.hardware.patch);
     }
     cJSON_AddStringToObject(response, "hardware", hw_ver);
 
@@ -174,7 +176,6 @@ static int8_t settings(char *res, const cJSON *root)
     }
 
     cJSON *power = cJSON_GetObjectItem(data, "power");
-    HSLink_Setting.power.enable = (bool) cJSON_GetObjectItem(power, "enable")->valueint;
     HSLink_Setting.power.voltage = cJSON_GetObjectItem(power, "voltage")->valuedouble;
     HSLink_Setting.power.power_on = (bool) cJSON_GetObjectItem(power, "power_on")->valueint;
     HSLink_Setting.power.port_on = (bool) cJSON_GetObjectItem(power, "port_on")->valueint;
@@ -204,7 +205,7 @@ static int8_t settings(char *res, const cJSON *root)
     HSLink_Setting.led_brightness = cJSON_GetObjectItem(data, "led_brightness")->valueint;
 
     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
-    cJSON_AddStringToObject(response, "message", "settings success");
+    cJSON_AddStringToObject(response, "message", "");
     ret = 0;
     Setting_Save();
     goto exit;
@@ -220,9 +221,86 @@ exit:
     return ret;
 }
 
+static int8_t set_nickname(char *res, const cJSON *root)
+{
+    int8_t ret = -1;
+    cJSON *response = cJSON_CreateObject();
+
+    char *nickname = cJSON_GetObjectItem(root, "nickname")->valuestring;
+    if (strlen(nickname) > sizeof(HSLink_Setting.nickname))
+    {
+        const char *message = "nickname too long";
+        USB_LOG_ERR("%s\n", message);
+        cJSON_AddStringToObject(response, "message", message);
+        goto fail;
+    }
+
+    strcpy(HSLink_Setting.nickname, nickname);
+    Add_ResponseState(response, HID_RESPONSE_SUCCESS);
+    cJSON_AddStringToObject(response, "message", "");
+    ret = 0;
+    Setting_Save();
+    goto exit;
+fail:
+    Add_ResponseState(response, HID_RESPONSE_FAILED);
+exit:
+    char *response_str = cJSON_PrintUnformatted(response);
+    strcpy(res, response_str);
+    cJSON_free(response_str);
+    cJSON_Delete(response);
+    return ret;
+}
+
+static int8_t get_settings(char *res, const cJSON *root)
+{
+    (void) root;
+    int8_t ret = -1;
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddBoolToObject(response, "boost", HSLink_Setting.boost);
+    cJSON_AddStringToObject(response, "swd_port_mode", HSLink_Setting.swd_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+    cJSON_AddStringToObject(response, "jtag_port_mode", HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+
+    cJSON *power = cJSON_CreateObject();
+    cJSON_AddNumberToObject(power, "voltage", HSLink_Setting.power.voltage);
+    cJSON_AddBoolToObject(power, "power_on", HSLink_Setting.power.power_on);
+    cJSON_AddBoolToObject(power, "port_on", HSLink_Setting.power.port_on);
+    cJSON_AddItemToObject(response, "power", power);
+
+    cJSON *reset = cJSON_CreateArray();
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) == 1)
+    {
+        cJSON_AddItemToArray(reset, cJSON_CreateString("nrst"));
+    }
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) == 1)
+    {
+        cJSON_AddItemToArray(reset, cJSON_CreateString("por"));
+    }
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) == 1)
+    {
+        cJSON_AddItemToArray(reset, cJSON_CreateString("arm_swd_soft"));
+    }
+    cJSON_AddItemToObject(response, "reset", reset);
+
+    cJSON_AddBoolToObject(response, "led", HSLink_Setting.led);
+    cJSON_AddNumberToObject(response, "led_brightness", HSLink_Setting.led_brightness);
+
+
+exit:
+    Add_ResponseState(response, HID_RESPONSE_SUCCESS);
+    cJSON_AddStringToObject(response, "message", "");
+    char *response_str = cJSON_PrintUnformatted(response);
+    strcpy(res, response_str);
+    cJSON_free(response_str);
+    cJSON_Delete(response);
+    ret = 0;
+    return ret;
+}
+
 static const HID_Command_t hid_command[] = {
     {"Hello", Hello},
-    {"settings", settings}
+    {"settings", settings},
+    {"set_nickname", set_nickname},
+    {"get_settings", get_settings},
 };
 
 void HID_Handle(void)

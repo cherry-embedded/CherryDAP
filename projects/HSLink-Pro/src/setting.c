@@ -10,9 +10,9 @@ HSLink_Setting_t HSLink_Setting = {
     .swd_port_mode = PORT_MODE_SPI,
     .jtag_port_mode = PORT_MODE_SPI,
     .power = {
-        .enable = false,
         .voltage = 3.3,
         .power_on = false,
+        .port_on = false,
     },
     .reset = RESET_NRST,
     .led = false,
@@ -21,6 +21,7 @@ HSLink_Setting_t HSLink_Setting = {
         0, 0, 0
     }
 };
+
 
 #define APP_OFFSET (0x20000)
 #define SETTING_E2P_RX_SIZE        (512)
@@ -53,6 +54,7 @@ static void print_param(void)
 {
     printf("magic: %08X\n", HSLink_Setting.magic);
     printf("boost: %d\n", HSLink_Setting.boost);
+    printf("nickname: %s\n", HSLink_Setting.nickname);
 }
 
 void Setting_Init(void)
@@ -83,9 +85,9 @@ void Setting_Init(void)
         Setting_Save();
         return;
     }
+    enable_global_irq(CSR_MSTATUS_MIE_MASK);
     memcpy(&HSLink_Setting, &temp, sizeof(HSLink_Setting_t));
     print_param();
-    enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }
 
 void Setting_Save(void)
