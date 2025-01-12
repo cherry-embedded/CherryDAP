@@ -8,6 +8,7 @@ option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
 option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
 set(APP_NAME "HSLink-Pro")
+set(CMAKE_CXX_STANDARD 26)
 
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
@@ -22,6 +23,9 @@ endif ()
 
 set(CONFIG_EEPROM_EMULATION 1)
 set(HEAP_SIZE 0x8000)
+set(STACK_SIZE 0x5000)
+
+set(HPM_SDK_LD_NO_NANO_SPECS 1)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
@@ -120,9 +124,11 @@ sdk_compile_options("-g")
 
 sdk_ld_options("-lm")
 #cjson
-sdk_app_inc(cJSON)
-sdk_app_src(cJSON/cJSON.c)
-sdk_app_src(cJSON/cJSON_Utils.c)
+#sdk_app_inc(cJSON)
+#sdk_app_src(cJSON/cJSON.c)
+#sdk_app_src(cJSON/cJSON_Utils.c)
+
+sdk_app_inc(rapidjson/include)
 
 #tlsf
 sdk_app_inc(tlsf)

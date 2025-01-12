@@ -1,3 +1,5 @@
+#include <errno.h>
+
 #include "tlsf/tlsf.h"
 #include "stdint.h"
 #include <reent.h>
@@ -21,4 +23,10 @@ void *__wrap__realloc_r(struct _reent *ptr, void *old, size_t newlen) {
 
 void __wrap__free_r(struct _reent *reent, void *ptr) {
     return tlsf_free(tlsf, ptr);
+}
+
+int getentropy(char buffer[], size_t length)
+{
+    buffer = buffer; length = length;
+    return -ENOSYS;
 }
