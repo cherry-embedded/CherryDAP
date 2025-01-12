@@ -6,8 +6,17 @@
 #define PIN_UART_RTS IOC_PAD_PA07
 #define PIN_UART_DTR IOC_PAD_PA06
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void uartx_preinit(void);
 
 void usb2uart_handler(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //HSLINK_PRO_USB2UART_H

@@ -88,13 +88,13 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 }
 
 struct usbd_endpoint hid_custom_in_ep = {
+    .ep_addr = HID_IN_EP,
     .ep_cb = usbd_hid_custom_in_callback,
-    .ep_addr = HID_IN_EP
 };
 
 struct usbd_endpoint hid_custom_out_ep = {
+    .ep_addr = HID_OUT_EP,
     .ep_cb = usbd_hid_custom_out_callback,
-    .ep_addr = HID_OUT_EP
 };
 
 static void Add_ResponseState(cJSON *response, HID_Response_t state)
@@ -353,9 +353,9 @@ void HID_Handle(void)
     }
 
 fail:
+    cJSON *fail = cJSON_CreateObject();
     // 进入此处说明未找到对应的处理函数
     USB_LOG_ERR("command %s not found\n", name->valuestring);
-    cJSON *fail = cJSON_CreateObject();
     Add_ResponseState(fail, HID_RESPONSE_FAILED);
     cJSON_AddStringToObject(fail, "message", "command not found");
     char *response_str = cJSON_PrintUnformatted(fail);

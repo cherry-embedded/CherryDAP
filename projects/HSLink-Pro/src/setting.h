@@ -64,4 +64,5 @@ void Setting_Save(void);
 #ifdef __cplusplus
 }
 #endif
+
 #endif //SETTING_H

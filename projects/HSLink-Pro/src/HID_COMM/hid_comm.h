@@ -78,9 +78,12 @@
     0x03,                         /* bmAttributes: Interrupt endpoint */ \
     WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */ \
     HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
-#ifdef CONFIG_USE_HID_CONFIG
 extern struct usbd_endpoint hid_custom_in_ep;
 extern struct usbd_endpoint hid_custom_out_ep;
 
@@ -90,6 +93,10 @@ extern uint8_t HID_read_buffer[];
 extern uint8_t HID_write_buffer[];
 
 void HID_Handle(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

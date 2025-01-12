@@ -89,7 +89,7 @@ sdk_app_src(../../../DAP/Source/DAP.c)
 
 sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
-sdk_app_src(main.c)
+sdk_app_src(main.cpp)
 sdk_app_src(dp_common.c)
 sdk_app_src(setting.c)
 
@@ -110,6 +110,7 @@ sdk_app_src(HSLink_Pro_expansion.c)
 
 file(GLOB_RECURSE HID_COMM_SRC
         "HID_COMM/*.c"
+        "HID_COMM/*.cpp"
 )
 sdk_app_src(${HID_COMM_SRC})
 sdk_app_inc(HID_COMM)
