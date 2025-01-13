@@ -95,30 +95,47 @@ struct usbd_endpoint hid_custom_out_ep = {
     .ep_cb = usbd_hid_custom_out_callback,
 };
 
-__attribute__((optimize("O1")))
 static void Hello(Document &root, char* res)
 {
-    Document doc(kObjectType, &root.GetAllocator());
-    Document::AllocatorType &allocator = doc.GetAllocator();
-    doc.AddMember("serial", Value().SetString(StringRef(serial_number)).Move(),allocator);
-    doc.AddMember("model", Value().SetString("HSLink-Pro").Move(), allocator);
-    doc.AddMember("version", Value().SetString(CONFIG_BUILD_VERSION).Move(), allocator);
-    doc.AddMember("bootloader", Value().SetString("1.0.0").Move(), allocator); // 以后再改
-    if (HSLink_Setting.hardware.major == 0 && HSLink_Setting.hardware.minor == 0 && HSLink_Setting.hardware.patch == 0)
+    (void)root;
+    StringBuffer buffer;
+
+    Writer writer(buffer);
+    writer.StartObject();
+
+    writer.Key("serial");
+    writer.String(serial_number);
+
+    writer.Key("model");
+    writer.String("HSLink-Pro");
+
+    writer.Key("version");
+    writer.String(CONFIG_BUILD_VERSION);
+
+    writer.Key("bootloader");
+    writer.String("1.0.0"); // TODO: Update as needed
+
+    writer.Key("hardware");
+    if (HSLink_Setting.hardware.major == 0 &&
+        HSLink_Setting.hardware.minor == 0 &&
+        HSLink_Setting.hardware.patch == 0)
     {
-        doc.AddMember("hardware", Value().SetString("unknown").Move(), allocator);
+        writer.String("unknown");
     }
     else
     {
         char version[32];
-        sprintf(version, "%d.%d.%d", HSLink_Setting.hardware.major, HSLink_Setting.hardware.minor, HSLink_Setting.hardware.patch);
-        doc.AddMember("hardware", Value().SetString(version, allocator).Move(), allocator);
+        std::sprintf(version, "%d.%d.%d",
+                     HSLink_Setting.hardware.major,
+                     HSLink_Setting.hardware.minor,
+                     HSLink_Setting.hardware.patch);
+        writer.String(version);
     }
-    doc.AddMember("nickname", Value().SetString(StringRef(HSLink_Setting.nickname)).Move(), allocator);
 
-    StringBuffer buffer;
-    Writer writer(buffer);
-    doc.Accept(writer);
+    writer.Key("nickname");
+    writer.String(HSLink_Setting.nickname);
+
+    writer.EndObject();
 
     std::strcpy(res, buffer.GetString());
 }
