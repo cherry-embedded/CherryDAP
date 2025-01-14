@@ -9,6 +9,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+
 using namespace rapidjson;
 
 #include <unordered_map>
@@ -17,57 +18,55 @@ using namespace rapidjson;
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_read_buffer[HID_PACKET_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE];
 
-typedef enum
-{
+typedef enum {
     HID_STATE_BUSY = 0,
     HID_STATE_DONE,
 } HID_State_t;
 
-typedef enum
-{
+typedef enum {
     HID_RESPONSE_SUCCESS = 0,
     HID_RESPONSE_FAILED,
 } HID_Response_t;
 
 const char *response_str[] = {
-    "success",
-    "failed"
+        "success",
+        "failed"
 };
 
 static volatile HID_State_t HID_ReadState = HID_STATE_BUSY;
 
 /*!< custom hid report descriptor */
 const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
-    /* USER CODE BEGIN 0 */
-    0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
-    0x09, 0x01, /* USAGE (Vendor Usage 1) */
-    0xa1, 0x01, /* COLLECTION (Application) */
-    0x85, 0x02, /*   REPORT ID (0x02) */
-    0x09, 0x02, /*   USAGE (Vendor Usage 1) */
-    0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-    0x25, 0xff, /*LOGICAL_MAXIMUM (255) */
-    0x75, 0x08, /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-    0x81, 0x02, /*   INPUT (Data,Var,Abs) */
-    /* <___________________________________________________> */
-    0x85, 0x01, /*   REPORT ID (0x01) */
-    0x09, 0x03, /*   USAGE (Vendor Usage 1) */
-    0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-    0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-    0x75, 0x08, /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-    0x91, 0x02, /*   OUTPUT (Data,Var,Abs) */
+        /* USER CODE BEGIN 0 */
+        0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
+        0x09, 0x01, /* USAGE (Vendor Usage 1) */
+        0xa1, 0x01, /* COLLECTION (Application) */
+        0x85, 0x02, /*   REPORT ID (0x02) */
+        0x09, 0x02, /*   USAGE (Vendor Usage 1) */
+        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
+        0x25, 0xff, /*LOGICAL_MAXIMUM (255) */
+        0x75, 0x08, /*   REPORT_SIZE (8) */
+        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+        0x81, 0x02, /*   INPUT (Data,Var,Abs) */
+        /* <___________________________________________________> */
+        0x85, 0x01, /*   REPORT ID (0x01) */
+        0x09, 0x03, /*   USAGE (Vendor Usage 1) */
+        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
+        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
+        0x75, 0x08, /*   REPORT_SIZE (8) */
+        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+        0x91, 0x02, /*   OUTPUT (Data,Var,Abs) */
 
-    /* <___________________________________________________> */
-    0x85, 0x03, /*   REPORT ID (0x03) */
-    0x09, 0x04, /*   USAGE (Vendor Usage 1) */
-    0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-    0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-    0x75, 0x08, /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-    0xb1, 0x02, /*   FEATURE (Data,Var,Abs) */
-    /* USER CODE END 0 */
-    0xC0 /*     END_COLLECTION	             */
+        /* <___________________________________________________> */
+        0x85, 0x03, /*   REPORT ID (0x03) */
+        0x09, 0x04, /*   USAGE (Vendor Usage 1) */
+        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
+        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
+        0x75, 0x08, /*   REPORT_SIZE (8) */
+        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+        0xb1, 0x02, /*   FEATURE (Data,Var,Abs) */
+        /* USER CODE END 0 */
+        0xC0 /*     END_COLLECTION	             */
 };
 
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
@@ -86,18 +85,36 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 }
 
 struct usbd_endpoint hid_custom_in_ep = {
-    .ep_addr = HID_IN_EP,
-    .ep_cb = usbd_hid_custom_in_callback,
+        .ep_addr = HID_IN_EP,
+        .ep_cb = usbd_hid_custom_in_callback,
 };
 
 struct usbd_endpoint hid_custom_out_ep = {
-    .ep_addr = HID_OUT_EP,
-    .ep_cb = usbd_hid_custom_out_callback,
+        .ep_addr = HID_OUT_EP,
+        .ep_cb = usbd_hid_custom_out_callback,
 };
 
-static void Hello(Document &root, char* res)
+static void FillState(HID_Response_t state, char *res, const char *message)
 {
-    (void)root;
+    StringBuffer buffer;
+    Writer writer(buffer);
+    writer.StartObject();
+    writer.Key("state");
+    writer.String(response_str[state]);
+    writer.Key("message");
+    writer.String(message);
+    writer.EndObject();
+    std::strcpy(res, buffer.GetString());
+}
+
+static void FillState(HID_Response_t state, char *res)
+{
+    FillState(state, res, "");
+}
+
+static void Hello(Document &root, char *res)
+{
+    (void) root;
     StringBuffer buffer;
 
     Writer writer(buffer);
@@ -118,12 +135,9 @@ static void Hello(Document &root, char* res)
     writer.Key("hardware");
     if (HSLink_Setting.hardware.major == 0 &&
         HSLink_Setting.hardware.minor == 0 &&
-        HSLink_Setting.hardware.patch == 0)
-    {
+        HSLink_Setting.hardware.patch == 0) {
         writer.String("unknown");
-    }
-    else
-    {
+    } else {
         char version[32];
         std::sprintf(version, "%d.%d.%d",
                      HSLink_Setting.hardware.major,
@@ -140,170 +154,143 @@ static void Hello(Document &root, char* res)
     std::strcpy(res, buffer.GetString());
 }
 
-//
-// static int8_t settings(char *res, const cJSON *root)
-// {
-//     int8_t ret = -1;
-//     cJSON *response = cJSON_CreateObject();
-//     cJSON *data = cJSON_GetObjectItem(root, "data");
-//     if (data == NULL)
-//     {
-//         const char *message = "data object not found";
-//         USB_LOG_ERR("%s\n", message);
-//         cJSON_AddStringToObject(response, "message", message);
-//         goto fail;
-//     }
-//
-//     HSLink_Setting.boost = (bool) cJSON_GetObjectItem(data, "boost")->valueint;
-//     char *swd = cJSON_GetObjectItem(data, "swd_port_mode")->valuestring;
-//     if (strcmp(swd, "spi") == 0)
-//     {
-//         HSLink_Setting.swd_port_mode = PORT_MODE_SPI;
-//     }
-//     else
-//     {
-//         // 其它任何字段都当作GPIO处理
-//         HSLink_Setting.swd_port_mode = PORT_MODE_GPIO;
-//     }
-//
-//     char *jtag = cJSON_GetObjectItem(data, "jtag_port_mode")->valuestring;
-//     if (strcmp(jtag, "spi") == 0)
-//     {
-//         HSLink_Setting.jtag_port_mode = PORT_MODE_SPI;
-//     }
-//     else
-//     {
-//         // 其它任何字段都当作GPIO处理
-//         HSLink_Setting.jtag_port_mode = PORT_MODE_GPIO;
-//     }
-//
-//     cJSON *power = cJSON_GetObjectItem(data, "power");
-//     HSLink_Setting.power.voltage = cJSON_GetObjectItem(power, "voltage")->valuedouble;
-//     HSLink_Setting.power.power_on = (bool) cJSON_GetObjectItem(power, "power_on")->valueint;
-//     HSLink_Setting.power.port_on = (bool) cJSON_GetObjectItem(power, "port_on")->valueint;
-//
-//     int reset_size = cJSON_GetArraySize(cJSON_GetObjectItem(data, "reset"));
-//     cJSON *reset_array = cJSON_GetObjectItem(data, "reset");
-//     HSLink_Setting.reset = 0;
-//     for (int i = 0; i < reset_size; i++)
-//     {
-//         cJSON *reset = cJSON_GetArrayItem(reset_array, i);
-//         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) != 1 && strcmp(reset->valuestring, "nrst") == 0)
-//         {
-//             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_NRST);
-//         }
-//         else if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) != 1 && strcmp(reset->valuestring, "por") == 0)
-//         {
-//             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_POR);
-//         }
-//         else if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) != 1 && strcmp(reset->valuestring,
-//                      "arm_swd_soft") == 0)
-//         {
-//             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT);
-//         }
-//     }
-//
-//     HSLink_Setting.led = (bool) cJSON_GetObjectItem(data, "led")->valueint;
-//     HSLink_Setting.led_brightness = cJSON_GetObjectItem(data, "led_brightness")->valueint;
-//
-//     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
-//     cJSON_AddStringToObject(response, "message", "");
-//     ret = 0;
-//     Setting_Save();
-//     goto exit;
-// fail:
-//     Add_ResponseState(response, HID_RESPONSE_FAILED);
-//     // 错误原因由错误的分支自行填充
-//     // cJSON_AddStringToObject(response, "message", "settings failed");
-// exit:
-//     char *response_str = cJSON_PrintUnformatted(response);
-//     strcpy(res, response_str);
-//     cJSON_free(response_str);
-//     cJSON_Delete(response);
-//     return ret;
-// }
-//
-// static int8_t set_nickname(char *res, const cJSON *root)
-// {
-//     int8_t ret = -1;
-//     cJSON *response = cJSON_CreateObject();
-//
-//     char *nickname = cJSON_GetObjectItem(root, "nickname")->valuestring;
-//     if (strlen(nickname) > sizeof(HSLink_Setting.nickname))
-//     {
-//         const char *message = "nickname too long";
-//         USB_LOG_ERR("%s\n", message);
-//         cJSON_AddStringToObject(response, "message", message);
-//         goto fail;
-//     }
-//
-//     strcpy(HSLink_Setting.nickname, nickname);
-//     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
-//     cJSON_AddStringToObject(response, "message", "");
-//     ret = 0;
-//     Setting_Save();
-//     goto exit;
-// fail:
-//     Add_ResponseState(response, HID_RESPONSE_FAILED);
-// exit:
-//     char *response_str = cJSON_PrintUnformatted(response);
-//     strcpy(res, response_str);
-//     cJSON_free(response_str);
-//     cJSON_Delete(response);
-//     return ret;
-// }
-//
-// static int8_t get_settings(char *res, const cJSON *root)
-// {
-//     (void) root;
-//     int8_t ret = -1;
-//     cJSON *response = cJSON_CreateObject();
-//     cJSON_AddBoolToObject(response, "boost", HSLink_Setting.boost);
-//     cJSON_AddStringToObject(response, "swd_port_mode", HSLink_Setting.swd_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
-//     cJSON_AddStringToObject(response, "jtag_port_mode", HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
-//
-//     cJSON *power = cJSON_CreateObject();
-//     cJSON_AddNumberToObject(power, "voltage", HSLink_Setting.power.voltage);
-//     cJSON_AddBoolToObject(power, "power_on", HSLink_Setting.power.power_on);
-//     cJSON_AddBoolToObject(power, "port_on", HSLink_Setting.power.port_on);
-//     cJSON_AddItemToObject(response, "power", power);
-//
-//     cJSON *reset = cJSON_CreateArray();
-//     if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) == 1)
-//     {
-//         cJSON_AddItemToArray(reset, cJSON_CreateString("nrst"));
-//     }
-//     if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) == 1)
-//     {
-//         cJSON_AddItemToArray(reset, cJSON_CreateString("por"));
-//     }
-//     if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) == 1)
-//     {
-//         cJSON_AddItemToArray(reset, cJSON_CreateString("arm_swd_soft"));
-//     }
-//     cJSON_AddItemToObject(response, "reset", reset);
-//
-//     cJSON_AddBoolToObject(response, "led", HSLink_Setting.led);
-//     cJSON_AddNumberToObject(response, "led_brightness", HSLink_Setting.led_brightness);
-//
-//
-// exit:
-//     Add_ResponseState(response, HID_RESPONSE_SUCCESS);
-//     cJSON_AddStringToObject(response, "message", "");
-//     char *response_str = cJSON_PrintUnformatted(response);
-//     strcpy(res, response_str);
-//     cJSON_free(response_str);
-//     cJSON_Delete(response);
-//     ret = 0;
-//     return ret;
-// }
+static void settings(Document &root, char *res)
+{
+    if (!root.HasMember("data") || !root["data"].IsObject()) {
+        const char *message = "data not found";
+        USB_LOG_WRN("%s\n", message);
+        FillState(HID_RESPONSE_FAILED, res, message);
+        return;
+    }
 
-// static const HID_Command_t hid_command[] = {
-//     {"Hello", Hello},
-//     {"settings", settings},
-//     {"set_nickname", set_nickname},
-//     {"get_settings", get_settings},
-// };
+    const Value & data = root["data"].GetObject();
+    static const char *kTypeNames[] =
+            {"Null", "False", "True", "Object", "Array", "String", "Number"};
+    for (Value::ConstMemberIterator itr = data.MemberBegin();
+         itr != data.MemberEnd(); ++itr) {
+        printf("Type of member %s is %s\n",
+               itr->name.GetString(), kTypeNames[itr->value.GetType()]);
+    }
+
+    const char *test_str = R"({"name":"settings","data":{"power":{"vref":3.3,"power_on":true,"port_on":true},"reset":["nrst","por"],"led":true,"led_brightness":50,"boost":true,"swd_port_mode":"spi","jtag_port_mode":"spi"}})";
+    Document r;
+    r.Parse(test_str);
+    const Value &d = r["data"].GetObject();
+    for (Value::ConstMemberIterator itr = d.MemberBegin();
+         itr != d.MemberEnd(); ++itr) {
+        printf("Type of member %s is %s\n",
+               itr->name.GetString(), kTypeNames[itr->value.GetType()]);
+    }
+
+    if (!data.HasMember("boost")) {
+        const char *message = "boost not found";
+        USB_LOG_WRN("%s\n", message);
+        FillState(HID_RESPONSE_FAILED, res, message);
+        return;
+    }
+    HSLink_Setting.boost = data["boost"].GetBool();
+    auto mode = [](const char *mode)
+    {
+        if (strcmp(mode, "spi") == 0) {
+            return PORT_MODE_SPI;
+        }
+        return PORT_MODE_GPIO;
+    };
+    HSLink_Setting.swd_port_mode = mode(data["swd_port_mode"].GetString());
+    HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
+
+    const Value &power = data["power"];
+    HSLink_Setting.power.voltage = power["voltage"].GetDouble();
+    HSLink_Setting.power.power_on = power["power_on"].GetBool();
+    HSLink_Setting.power.port_on = power["port_on"].GetBool();
+
+    for (auto &reset: data["reset"].GetArray())
+    {
+        if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) && strcmp(reset.GetString(), "nrst") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_NRST);
+        }
+        else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) && strcmp(reset.GetString(), "por") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_POR);
+        }
+        else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) && strcmp(
+                     reset.GetString(), "arm_swd_soft") == 0)
+        {
+            SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT);
+        }
+    }
+
+    HSLink_Setting.led = data["led"].GetBool();
+    HSLink_Setting.led_brightness = data["led_brightness"].GetUint();
+
+    Setting_Save();
+
+    FillState(HID_RESPONSE_SUCCESS, res);
+}
+
+void set_nickname(Document &root, char *res)
+{
+    if (!root.HasMember("nickname") || !root["nickname"].IsObject()) {
+        const char *message = "nickname not found";
+        USB_LOG_WRN("%s\n", message);
+        FillState(HID_RESPONSE_FAILED, res, message);
+        return;
+    }
+    std::strcpy(HSLink_Setting.nickname, root["nickname"].GetString());
+
+    FillState(HID_RESPONSE_SUCCESS, res);
+}
+
+static void get_setting(Document &root, char *res)
+{
+    (void) root;
+    StringBuffer buffer;
+    Writer writer(buffer);
+    writer.StartObject();
+
+    writer.Key("boost");
+    writer.Bool(HSLink_Setting.boost);
+
+    writer.Key("swd_port_mode");
+    writer.String(HSLink_Setting.swd_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+
+    writer.Key("jtag_port_mode");
+    writer.String(HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+
+    writer.Key("power");
+    writer.StartObject();
+    writer.Key("voltage");
+    writer.Double(HSLink_Setting.power.voltage);
+    writer.Key("power_on");
+    writer.Bool(HSLink_Setting.power.power_on);
+    writer.Key("port_on");
+    writer.Bool(HSLink_Setting.power.port_on);
+    writer.EndObject();
+
+    writer.Key("reset");
+    writer.StartArray();
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
+        writer.String("nrst");
+    }
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR)) {
+        writer.String("por");
+    }
+    if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
+        writer.String("arm_swd_soft");
+    }
+    writer.EndArray();
+
+    writer.Key("led");
+    writer.Bool(HSLink_Setting.led);
+
+    writer.Key("led_brightness");
+    writer.Uint(HSLink_Setting.led_brightness);
+
+    writer.EndObject();
+
+    std::strcpy(res, buffer.GetString());
+}
 
 static void HID_Write(const std::string &res)
 {
@@ -315,17 +302,19 @@ static void HID_Write(const char *res)
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res);
 }
 
-using HID_Command_t = std::function<void(Document &, char* res)>;
+using HID_Command_t = std::function<void(Document &, char *res)>;
 
-void HID_Handle(void)
+void HID_Handle()
 {
-    if (HID_ReadState == HID_STATE_BUSY)
-    {
+    if (HID_ReadState == HID_STATE_BUSY) {
         return; // 接收中，不处理
     }
 
     static std::unordered_map<std::string_view, HID_Command_t> hid_command = {
-        {"Hello", Hello},
+            {"Hello",        Hello},
+            {"settings",     settings},
+            {"set_nickname", set_nickname},
+            {"get_setting",  get_setting},
     };
 
     Document root;
@@ -335,16 +324,14 @@ void HID_Handle(void)
     {
         if (root.HasParseError()
             || root.HasMember("name") == false
-        )
-        {
+                ) {
             HID_Write("parse error!\n");
             return;
         }
 
         auto name = root["name"].GetString();
         auto it = hid_command.find(name);
-        if (it == hid_command.end())
-        {
+        if (it == hid_command.end()) {
             // 没有这个命令
             HID_Write("command " + std::string(name) + " not found!\n");
             return;
@@ -354,7 +341,7 @@ void HID_Handle(void)
     }();
 
     HID_ReadState = HID_STATE_BUSY;
-    usbd_ep_start_write(0,HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
     usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);
 }
 

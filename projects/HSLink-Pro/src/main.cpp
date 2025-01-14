@@ -11,6 +11,12 @@
 #include "usb_configuration.h"
 #include "setting.h"
 
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+
+using namespace rapidjson;
+
 static void serial_number_init(void)
 {
 #define OTP_CHIP_UUID_IDX_START (88U)
@@ -50,10 +56,21 @@ int main(void)
     Setting_Init();
 
     printf("version: " CONFIG_BUILD_VERSION "\n");
-    HSP_Init();
+    static const char *kTypeNames[] =
+            {"Null", "False", "True", "Object", "Array", "String", "Number"};
+    const char *test_str = R"({"name":"settings","data":{"power":{"vref":3.3,"power_on":true,"port_on":true},"reset":["nrst","por"],"led":true,"led_brightness":50,"boost":true,"swd_port_mode":"spi","jtag_port_mode":"spi"}})";
+    Document r;
+    r.Parse(test_str);
+    const Value &d = r["data"].GetObject();
+    for (Value::ConstMemberIterator itr = d.MemberBegin();
+         itr != d.MemberEnd(); ++itr) {
+        printf("Type of member %s is %s\n",
+               itr->name.GetString(), kTypeNames[itr->value.GetType()]);
+    }
 
+    HSP_Init();
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
-    uartx_preinit();
+//    uartx_preinit();
     USB_Configuration();
 
     while (1) {

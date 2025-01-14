@@ -25,7 +25,7 @@ set(CONFIG_EEPROM_EMULATION 1)
 set(HEAP_SIZE 0x8000)
 set(STACK_SIZE 0x5000)
 
-set(HPM_SDK_LD_NO_NANO_SPECS 1)
+#set(HPM_SDK_LD_NO_NANO_SPECS 1)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
@@ -135,7 +135,7 @@ sdk_app_inc(tlsf)
 sdk_app_src(tlsf/tlsf.c)
 
 sdk_app_src(malloc.c)
-sdk_ld_options(-Wl,--wrap=_malloc_r,--wrap=_free_r,--wrap=_realloc_r)
+#sdk_ld_options(-Wl,--wrap=_malloc_r,--wrap=_free_r,--wrap=_realloc_r)
 
 # 执行完之后转换为uf2
 add_custom_command(

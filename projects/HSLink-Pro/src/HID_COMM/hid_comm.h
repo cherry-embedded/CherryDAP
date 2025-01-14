@@ -79,11 +79,6 @@
     WBVAL(HID_PACKET_SIZE),       /* wMaxPacketSize: 4 Byte max */ \
     HIDRAW_INTERVAL,              /* bInterval: Polling Interval */
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 extern struct usbd_endpoint hid_custom_in_ep;
 extern struct usbd_endpoint hid_custom_out_ep;
 
@@ -92,11 +87,8 @@ extern const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE];
 extern uint8_t HID_read_buffer[];
 extern uint8_t HID_write_buffer[];
 
-void HID_Handle(void);
+void HID_Handle();
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 
