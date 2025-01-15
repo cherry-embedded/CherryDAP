@@ -163,7 +163,7 @@ static void settings(Document &root, char *res)
         return;
     }
 
-    const Value & data = root["data"].GetObject();
+    const Value &data = root["data"].GetObject();
 
     if (!data.HasMember("boost")) {
         const char *message = "boost not found";
@@ -187,19 +187,13 @@ static void settings(Document &root, char *res)
     HSLink_Setting.power.power_on = power["power_on"].GetBool();
     HSLink_Setting.power.port_on = power["port_on"].GetBool();
 
-    for (auto &reset: data["reset"].GetArray())
-    {
-        if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) && strcmp(reset.GetString(), "nrst") == 0)
-        {
+    for (auto &reset: data["reset"].GetArray()) {
+        if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) && strcmp(reset.GetString(), "nrst") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_NRST);
-        }
-        else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) && strcmp(reset.GetString(), "por") == 0)
-        {
+        } else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) && strcmp(reset.GetString(), "por") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_POR);
-        }
-        else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) && strcmp(
-                     reset.GetString(), "arm_swd_soft") == 0)
-        {
+        } else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) && strcmp(
+                reset.GetString(), "arm_swd_soft") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT);
         }
     }
@@ -214,13 +208,16 @@ static void settings(Document &root, char *res)
 
 void set_nickname(Document &root, char *res)
 {
-    if (!root.HasMember("nickname") || !root["nickname"].IsObject()) {
+    if (!root.HasMember("nickname") || !root["nickname"].IsString()) {
         const char *message = "nickname not found";
         USB_LOG_WRN("%s\n", message);
         FillState(HID_RESPONSE_FAILED, res, message);
         return;
     }
+    std::memset(HSLink_Setting.nickname, 0, sizeof(HSLink_Setting.nickname));
     std::strcpy(HSLink_Setting.nickname, root["nickname"].GetString());
+
+    Setting_Save();
 
     FillState(HID_RESPONSE_SUCCESS, res);
 }
@@ -292,6 +289,7 @@ void HID_Handle()
     if (HID_ReadState == HID_STATE_BUSY) {
         return; // 接收中，不处理
     }
+    memset(HID_write_buffer + 1, 0, HID_PACKET_SIZE - 1);
 
     static std::unordered_map<std::string_view, HID_Command_t> hid_command = {
             {"Hello",        Hello},
