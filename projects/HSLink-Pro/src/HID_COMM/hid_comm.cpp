@@ -240,7 +240,7 @@ static void get_setting(Document &root, char *res)
 
     writer.Key("power");
     writer.StartObject();
-    writer.Key("voltage");
+    writer.Key("vref");
     writer.Double(HSLink_Setting.power.voltage);
     writer.Key("power_on");
     writer.Bool(HSLink_Setting.power.power_on);
