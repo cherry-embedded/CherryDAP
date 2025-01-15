@@ -3,14 +3,17 @@
 #include "bootuf2.h"
 #include "usb_config.h"
 #include <board.h>
+#include <hpm_dma_mgr.h>
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <usb_log.h>
-#include <hpm_dma_mgr.h>
 
 ATTR_PLACE_AT(".bl_setting")
 static BL_Setting_t bl_setting;
+
+static const uint32_t CONFIG_P_EN = IOC_PAD_PA31;
+static const uint32_t CONFIG_Port_EN = IOC_PAD_PA04;
 
 static void jump_app(void)
 {
@@ -102,7 +105,7 @@ static void show_rainbow(void)
             WS2812_SetPixel(i, r, g, b);
         }
         WS2812_Update();
-        board_delay_ms(10); // 纯阻塞，好孩子别学
+        board_delay_ms(50); // 纯阻塞，好孩子别学
     }
 }
 
@@ -114,9 +117,29 @@ static void TurnOffLED(void)
         ;
 }
 
+static void IOInit(void)
+{
+    // 将输出全部设置为高阻态
+
+    // PowerEN
+    HPM_IOC->PAD[CONFIG_P_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
+
+    // PortEN
+    HPM_IOC->PAD[CONFIG_Port_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_Port_EN), GPIO_GET_PIN_INDEX(CONFIG_Port_EN), gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_Port_EN), GPIO_GET_PIN_INDEX(CONFIG_Port_EN));
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_Port_EN), GPIO_GET_PIN_INDEX(CONFIG_Port_EN), 0);
+}
+
 int main(void)
 {
     board_init();
+    IOInit();
     dma_mgr_init();
     show_logo();
     board_init_usb(HPM_USB0);
