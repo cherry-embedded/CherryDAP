@@ -128,6 +128,7 @@ sdk_ld_options("-lm")
 #sdk_app_src(cJSON/cJSON.c)
 #sdk_app_src(cJSON/cJSON_Utils.c)
 
+sdk_compile_definitions(-DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=8*1024)
 sdk_app_inc(rapidjson/include)
 
 #tlsf

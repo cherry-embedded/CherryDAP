@@ -164,23 +164,6 @@ static void settings(Document &root, char *res)
     }
 
     const Value & data = root["data"].GetObject();
-    static const char *kTypeNames[] =
-            {"Null", "False", "True", "Object", "Array", "String", "Number"};
-    for (Value::ConstMemberIterator itr = data.MemberBegin();
-         itr != data.MemberEnd(); ++itr) {
-        printf("Type of member %s is %s\n",
-               itr->name.GetString(), kTypeNames[itr->value.GetType()]);
-    }
-
-    const char *test_str = R"({"name":"settings","data":{"power":{"vref":3.3,"power_on":true,"port_on":true},"reset":["nrst","por"],"led":true,"led_brightness":50,"boost":true,"swd_port_mode":"spi","jtag_port_mode":"spi"}})";
-    Document r;
-    r.Parse(test_str);
-    const Value &d = r["data"].GetObject();
-    for (Value::ConstMemberIterator itr = d.MemberBegin();
-         itr != d.MemberEnd(); ++itr) {
-        printf("Type of member %s is %s\n",
-               itr->name.GetString(), kTypeNames[itr->value.GetType()]);
-    }
 
     if (!data.HasMember("boost")) {
         const char *message = "boost not found";
@@ -200,7 +183,7 @@ static void settings(Document &root, char *res)
     HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
 
     const Value &power = data["power"];
-    HSLink_Setting.power.voltage = power["voltage"].GetDouble();
+    HSLink_Setting.power.voltage = power["vref"].GetDouble();
     HSLink_Setting.power.power_on = power["power_on"].GetBool();
     HSLink_Setting.power.port_on = power["port_on"].GetBool();
 
