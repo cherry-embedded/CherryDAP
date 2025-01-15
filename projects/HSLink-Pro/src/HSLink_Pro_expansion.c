@@ -285,7 +285,7 @@ void HSP_Init(void)
     MCHTMR_CLK_FREQ = clock_get_frequency(clock_mchtmr0);
     // 初始化电源部分
     Power_Enable_Init();
-//    Port_Enable_Init();
+    Port_Enable_Init();
     Power_PWM_Init();
 
     // 初始化ADC部分

@@ -7,7 +7,6 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <usb_log.h>
-#include "HSLink_Pro_expansion.h"
 #include <hpm_dma_mgr.h>
 
 ATTR_PLACE_AT(".bl_setting")
@@ -120,7 +119,6 @@ int main(void)
     board_init();
     dma_mgr_init();
     show_logo();
-    HSP_Init(); // 关闭电源输出，将电平修改为3.3V
     board_init_usb(HPM_USB0);
     bootloader_button_init();
     WS2812_Init();

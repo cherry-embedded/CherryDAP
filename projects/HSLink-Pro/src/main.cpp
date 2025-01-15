@@ -59,7 +59,7 @@ int main(void)
 
     HSP_Init();
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
-//    uartx_preinit();
+    uartx_preinit();
     USB_Configuration();
 
     while (1) {
