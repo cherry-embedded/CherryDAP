@@ -123,15 +123,12 @@ sdk_app_src(usb_configuration.c)
 sdk_compile_options("-g")
 
 sdk_ld_options("-lm")
-#cjson
-#sdk_app_inc(cJSON)
-#sdk_app_src(cJSON/cJSON.c)
-#sdk_app_src(cJSON/cJSON_Utils.c)
 
 sdk_compile_definitions(-DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=8*1024)
 sdk_app_inc(rapidjson/include)
 
 #tlsf
+sdk_compile_definitions(-D_DEBUG=0)
 sdk_app_inc(tlsf)
 sdk_app_src(tlsf/tlsf.c)
 

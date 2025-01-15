@@ -333,7 +333,9 @@ void Set_Clock_Delay(uint32_t clock);
 
 __STATIC_FORCEINLINE void PIN_DELAY_SLOW (uint32_t delay) {
   volatile uint32_t count = delay;
-  while (--count);
+    do {
+        count -= 1;
+    } while (count);
 }
 
 // Fixed delay for fast clock generation
