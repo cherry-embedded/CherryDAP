@@ -1033,7 +1033,7 @@
 				)
 				(polyline
 					(pts
-						(xy -7.62 17.78) (xy -8.255 18.415)
+						(xy -7.62 17.78) (xy -11.43 17.78) (xy -11.43 12.7) (xy -7.62 12.7)
 					)
 					(stroke
 						(width 0)
@@ -1057,7 +1057,7 @@
 				)
 				(polyline
 					(pts
-						(xy -7.62 17.78) (xy -11.43 17.78) (xy -11.43 12.7) (xy -7.62 12.7)
+						(xy -7.62 17.78) (xy -8.255 18.415)
 					)
 					(stroke
 						(width 0)
@@ -1163,18 +1163,6 @@
 				)
 				(polyline
 					(pts
-						(xy 4.445 12.7) (xy 3.81 13.335)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
 						(xy 4.445 12.7) (xy -2.54 12.7)
 					)
 					(stroke
@@ -1188,6 +1176,18 @@
 				(polyline
 					(pts
 						(xy 4.445 12.7) (xy 3.81 12.065)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 4.445 12.7) (xy 3.81 13.335)
 					)
 					(stroke
 						(width 0)
@@ -3079,10 +3079,6 @@
 		(at 34.29 115.57)
 		(uuid "9c75c60c-0778-460b-963c-3b5428b0a5fd")
 	)
-	(no_connect
-		(at 34.29 36.83)
-		(uuid "cdf09c49-382e-4821-aa56-6e4d85a8351e")
-	)
 	(wire
 		(pts
 			(xy 236.22 48.26) (xy 243.84 48.26)
@@ -3182,6 +3178,16 @@
 			(type default)
 		)
 		(uuid "101057be-57c5-48f1-98b2-9eb7e0b9d69d")
+	)
+	(wire
+		(pts
+			(xy 22.86 36.83) (xy 34.29 36.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "13559c1f-41ce-42ac-a5ad-6da966f4e905")
 	)
 	(wire
 		(pts
@@ -3785,7 +3791,7 @@
 	)
 	(wire
 		(pts
-			(xy 60.96 171.45) (xy 67.31 171.45)
+			(xy 59.69 171.45) (xy 67.31 171.45)
 		)
 		(stroke
 			(width 0)
@@ -4363,26 +4369,6 @@
 		)
 		(uuid "186bc111-ce25-4f46-8baf-4347231acffb")
 	)
-	(label "BOOT0"
-		(at 60.96 171.45 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "1eefed20-f97c-4c6e-a12d-9d345cbb611c")
-	)
-	(label "UART_RTS"
-		(at 22.86 41.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "21c01fd0-eb30-4727-a6d4-f2080024b247")
-	)
 	(label "ISP_TX"
 		(at 38.1 161.29 0)
 		(effects
@@ -4723,6 +4709,16 @@
 		)
 		(uuid "a183cd9f-0100-484d-9fc2-ac43edadfb81")
 	)
+	(label "WS2812"
+		(at 22.86 41.91 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a2eae1af-7459-42b2-b745-19294a841552")
+	)
 	(label "SWCLK{slash}TCK"
 		(at 22.86 59.69 0)
 		(effects
@@ -4853,6 +4849,16 @@
 		)
 		(uuid "d9222a05-95e5-4f62-94dd-10f7eb51ddea")
 	)
+	(label "UART_RTS"
+		(at 22.86 36.83 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "dc4be261-028a-486d-9a38-2c34cdc21dd2")
+	)
 	(label "PORT_EN"
 		(at 64.77 134.62 0)
 		(effects
@@ -4892,6 +4898,16 @@
 			(justify left bottom)
 		)
 		(uuid "f74351f4-4e11-409d-8b4d-9058ad9a4a44")
+	)
+	(label "WS2812"
+		(at 59.69 171.45 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f9a7c755-d138-4f48-abb4-160d738293a4")
 	)
 	(label "USB_D-"
 		(at 22.86 54.61 0)
