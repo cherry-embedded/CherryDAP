@@ -30,6 +30,8 @@ void HSP_Init(void);
  */
 void HSP_Loop(void);
 
+void HSP_EnterBootloader(void);
+
 #ifdef __cplusplus
 }
 #endif

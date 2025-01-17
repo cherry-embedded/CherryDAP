@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "BL_Setting_Common.h"
 
 typedef enum
 {
@@ -52,6 +53,7 @@ typedef struct
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
+extern BL_Setting_t bl_setting;
 
 #ifdef __cplusplus
 extern "C"

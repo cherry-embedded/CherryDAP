@@ -3,6 +3,7 @@
 #include "dap_main.h"
 #include "setting.h"
 #include "usb_configuration.h"
+#include "HSLink_Pro_expansion.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
 
@@ -206,7 +207,7 @@ static void settings(Document &root, char *res)
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-void set_nickname(Document &root, char *res)
+static void set_nickname(Document &root, char *res)
 {
     if (!root.HasMember("nickname") || !root["nickname"].IsString()) {
         const char *message = "nickname not found";
@@ -220,6 +221,16 @@ void set_nickname(Document &root, char *res)
     Setting_Save();
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
+}
+
+static void upgrade(Document &root, char *res)
+{
+    (void) root;
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    clock_cpu_delay_ms(5); // 确保已经发送完毕
+    HSP_EnterBootloader();
 }
 
 static void get_setting(Document &root, char *res)
@@ -295,7 +306,8 @@ void HID_Handle()
             {"Hello",        Hello},
             {"settings",     settings},
             {"set_nickname", set_nickname},
-            {"get_setting",  get_setting}
+            {"get_setting",  get_setting},
+            {"upgrade",      upgrade},
     };
 
     Document root;

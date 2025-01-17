@@ -4,6 +4,7 @@
 #include "board.h"
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
+#include "BL_Setting_Common.h"
 
 HSLink_Setting_t HSLink_Setting = {
     .boost = false,
@@ -22,6 +23,8 @@ HSLink_Setting_t HSLink_Setting = {
     }
 };
 
+ATTR_PLACE_AT(".bl_setting")
+BL_Setting_t bl_setting;
 
 #define APP_OFFSET (0x20000)
 #define SETTING_E2P_RX_SIZE        (512)

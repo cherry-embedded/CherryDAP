@@ -72,9 +72,11 @@ static void Power_Enable_Init(void)
 {
     HPM_IOC->PAD[CONFIG_P_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN),
+                             gpiom_soc_gpio0);
     gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN));
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), HSLink_Setting.power.power_on);
+    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN),
+                   HSLink_Setting.power.power_on);
 }
 
 ATTR_ALWAYS_INLINE
@@ -111,7 +113,7 @@ static void Power_Set_TVCC_Voltage(double voltage)
     }
 
     // 计算PWM占空比
-    uint8_t duty = (uint8_t)(dac / 3.3 * 100);
+    uint8_t duty = (uint8_t) (dac / 3.3 * 100);
     set_pwm_waveform_edge_aligned_duty(duty);
 }
 
@@ -195,13 +197,13 @@ static inline void TVCC_Init(void)
 ATTR_ALWAYS_INLINE
 static inline double Get_VREF_Voltage(void)
 {
-    return (double)Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535 * 2;
+    return (double) Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
 static double inline Get_TVCC_Voltage(void)
 {
-    return (double)Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535 * 2;
+    return (double) Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
@@ -254,7 +256,7 @@ static inline void Port_Turn(bool on)
 static uint32_t millis(void)
 {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
-    return (uint32_t)(mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
+    return (uint32_t) (mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
 }
 
 static bool BOOT_Button_Pressed(void)
@@ -317,20 +319,31 @@ void HSP_Loop(void)
         printf("Enter Bootloader\n");
         Power_Turn_Off();
 
-        l1c_dc_disable();
-
-        api_boot_arg_t boot_arg = {
-            .index = 0,
-            .peripheral = API_BOOT_PERIPH_AUTO,
-            .src = API_BOOT_SRC_PRIMARY,
-            .tag = API_BOOT_TAG,
-        };
-
-        ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
+        HSP_EnterBootloader();
     }
 
     if (WS2812_Update_Flag) {
         WS2812_Update();
         WS2812_Update_Flag = false;
     }
+}
+
+void HSP_EnterBootloader(void)
+{
+    bl_setting.is_update = 1;
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+    //disable_global_irq(CSR_MSTATUS_SIE_MASK);
+    disable_global_irq(CSR_MSTATUS_UIE_MASK);
+    l1c_dc_invalidate_all();
+    l1c_dc_disable();
+    fencei();
+
+    api_boot_arg_t boot_arg = {
+            .index = 0,
+            .peripheral = API_BOOT_PERIPH_AUTO,
+            .src = API_BOOT_SRC_PRIMARY,
+            .tag = API_BOOT_TAG,
+    };
+
+    ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
 }

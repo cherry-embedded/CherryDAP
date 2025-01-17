@@ -13,6 +13,10 @@ set(CMAKE_CXX_STANDARD 26)
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
 
+set(CUSTOM_GCC_LINKER_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
+)
+
 # CONFIG_USE_HPM_BOARD_JTAG_GPIO is for 20p output SWD+JTAG signal of hpm5301evklite
 set(CONFIG_USE_HPM_BOARD_JTAG_GPIO 0)
 
@@ -142,4 +146,4 @@ add_custom_command(
         COMMENT "Convert to UF2"
 )
 
-generate_ide_projects()
+#generate_ide_projects()
