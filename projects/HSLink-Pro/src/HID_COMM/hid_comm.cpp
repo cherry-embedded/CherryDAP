@@ -134,16 +134,16 @@ static void Hello(Document &root, char *res)
     writer.String("1.0.0"); // TODO: Update as needed
 
     writer.Key("hardware");
-    if (HSLink_Setting.hardware.major == 0 &&
-        HSLink_Setting.hardware.minor == 0 &&
-        HSLink_Setting.hardware.patch == 0) {
+    if (HSLink_Hardware_Version.major == 0 &&
+        HSLink_Hardware_Version.minor == 0 &&
+        HSLink_Hardware_Version.patch == 0) {
         writer.String("unknown");
     } else {
         char version[32];
         std::sprintf(version, "%d.%d.%d",
-                     HSLink_Setting.hardware.major,
-                     HSLink_Setting.hardware.minor,
-                     HSLink_Setting.hardware.patch);
+                     HSLink_Hardware_Version.major,
+                     HSLink_Hardware_Version.minor,
+                     HSLink_Hardware_Version.patch);
         writer.String(version);
     }
 

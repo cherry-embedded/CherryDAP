@@ -18,10 +18,9 @@ HSLink_Setting_t HSLink_Setting = {
     .reset = RESET_NRST,
     .led = false,
     .led_brightness = 0,
-    .hardware = {
-        0, 0, 0
-    }
 };
+
+Setting_Version_t HSLink_Hardware_Version;
 
 ATTR_PLACE_AT(".bl_setting")
 BL_Setting_t bl_setting;
@@ -33,6 +32,8 @@ BL_Setting_t bl_setting;
 #define SETTING_E2P_SECTOR_CNT     (32)
 #define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)
 #define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - APP_OFFSET - SETTING_E2P_MANEGE_SIZE * 2)
+
+static const uint32_t HARDWARE_VER_ADDR = 69;
 
 static const char *e2p_name = "HSP";
 static uint32_t setting_eeprom_id;
@@ -60,8 +61,22 @@ static void print_param(void)
     printf("nickname: %s\n", HSLink_Setting.nickname);
 }
 
+static Setting_Version_t get_hardware_version(void)
+{
+    uint32_t version = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(HARDWARE_VER_ADDR);
+    Setting_Version_t ver;
+    ver.major = (version >> 24) & 0xFF;
+    ver.minor = (version >> 16) & 0xFF;
+    ver.patch = (version >> 8) & 0xFF;
+    ver.reserved = version & 0xFF;
+
+    return ver;
+}
+
 void Setting_Init(void)
 {
+    HSLink_Hardware_Version = get_hardware_version();
+
     e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
     e2p.nor_config.base_addr = BOARD_FLASH_BASE_ADDRESS;
     e2p.config.start_addr = e2p.nor_config.base_addr + SETTING_E2P_MANAGE_OFFSET;

@@ -5,32 +5,35 @@
 #include <stdint.h>
 #include "BL_Setting_Common.h"
 
-typedef enum
-{
+typedef enum {
     PORT_MODE_GPIO = 0,
     PORT_MODE_SPI = 1,
 } PORT_Mode_t;
 
-typedef struct
-{
+typedef struct {
     double voltage;
     bool power_on;
     bool port_on;
 } Setting_Power_t;
 
-typedef enum
-{
+typedef enum {
     RESET_NRST = 0,
     RESET_POR,
     RESET_ARM_SWD_SOFT,
 } Setting_ResetBit_t;
 
+typedef struct {
+    uint8_t major;
+    uint8_t minor;
+    uint8_t patch;
+    uint8_t reserved;
+} Setting_Version_t;
+
 #define SETTING_CLEAR_RESET_MODE(reset, mode) (reset &= ~(1 << mode))
 #define SETTING_SET_RESET_MODE(reset, mode) (reset |= (1 << mode))
 #define SETTING_GET_RESET_MODE(reset, mode) (reset & (1 << mode))
 
-typedef struct
-{
+typedef struct {
     uint32_t magic;
     bool boost;
     PORT_Mode_t swd_port_mode;
@@ -40,19 +43,13 @@ typedef struct
     bool led;
     uint8_t led_brightness;
 
-    struct
-    {
-        uint8_t major;
-        uint8_t minor;
-        uint8_t patch;
-    } hardware;
-
     char nickname[128];
 } HSLink_Setting_t;
 
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
+extern Setting_Version_t HSLink_Hardware_Version;
 extern BL_Setting_t bl_setting;
 
 #ifdef __cplusplus
@@ -61,6 +58,7 @@ extern "C"
 #endif
 
 void Setting_Init(void);
+
 void Setting_Save(void);
 
 #ifdef __cplusplus
