@@ -134,9 +134,13 @@ static void Hello(Document &root, char *res)
     writer.String("1.0.0"); // TODO: Update as needed
 
     writer.Key("hardware");
-    if (HSLink_Hardware_Version.major == 0 &&
-        HSLink_Hardware_Version.minor == 0 &&
-        HSLink_Hardware_Version.patch == 0) {
+    if ((HSLink_Hardware_Version.major == 0x00 &&
+         HSLink_Hardware_Version.minor == 0x00 &&
+         HSLink_Hardware_Version.patch == 0x00) ||
+        (HSLink_Hardware_Version.major == 0xFF &&
+         HSLink_Hardware_Version.minor == 0xFF &&
+         HSLink_Hardware_Version.patch == 0xFF)
+            ) {
         writer.String("unknown");
     } else {
         char version[32];
