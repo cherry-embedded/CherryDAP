@@ -94,22 +94,22 @@ struct usbd_endpoint hid_custom_out_ep = {
         .ep_cb = usbd_hid_custom_out_callback,
 };
 
-static void FillState(HID_Response_t state, char *res, const char *message)
+static void FillStatus(HID_Response_t status, char *res, const char *message)
 {
     StringBuffer buffer;
     Writer writer(buffer);
     writer.StartObject();
-    writer.Key("state");
-    writer.String(response_str[state]);
+    writer.Key("status");
+    writer.String(response_str[status]);
     writer.Key("message");
     writer.String(message);
     writer.EndObject();
     std::strcpy(res, buffer.GetString());
 }
 
-static void FillState(HID_Response_t state, char *res)
+static void FillStatus(HID_Response_t status, char *res)
 {
-    FillState(state, res, "");
+    FillStatus(status, res, "");
 }
 
 static void Hello(Document &root, char *res)
@@ -159,7 +159,7 @@ static void settings(Document &root, char *res)
     if (!root.HasMember("data") || !root["data"].IsObject()) {
         const char *message = "data not found";
         USB_LOG_WRN("%s\n", message);
-        FillState(HID_RESPONSE_FAILED, res, message);
+        FillStatus(HID_RESPONSE_FAILED, res, message);
         return;
     }
 
@@ -168,7 +168,7 @@ static void settings(Document &root, char *res)
     if (!data.HasMember("boost")) {
         const char *message = "boost not found";
         USB_LOG_WRN("%s\n", message);
-        FillState(HID_RESPONSE_FAILED, res, message);
+        FillStatus(HID_RESPONSE_FAILED, res, message);
         return;
     }
     HSLink_Setting.boost = data["boost"].GetBool();
@@ -203,7 +203,7 @@ static void settings(Document &root, char *res)
 
     Setting_Save();
 
-    FillState(HID_RESPONSE_SUCCESS, res);
+    FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
 void set_nickname(Document &root, char *res)
@@ -211,7 +211,7 @@ void set_nickname(Document &root, char *res)
     if (!root.HasMember("nickname") || !root["nickname"].IsString()) {
         const char *message = "nickname not found";
         USB_LOG_WRN("%s\n", message);
-        FillState(HID_RESPONSE_FAILED, res, message);
+        FillStatus(HID_RESPONSE_FAILED, res, message);
         return;
     }
     std::memset(HSLink_Setting.nickname, 0, sizeof(HSLink_Setting.nickname));
@@ -219,7 +219,7 @@ void set_nickname(Document &root, char *res)
 
     Setting_Save();
 
-    FillState(HID_RESPONSE_SUCCESS, res);
+    FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
 static void get_setting(Document &root, char *res)
@@ -295,7 +295,7 @@ void HID_Handle()
             {"Hello",        Hello},
             {"settings",     settings},
             {"set_nickname", set_nickname},
-            {"get_setting",  get_setting},
+            {"get_setting",  get_setting}
     };
 
     Document root;
