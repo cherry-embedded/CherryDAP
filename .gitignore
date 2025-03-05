@@ -22,3 +22,5 @@
 *.scvd
 *.usb.tmp
 build
+.DS_Store
+.idea

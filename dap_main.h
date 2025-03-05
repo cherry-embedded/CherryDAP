@@ -73,6 +73,11 @@
 #define CONFIG_UARTRX_RINGBUF_SIZE (8 * 1024)
 #define CONFIG_USBRX_RINGBUF_SIZE  (8 * 1024)
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t uartrx_ringbuffer[CONFIG_UARTRX_RINGBUF_SIZE];
 extern USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usbrx_ringbuffer[CONFIG_USBRX_RINGBUF_SIZE];
 extern USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usb_tmpbuffer[DAP_PACKET_SIZE];
@@ -132,5 +137,9 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
 void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len);
 
 void chry_dap_usb2uart_uart_send_complete(uint32_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

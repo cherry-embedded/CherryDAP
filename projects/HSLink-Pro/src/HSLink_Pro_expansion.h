@@ -15,6 +15,11 @@ typedef enum {
     USER_ADC_TVCC_CHANNEL = 1,
 } USER_ADC_CHANNEL_t;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * @brief 外部扩展初始化
  */
@@ -24,5 +29,11 @@ void HSP_Init(void);
  * @brief 外部扩展循环，放入主循环中
  */
 void HSP_Loop(void);
+
+void HSP_EnterBootloader(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //HPM5300EVKLITE_DAP_HSLINK_PRO_EXPANSION_H

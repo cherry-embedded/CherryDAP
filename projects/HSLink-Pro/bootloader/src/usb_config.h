@@ -9,8 +9,8 @@
 
 #include "hpm_soc_feature.h"
 
-#define CHERRYUSB_VERSION     0x010300
-#define CHERRYUSB_VERSION_STR "v1.3.0"
+//#define CHERRYUSB_VERSION     0x010300
+//#define CHERRYUSB_VERSION_STR "v1.3.0"
 
 /* ================ USB common Configuration ================ */
 

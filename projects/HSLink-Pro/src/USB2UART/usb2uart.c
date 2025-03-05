@@ -9,6 +9,7 @@
 #include "hpm_sysctl_drv.h"
 #include "dap_main.h"
 #include "usb2uart.h"
+#include "setting.h"
 
 #define UART_BASE                  HPM_UART2
 #define UART_IRQ                   IRQn_UART2
@@ -16,7 +17,7 @@
 #define UART_RX_DMA                HPM_DMA_SRC_UART2_RX
 #define UART_RX_DMA_RESOURCE_INDEX (0U)
 #define UART_RX_DMA_BUFFER_SIZE    (8192U)
-#define UART_RX_DMA_BUFFER_COUNT   (5)
+#define UART_RX_DMA_BUFFER_COUNT   (3)
 
 #define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
 #define UART_TX_DMA_RESOURCE_INDEX (1U)
@@ -33,6 +34,9 @@ dma_linked_descriptor_t rx_descriptors[UART_RX_DMA_BUFFER_COUNT];
 static dma_resource_t dma_resource_pools[2];
 volatile uint32_t g_uart_tx_transfer_length = 0;
 static hpm_stat_t board_uart_dma_config(void);
+
+static uint32_t PIN_UART_DTR = 0;
+static uint32_t PIN_UART_RTS = 0;
 
 void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
 {
@@ -114,6 +118,16 @@ void usb2uart_handler (void)
 void uartx_preinit(void)
 {
     // board_init_uart(UART_BASE);
+    if (HSLink_Hardware_Version.major == 1 && HSLink_Hardware_Version.minor == 2 && HSLink_Hardware_Version.patch == 0)
+    {
+        PIN_UART_DTR = IOC_PAD_PA06;
+        PIN_UART_RTS = IOC_PAD_PA05;
+    }
+    else
+    {
+        PIN_UART_DTR = IOC_PAD_PA06;
+        PIN_UART_RTS = IOC_PAD_PA07;
+    }
     HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
     HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
 

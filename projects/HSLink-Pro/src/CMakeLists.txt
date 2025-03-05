@@ -8,9 +8,14 @@ option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
 option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
 set(APP_NAME "HSLink-Pro")
+set(CMAKE_CXX_STANDARD 26)
 
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
+
+set(CUSTOM_GCC_LINKER_FILE
+    ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
+)
 
 # CONFIG_USE_HPM_BOARD_JTAG_GPIO is for 20p output SWD+JTAG signal of hpm5301evklite
 set(CONFIG_USE_HPM_BOARD_JTAG_GPIO 0)
@@ -19,6 +24,12 @@ if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPI
     set(CONFIG_USE_SPI_SWD 1)
     set(CONFIG_USE_SPI_JTAG 1)
 endif ()
+
+set(CONFIG_EEPROM_EMULATION 1)
+set(HEAP_SIZE 0x8000)
+set(STACK_SIZE 0x5000)
+
+#set(HPM_SDK_LD_NO_NANO_SPECS 1)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
@@ -86,8 +97,9 @@ sdk_app_src(../../../DAP/Source/DAP.c)
 
 sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
-sdk_app_src(main.c)
+sdk_app_src(main.cpp)
 sdk_app_src(dp_common.c)
+sdk_app_src(setting.c)
 
 if (CONFIG_BUILD_VERSION)
     sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
@@ -102,16 +114,30 @@ sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
-sdk_app_src(../common/HSLink_Pro_expansion.c)
+sdk_app_src(HSLink_Pro_expansion.c)
 
 file(GLOB_RECURSE HID_COMM_SRC
         "HID_COMM/*.c"
+        "HID_COMM/*.cpp"
 )
 sdk_app_src(${HID_COMM_SRC})
 sdk_app_inc(HID_COMM)
 sdk_app_src(usb_configuration.c)
 
 sdk_compile_options("-g")
+
+sdk_ld_options("-lm")
+
+sdk_compile_definitions(-DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=8*1024)
+sdk_app_inc(rapidjson/include)
+
+#tlsf
+sdk_compile_definitions(-D_DEBUG=0)
+sdk_app_inc(tlsf)
+sdk_app_src(tlsf/tlsf.c)
+
+sdk_app_src(malloc.c)
+#sdk_ld_options(-Wl,--wrap=_malloc_r,--wrap=_free_r,--wrap=_realloc_r)
 
 # 执行完之后转换为uf2
 add_custom_command(
@@ -120,4 +146,4 @@ add_custom_command(
         COMMENT "Convert to UF2"
 )
 
-generate_ide_projects()
+#generate_ide_projects()
