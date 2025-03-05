@@ -51,7 +51,7 @@ static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
     gptmr_freq = clock_get_frequency(USER_PWM_CLK);
     pwm_current_reload = gptmr_freq / freq;
     config.reload = pwm_current_reload;
-    config.cmp_initial_polarity_high = false;
+    config.cmp_initial_polarity_high = true;
     gptmr_stop_counter(USER_PWM, PWM_CHANNEL);
     gptmr_channel_config(USER_PWM, PWM_CHANNEL, &config, false);
     gptmr_channel_reset_count(USER_PWM, PWM_CHANNEL);
