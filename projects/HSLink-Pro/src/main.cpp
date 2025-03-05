@@ -43,7 +43,7 @@ static inline void SWDIO_DIR_Init(void)
 }
 
 [[noreturn]] // make compiler happy
-int main(void)
+int main()
 {
     board_init();
     board_delay_ms(500);
