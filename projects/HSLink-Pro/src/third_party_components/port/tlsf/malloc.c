@@ -1,6 +1,6 @@
 #include <errno.h>
 
-#include "tlsf/tlsf.h"
+#include "tlsf.h"
 #include "stdint.h"
 #include <reent.h>
 

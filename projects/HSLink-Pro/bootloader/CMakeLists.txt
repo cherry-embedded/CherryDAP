@@ -15,7 +15,8 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(HSLink-Pro-Bootloader)
 
-add_subdirectory(../WS2812 ${CMAKE_CURRENT_BINARY_DIR}/ws2812)
+sdk_compile_definitions(-DWS2812_USE_SPI=0)
+add_subdirectory(../third_party_components/WS2812 ${CMAKE_CURRENT_BINARY_DIR}/ws2812)
 
 sdk_compile_definitions(
 #        -DBOARD_SHOW_CLOCK=0

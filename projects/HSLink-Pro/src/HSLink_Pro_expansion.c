@@ -323,7 +323,7 @@ void HSP_Loop(void)
     }
 
     if (WS2812_Update_Flag) {
-        WS2812_Update();
+        WS2812_Update(true);
         WS2812_Update_Flag = false;
     }
 }

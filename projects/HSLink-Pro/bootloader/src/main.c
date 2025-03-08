@@ -104,7 +104,7 @@ static void show_rainbow(void)
         {
             WS2812_SetPixel(i, r, g, b);
         }
-        WS2812_Update();
+        WS2812_Update(true);
         board_delay_ms(50); // 纯阻塞，好孩子别学
     }
 }
@@ -112,7 +112,7 @@ static void show_rainbow(void)
 static void TurnOffLED(void)
 {
     WS2812_SetPixel(0, 0, 0, 0);
-    WS2812_Update();
+    WS2812_Update(true);
     while (WS2812_IsBusy())
         ;
 }

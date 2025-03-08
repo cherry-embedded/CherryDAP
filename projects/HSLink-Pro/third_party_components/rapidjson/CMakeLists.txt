@@ -1,0 +1,2 @@
+sdk_compile_definitions(-DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=8*1024)
+sdk_app_inc(rapidjson/include)

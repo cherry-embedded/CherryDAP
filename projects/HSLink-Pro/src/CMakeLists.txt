@@ -35,8 +35,6 @@ find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
 project(HSLink-Pro)
 
-add_subdirectory(../WS2812 ${CMAKE_CURRENT_BINARY_DIR}/ws2812)
-
 # 设置版本号
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
     file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/.version BUILD_VERSION)
@@ -128,16 +126,7 @@ sdk_compile_options("-g")
 
 sdk_ld_options("-lm")
 
-sdk_compile_definitions(-DRAPIDJSON_ALLOCATOR_DEFAULT_CHUNK_CAPACITY=8*1024)
-sdk_app_inc(rapidjson/include)
-
-#tlsf
-sdk_compile_definitions(-D_DEBUG=0)
-sdk_app_inc(tlsf)
-sdk_app_src(tlsf/tlsf.c)
-
-sdk_app_src(malloc.c)
-#sdk_ld_options(-Wl,--wrap=_malloc_r,--wrap=_free_r,--wrap=_realloc_r)
+add_subdirectory(third_party_components)
 
 # 执行完之后转换为uf2
 add_custom_command(
