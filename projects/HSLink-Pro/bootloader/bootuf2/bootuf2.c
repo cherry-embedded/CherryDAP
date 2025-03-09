@@ -281,7 +281,7 @@ void bootuf2_SetReason(const char* reason) {
     // modify it to show why we keep in bootloader mode
     // because of file_INFO is a string in .data section, we need to copy it and modify it
     char* const file_INFO_ = (char*)malloc(strlen(file_INFO) + 100);
-    memset(file_INFO_, 0, strlen(file_INFO_) + 100);
+    memset(file_INFO_, 0, strlen(file_INFO) + 100);
     strcpy(file_INFO_, file_INFO);
     replaceSubstring(file_INFO_, DEFAULT_REASON, reason);
     files[FILE_INFO].Content = file_INFO_;
