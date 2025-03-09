@@ -67,37 +67,51 @@ static bool app_valid(void)
 #if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
 static void show_rainbow(void)
 {
-    for (int j = 0; j < 256; j++)
+    static int j = 0;
+    j++;
+    uint8_t r, g, b;
+    uint8_t pos = j & 255;
+    if (pos < 85)
     {
-        uint8_t r, g, b;
-        uint8_t pos = j & 255;
-        if (pos < 85)
-        {
-            r = pos * 3;
-            g = 255 - pos * 3;
-            b = 0;
-        }
-        else if (pos < 170)
-        {
-            pos -= 85;
-            r = 255 - pos * 3;
-            g = 0;
-            b = pos * 3;
-        }
-        else
-        {
-            pos -= 170;
-            r = 0;
-            g = pos * 3;
-            b = 255 - pos * 3;
-        }
-        for (size_t i = 0; i < WS2812_LED_NUM; i++)
-        {
-            WS2812_SetPixel(i, r, g, b);
-        }
-        WS2812_Update(true);
-        board_delay_ms(50); // 纯阻塞，好孩子别学
+        r = pos * 3;
+        g = 255 - pos * 3;
+        b = 0;
     }
+    else if (pos < 170)
+    {
+        pos -= 85;
+        r = 255 - pos * 3;
+        g = 0;
+        b = pos * 3;
+    }
+    else
+    {
+        pos -= 170;
+        r = 0;
+        g = pos * 3;
+        b = 255 - pos * 3;
+    }
+    printf("Rainbow: %d, %d, %d\n", r, g, b);
+    r = r / 16;
+    g = g / 16;
+    b = b / 16;
+    for (size_t i = 0; i < WS2812_LED_NUM; i++)
+    {
+        WS2812_SetPixel(i, r, g, b);
+    }
+    WS2812_Update(true);
+}
+
+static void show_fade_on(void)
+{
+    static uint8_t j = 0;
+    j++;
+    printf("FadeOn: %d\n", j);
+    for (size_t i = 0; i < WS2812_LED_NUM; i++)
+    {
+        WS2812_SetPixel(i, j, j, j);
+    }
+    WS2812_Update(true);
 }
 
 static void TurnOffLED(void)
@@ -128,7 +142,8 @@ static void IOInit(void)
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_Port_EN), GPIO_GET_PIN_INDEX(CONFIG_Port_EN), 0);
 }
 
-static void EWDG_Init() {
+static void EWDG_Init()
+{
     clock_add_to_group(clock_watchdog0, 0);
     ewdg_config_t config;
     ewdg_get_default_config(HPM_EWDG0, &config);
@@ -144,7 +159,8 @@ static void EWDG_Init() {
 
     /* Initialize the WDG */
     hpm_stat_t status = ewdg_init(HPM_EWDG0, &config);
-    if (status != status_success) {
+    if (status != status_success)
+    {
         printf(" EWDG initialization failed, error_code=%d\n", status);
     }
 }
@@ -163,6 +179,7 @@ int main(void)
     bootloader_button_init();
 #if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     WS2812_Init();
+    TurnOffLED();
 #endif
 
     if (bl_setting.magic != BL_SETTING_MAGIC)
@@ -173,7 +190,7 @@ int main(void)
 
     bl_setting.fail_cnt += 1;
 
-//        bl_setting.keep_bootloader = true;
+    //        bl_setting.keep_bootloader = true;
 
     // 检测是否由APP触发
     if (bl_setting.keep_bootloader)
@@ -203,7 +220,8 @@ int main(void)
     }
 
     // 检测是否启动失败次数超过阈发值
-    if (bl_setting.fail_cnt > 5) {
+    if (bl_setting.fail_cnt > 5)
+    {
         bl_setting.fail_cnt = 0;
         bootuf2_SetReason("FAIL_CNT_OVER_THRESHOLD");
         printf("FAIL_CNT_OVER_THRESHOLD\n");
@@ -229,13 +247,17 @@ __entry_bl:
         }
 #if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
         show_rainbow();
+//        show_fade_on();
+        board_delay_ms(10);
 #endif
         ewdg_refresh(HPM_EWDG0);
     }
     return 0;
 
 __entry_app:
-    //        TurnOffLED();
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+    TurnOffLED();
+#endif
     USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
     jump_app();
     while (1)

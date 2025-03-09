@@ -201,6 +201,7 @@ void board_init_clock(void)
     clock_add_to_group(clock_lmm0, 0);
     clock_add_to_group(clock_mchtmr0, 0);
     clock_add_to_group(clock_gptmr0, 0);
+    clock_add_to_group(clock_gptmr1, 0);
     clock_add_to_group(clock_adc0, 0);
     clock_add_to_group(clock_rom, 0);
     clock_add_to_group(clock_gpio, 0);
@@ -227,6 +228,7 @@ void board_init_clock(void)
     /* Configure mchtmr to 24MHz */
     clock_set_source_divider(clock_mchtmr0, clk_src_osc24m, 1);
     clock_set_source_divider(clock_gptmr0, clk_src_pll1_clk0, 8);
+    clock_set_source_divider(clock_gptmr1, clk_src_pll1_clk0, 2);
 }
 
 void board_delay_us(uint32_t us)
