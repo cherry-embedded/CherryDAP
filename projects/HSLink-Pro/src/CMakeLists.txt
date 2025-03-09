@@ -8,6 +8,7 @@ option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
 option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
 set(APP_NAME "HSLink-Pro")
+set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 set(CMAKE_CXX_STANDARD 26)
 
 set(CONFIG_USB_DEVICE 1)
@@ -59,8 +60,6 @@ sdk_compile_definitions(-DBOOST_KEIL_SWD_FREQ=0)
 
 sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
 sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
-
-sdk_compile_definitions(-DCONFIG_WS2812=1)
 
 sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
 

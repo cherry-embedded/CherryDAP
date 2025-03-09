@@ -46,8 +46,12 @@ This information includes:
 
 #include <stdio.h>
 #include <hpm_romapi.h>
-#include <WS2812.h>
+
 #include "stdint.h"
+
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+#include <WS2812.h>
+#endif
 
 #ifndef   __STATIC_INLINE
 #define __STATIC_INLINE                        static inline
@@ -651,7 +655,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT (uint32_t bit) {
     }
 #endif
 
-#if CONFIG_WS2812
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     extern volatile bool WS2812_Update_Flag;
     if (bit & 0x01) {
         WS2812_MixPixel(0, 128, 0, 0);
@@ -678,7 +682,7 @@ __STATIC_INLINE void LED_RUNNING_OUT (uint32_t bit) {
     }
 #endif
 
-#ifdef CONFIG_WS2812
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     extern volatile bool WS2812_Update_Flag;
     if (bit & 0x01) {
         WS2812_MixPixel(0, 0, 0, 128);

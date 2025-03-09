@@ -3,9 +3,9 @@
 #include <hpm_dma_mgr.h>
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
+#include <hpm_ewdg_drv.h>
 #include "board.h"
 #include "dap_main.h"
-#include "WS2812.h"
 #include "HSLink_Pro_expansion.h"
 #include "usb2uart.h"
 #include "usb_configuration.h"
@@ -62,7 +62,10 @@ int main()
     uartx_preinit();
     USB_Configuration();
 
+    bl_setting.fail_cnt = 0;
+
     while (1) {
+        ewdg_refresh(HPM_EWDG0);
         chry_dap_handle();
         chry_dap_usb2uart_handle();
         usb2uart_handler();

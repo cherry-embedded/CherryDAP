@@ -1,5 +1,4 @@
 #include "BL_Setting_Common.h"
-#include "WS2812.h"
 #include "bootuf2.h"
 #include "usb_config.h"
 #include <board.h>
@@ -10,6 +9,10 @@
 #include <hpm_l1c_drv.h>
 #include <hpm_ppor_drv.h>
 #include <usb_log.h>
+
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+#include <WS2812.h>
+#endif
 
 ATTR_PLACE_AT(".bl_setting")
 static BL_Setting_t bl_setting;
@@ -61,21 +64,7 @@ static bool app_valid(void)
     return true;
 }
 
-static void show_logo(void)
-{
-    const char str[] = {
-        "  _    _  _____ _      _       _      _____           \n"
-        " | |  | |/ ____| |    (_)     | |    |  __ \\          \n"
-        " | |__| | (___ | |     _ _ __ | | __ | |__) | __ ___  \n"
-        " |  __  |\\___ \\| |    | | '_ \\| |/ / |  ___/ '__/ _ \\ \n"
-        " | |  | |____) | |____| | | | |   <  | |   | | | (_) |\n"
-        " |_|  |_|_____/|______|_|_| |_|_|\\_\\ |_|   |_|  \\___/ \n"
-        "                                                      \n"
-        "                                                      \n"
-        ""};
-    printf("%s", str);
-}
-
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
 static void show_rainbow(void)
 {
     for (int j = 0; j < 256; j++)
@@ -118,6 +107,7 @@ static void TurnOffLED(void)
     while (WS2812_IsBusy())
         ;
 }
+#endif
 
 static void IOInit(void)
 {
@@ -169,10 +159,11 @@ int main(void)
     EWDG_Init();
     IOInit();
     dma_mgr_init();
-    show_logo();
     board_init_usb(HPM_USB0);
     bootloader_button_init();
-    //    WS2812_Init();
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+    WS2812_Init();
+#endif
 
     if (bl_setting.magic != BL_SETTING_MAGIC)
     {
@@ -236,7 +227,9 @@ __entry_bl:
             ppor_reset_mask_set_source_enable(HPM_PPOR, ppor_reset_software);
             ppor_sw_reset(HPM_PPOR, 1000);
         }
-//        show_rainbow();
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+        show_rainbow();
+#endif
         ewdg_refresh(HPM_EWDG0);
     }
     return 0;
