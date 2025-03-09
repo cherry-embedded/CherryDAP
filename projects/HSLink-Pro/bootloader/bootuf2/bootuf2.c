@@ -253,25 +253,51 @@ int bootuf2_flash_write_internal(struct bootuf2_data *ctx, struct bootuf2_BLOCK 
 
    return 0;
 }
-// ai写的，不是很优雅，凑合用吧
 static void replaceSubstring(char *str, const char *oldWord, const char *newWord) {
-    char *pos;
-    char* buffer = (char*)malloc(512);
-    memset(buffer, 0, 512);
+    char *result;   // 存放新字符串的缓冲区
+    char *pos, *temp;
+    int count = 0;
+    int oldLen = strlen(oldWord);
+    int newLen = strlen(newWord);
 
-    while ((pos = strstr(str, oldWord)) != NULL) {
-        memset(buffer, 0, 512);  // 每次循环前清空缓冲区
-        // 复制 `oldWord` 之前的部分
-        strncpy(buffer, str, pos - str);
-        // 添加 `newWord`
-        strcat(buffer, newWord);
-        // 复制 `oldWord` 之后的部分
-        strcat(buffer, pos + strlen(oldWord));
-        // 将结果复制回 `str`
-        strncpy(str, buffer, strlen(buffer) + 1);
+    // 1. 统计 oldWord 在 str 中出现的次数
+    temp = str;
+    while ((pos = strstr(temp, oldWord)) != NULL) {
+        count++;
+        temp = pos + oldLen;
     }
 
-    free(buffer);
+    // 2. 分配足够大小的缓冲区（注意：如果 newLen < oldLen，分配空间会小于原始字符串大小，
+    //    但为了代码简单，这里直接分配原始串长度加上扩展部分）
+    result = (char *) malloc(strlen(str) + count * (newLen - oldLen) + 1);
+    if (result == NULL) {
+        // 内存分配失败，直接返回
+        return;
+    }
+
+    // 3. 进行字符串替换构造新的结果字符串
+    temp = str;       // 临时指针，指向原字符串
+    char *r = result; // 指向新字符串的写入位置
+
+    while ((pos = strstr(temp, oldWord)) != NULL) {
+        // 复制 pos 之前的部分
+        int len = pos - temp;
+        memcpy(r, temp, len);
+        r += len;
+
+        // 将 newWord 复制到结果中
+        memcpy(r, newWord, newLen);
+        r += newLen;
+
+        // 更新 temp 指针，跳过被替换的 oldWord
+        temp = pos + oldLen;
+    }
+    // 复制剩下的部分
+    strcpy(r, temp);
+
+    // 4. 将结果拷贝回原来的字符串中
+    strcpy(str, result);
+    free(result);
 }
 void bootuf2_SetReason(const char* reason) {
     if (files[FILE_INFO].Content != NULL) {
