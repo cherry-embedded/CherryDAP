@@ -257,10 +257,10 @@ int bootuf2_flash_write_internal(struct bootuf2_data *ctx, struct bootuf2_BLOCK 
 static void replaceSubstring(char *str, const char *oldWord, const char *newWord) {
     char *pos;
     char* buffer = (char*)malloc(512);
-    memset(buffer, 0, sizeof(buffer));
+    memset(buffer, 0, 512);
 
     while ((pos = strstr(str, oldWord)) != NULL) {
-        memset(buffer, 0, sizeof(buffer));  // 每次循环前清空缓冲区
+        memset(buffer, 0, 512);  // 每次循环前清空缓冲区
         // 复制 `oldWord` 之前的部分
         strncpy(buffer, str, pos - str);
         // 添加 `newWord`
