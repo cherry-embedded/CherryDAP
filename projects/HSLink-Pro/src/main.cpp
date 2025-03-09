@@ -3,9 +3,9 @@
 #include <hpm_dma_mgr.h>
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
+#include <hpm_ewdg_drv.h>
 #include "board.h"
 #include "dap_main.h"
-#include "WS2812.h"
 #include "HSLink_Pro_expansion.h"
 #include "usb2uart.h"
 #include "usb_configuration.h"
@@ -42,10 +42,34 @@ static inline void SWDIO_DIR_Init(void)
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
 }
 
+static void EWDG_Init()
+{
+    clock_add_to_group(clock_watchdog0, 0);
+    ewdg_config_t config;
+    ewdg_get_default_config(HPM_EWDG0, &config);
+
+    config.enable_watchdog = true;
+    config.int_rst_config.enable_timeout_reset = true;
+    config.ctrl_config.use_lowlevel_timeout = false;
+    config.ctrl_config.cnt_clk_sel = ewdg_cnt_clk_src_ext_osc_clk;
+
+    /* Set the EWDG reset timeout to 5 second */
+    config.cnt_src_freq = 32768;
+    config.ctrl_config.timeout_reset_us = 5 * 1000 * 1000;
+
+    /* Initialize the WDG */
+    hpm_stat_t status = ewdg_init(HPM_EWDG0, &config);
+    if (status != status_success)
+    {
+        printf(" EWDG initialization failed, error_code=%d\n", status);
+    }
+}
+
 [[noreturn]] // make compiler happy
 int main()
 {
     board_init();
+    EWDG_Init();
     board_delay_ms(500);
     serial_number_init();
     board_init_usb(HPM_USB0);
@@ -62,7 +86,10 @@ int main()
     uartx_preinit();
     USB_Configuration();
 
+    bl_setting.fail_cnt = 0;
+
     while (1) {
+        ewdg_refresh(HPM_EWDG0);
         chry_dap_handle();
         chry_dap_usb2uart_handle();
         usb2uart_handler();

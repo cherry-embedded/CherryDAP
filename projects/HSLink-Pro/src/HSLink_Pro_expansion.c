@@ -9,7 +9,6 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <hpm_romapi.h>
-#include <WS2812.h>
 #include "HSLink_Pro_expansion.h"
 #include "board.h"
 #include "hpm_gptmr_drv.h"
@@ -19,6 +18,9 @@
 #include "setting.h"
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+#include <WS2812.h>
+#endif
 
 const double ADC_REF = 3.3;
 
@@ -289,15 +291,14 @@ void HSP_Init(void)
     Power_Enable_Init();
     Port_Enable_Init();
     Power_PWM_Init();
-
     // 初始化ADC部分
     ADC_Init();
     VREF_Init();
     TVCC_Init();
-
     BOOT_Init();
-
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     WS2812_Init();
+#endif
 }
 
 void HSP_Loop(void)
@@ -323,14 +324,16 @@ void HSP_Loop(void)
     }
 
     if (WS2812_Update_Flag) {
-        WS2812_Update();
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+        WS2812_Update(true);
+#endif
         WS2812_Update_Flag = false;
     }
 }
 
 void HSP_EnterBootloader(void)
 {
-    bl_setting.is_update = 1;
+    bl_setting.keep_bootloader = 1;
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);

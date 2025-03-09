@@ -1,13 +1,18 @@
 #include "BL_Setting_Common.h"
-#include "WS2812.h"
 #include "bootuf2.h"
 #include "usb_config.h"
 #include <board.h>
 #include <hpm_dma_mgr.h>
+#include <hpm_ewdg_drv.h>
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
+#include <hpm_ppor_drv.h>
 #include <usb_log.h>
+
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+#include <WS2812.h>
+#endif
 
 ATTR_PLACE_AT(".bl_setting")
 static BL_Setting_t bl_setting;
@@ -59,63 +64,64 @@ static bool app_valid(void)
     return true;
 }
 
-static void show_logo(void)
-{
-    const char str[] = {
-        "  _    _  _____ _      _       _      _____           \n"
-        " | |  | |/ ____| |    (_)     | |    |  __ \\          \n"
-        " | |__| | (___ | |     _ _ __ | | __ | |__) | __ ___  \n"
-        " |  __  |\\___ \\| |    | | '_ \\| |/ / |  ___/ '__/ _ \\ \n"
-        " | |  | |____) | |____| | | | |   <  | |   | | | (_) |\n"
-        " |_|  |_|_____/|______|_|_| |_|_|\\_\\ |_|   |_|  \\___/ \n"
-        "                                                      \n"
-        "                                                      \n"
-        ""};
-    printf("%s", str);
-}
-
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
 static void show_rainbow(void)
 {
-    for (int j = 0; j < 256; j++)
+    static int j = 0;
+    j++;
+    uint8_t r, g, b;
+    uint8_t pos = j & 255;
+    if (pos < 85)
     {
-        uint8_t r, g, b;
-        uint8_t pos = j & 255;
-        if (pos < 85)
-        {
-            r = pos * 3;
-            g = 255 - pos * 3;
-            b = 0;
-        }
-        else if (pos < 170)
-        {
-            pos -= 85;
-            r = 255 - pos * 3;
-            g = 0;
-            b = pos * 3;
-        }
-        else
-        {
-            pos -= 170;
-            r = 0;
-            g = pos * 3;
-            b = 255 - pos * 3;
-        }
-        for (size_t i = 0; i < WS2812_LED_NUM; i++)
-        {
-            WS2812_SetPixel(i, r, g, b);
-        }
-        WS2812_Update();
-        board_delay_ms(50); // 纯阻塞，好孩子别学
+        r = pos * 3;
+        g = 255 - pos * 3;
+        b = 0;
     }
+    else if (pos < 170)
+    {
+        pos -= 85;
+        r = 255 - pos * 3;
+        g = 0;
+        b = pos * 3;
+    }
+    else
+    {
+        pos -= 170;
+        r = 0;
+        g = pos * 3;
+        b = 255 - pos * 3;
+    }
+    printf("Rainbow: %d, %d, %d\n", r, g, b);
+    r = r / 16;
+    g = g / 16;
+    b = b / 16;
+    for (size_t i = 0; i < WS2812_LED_NUM; i++)
+    {
+        WS2812_SetPixel(i, r, g, b);
+    }
+    WS2812_Update(true);
+}
+
+static void show_fade_on(void)
+{
+    static uint8_t j = 0;
+    j++;
+    printf("FadeOn: %d\n", j);
+    for (size_t i = 0; i < WS2812_LED_NUM; i++)
+    {
+        WS2812_SetPixel(i, j, j, j);
+    }
+    WS2812_Update(true);
 }
 
 static void TurnOffLED(void)
 {
     WS2812_SetPixel(0, 0, 0, 0);
-    WS2812_Update();
+    WS2812_Update(true);
     while (WS2812_IsBusy())
         ;
 }
+#endif
 
 static void IOInit(void)
 {
@@ -136,15 +142,45 @@ static void IOInit(void)
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_Port_EN), GPIO_GET_PIN_INDEX(CONFIG_Port_EN), 0);
 }
 
+static void EWDG_Init()
+{
+    clock_add_to_group(clock_watchdog0, 0);
+    ewdg_config_t config;
+    ewdg_get_default_config(HPM_EWDG0, &config);
+
+    config.enable_watchdog = true;
+    config.int_rst_config.enable_timeout_reset = true;
+    config.ctrl_config.use_lowlevel_timeout = false;
+    config.ctrl_config.cnt_clk_sel = ewdg_cnt_clk_src_ext_osc_clk;
+
+    /* Set the EWDG reset timeout to 5 second */
+    config.cnt_src_freq = 32768;
+    config.ctrl_config.timeout_reset_us = 5 * 1000 * 1000;
+
+    /* Initialize the WDG */
+    hpm_stat_t status = ewdg_init(HPM_EWDG0, &config);
+    if (status != status_success)
+    {
+        printf(" EWDG initialization failed, error_code=%d\n", status);
+    }
+}
+
+extern const char *file_INFO;
+extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
+extern void bootuf2_SetReason(const char *reason);
+
 int main(void)
 {
     board_init();
+    EWDG_Init();
     IOInit();
     dma_mgr_init();
-    show_logo();
     board_init_usb(HPM_USB0);
     bootloader_button_init();
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     WS2812_Init();
+    TurnOffLED();
+#endif
 
     if (bl_setting.magic != BL_SETTING_MAGIC)
     {
@@ -152,22 +188,52 @@ int main(void)
         bl_setting.magic = BL_SETTING_MAGIC;
     }
 
-    if (!bootloader_button_pressed() // 按键未按下
-        && app_valid()               // APP区合法
-        && bl_setting.is_update == 0 // 不需要进入bootloader
-    )
+    bl_setting.fail_cnt += 1;
+
+    //        bl_setting.keep_bootloader = true;
+
+    // 检测是否由APP触发
+    if (bl_setting.keep_bootloader)
     {
-        USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
-        TurnOffLED();
-        jump_app();
-        while (1)
-            ;
+        bootuf2_SetReason("APP_REQ_KEEP_BL");
+        printf("APP_REQ_KEEP_BL\n");
+        goto __entry_bl;
     }
 
+    // 检测2s内是否有按键按下
+    for (int i = 0; i < 2000 / 5; i++)
+    {
+        if (bootloader_button_pressed())
+        {
+            bootuf2_SetReason("BUTTON_PRESSED_IN_2S");
+            printf("BUTTON_PRESSED_IN_2S\n");
+            goto __entry_bl;
+        }
+    }
+
+    // 检测APP是否合法
+    if (!app_valid())
+    {
+        bootuf2_SetReason("APP_INVALID");
+        printf("APP_INVALID\n");
+        goto __entry_bl;
+    }
+
+    // 检测是否启动失败次数超过阈发值
+    if (bl_setting.fail_cnt > 5)
+    {
+        bl_setting.fail_cnt = 0;
+        bootuf2_SetReason("FAIL_CNT_OVER_THRESHOLD");
+        printf("FAIL_CNT_OVER_THRESHOLD\n");
+        goto __entry_bl;
+    }
+
+    goto __entry_app;
+
+__entry_bl:
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 2);
     printf("HSLink Pro UF2 Bootloader\n");
 
-    extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
     msc_bootuf2_init(0, CONFIG_HPM_USBD_BASE);
 
     while (1)
@@ -175,12 +241,25 @@ int main(void)
         if (bootuf2_is_write_done())
         {
             USB_LOG_INFO("Update success! Jump to application.\n");
-            TurnOffLED();
-            jump_app();
-            while (1)
-                ;
+            bl_setting.keep_bootloader = false;
+            ppor_reset_mask_set_source_enable(HPM_PPOR, ppor_reset_software);
+            ppor_sw_reset(HPM_PPOR, 1000);
         }
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
         show_rainbow();
+//        show_fade_on();
+        board_delay_ms(10);
+#endif
+        ewdg_refresh(HPM_EWDG0);
     }
     return 0;
+
+__entry_app:
+#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
+    TurnOffLED();
+#endif
+    USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
+    jump_app();
+    while (1)
+        ;
 }

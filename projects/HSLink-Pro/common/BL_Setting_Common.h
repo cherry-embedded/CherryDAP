@@ -14,7 +14,8 @@ typedef struct {
     union {
         uint8_t data0;
         struct {
-            uint8_t is_update : 1; // 判断是否需要进入bootloader
+            uint8_t keep_bootloader : 1; // 判断是否需要进入bootloader
+            uint8_t fail_cnt: 3;    // 启动失败次数
         };
     };
 
