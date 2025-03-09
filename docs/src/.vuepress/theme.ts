@@ -11,7 +11,7 @@ export default hopeTheme({
     url: "https://github.com/cherry-embedded",
   },
 
-  iconAssets: "fontawesome-with-brands",
+  // iconAssets: "fontawesome-with-brands",
 
   // logo: "https://theme-hope-assets.vuejs.press/logo.svg",
 
@@ -63,7 +63,33 @@ export default hopeTheme({
   //     "/zh/demo/encrypt.html": ["1234"],
   //   },
   // },
-
+  markdown: {
+    tasklist: true,
+    component: true,
+    vPre: true,
+    include: true,
+    align: true,
+    attrs: true,
+    mark: true,
+    spoiler: true,
+    sub: true,
+    sup: true,
+    stylize: [
+          {
+            matcher: "Recommended",
+            replacer: ({ tag }) => {
+              if (tag === "em")
+                return {
+                  tag: "Badge",
+                  attrs: { type: "tip" },
+                  content: "Recommended",
+                };
+            },
+          },
+        ],
+    plantuml: true,
+    demo: true,
+  },
   plugins: {
     // Note: This is for testing ONLY!
     // You MUST generate and use your own comment service in production.
@@ -78,78 +104,81 @@ export default hopeTheme({
     components: {
       components: ["Badge", "VPCard"],
     },
+    icon: {
+      assets: "fontawesome-with-brands",
+    },
 
     // All features are enabled for demo, only preserve features you need here
-    mdEnhance: {
-      align: true,
-      attrs: true,
-      // codetabs: true,
-      component: true,
-      demo: true,
-      // figure: true,
-      // imgLazyload: true,
-      // imgSize: true,
-      include: true,
-      mark: true,
-      plantuml: true,
-      spoiler: true,
-      stylize: [
-        {
-          matcher: "Recommended",
-          replacer: ({ tag }) => {
-            if (tag === "em")
-              return {
-                tag: "Badge",
-                attrs: { type: "tip" },
-                content: "Recommended",
-              };
-          },
-        },
-      ],
-      sub: true,
-      sup: true,
-      // tabs: true,
-      tasklist: true,
-      vPre: true,
+    // mdEnhance: {
+    //   align: true,
+    //   attrs: true,
+    //   // codetabs: true,
+    //   component: true,
+    //   demo: true,
+    //   // figure: true,
+    //   // imgLazyload: true,
+    //   // imgSize: true,
+    //   include: true,
+    //   mark: true,
+    //   plantuml: true,
+    //   spoiler: true,
+    //   stylize: [
+    //     {
+    //       matcher: "Recommended",
+    //       replacer: ({ tag }) => {
+    //         if (tag === "em")
+    //           return {
+    //             tag: "Badge",
+    //             attrs: { type: "tip" },
+    //             content: "Recommended",
+    //           };
+    //       },
+    //     },
+    //   ],
+    //   sub: true,
+    //   sup: true,
+    //   // tabs: true,
+    //   tasklist: true,
+    //   vPre: true,
 
-      // Install chart.js before enabling it
-      // chart: true,
+    //   // Install chart.js before enabling it
+    //   // chart: true,
 
-      // insert component easily
+    //   // insert component easily
 
-      // Install echarts before enabling it
-      // echarts: true,
+    //   // Install echarts before enabling it
+    //   // echarts: true,
 
-      // Install flowchart.ts before enabling it
-      // flowchart: true,
+    //   // Install flowchart.ts before enabling it
+    //   // flowchart: true,
 
-      // gfm requires mathjax-full to provide tex support
-      // gfm: true,
+    //   // gfm requires mathjax-full to provide tex support
+    //   // gfm: true,
 
-      // Install katex before enabling it
-      // katex: true,
+    //   // Install katex before enabling it
+    //   // katex: true,
 
-      // Install mathjax-full before enabling it
-      // mathjax: true,
+    //   // Install mathjax-full before enabling it
+    //   // mathjax: true,
 
-      // Install mermaid before enabling it
-      // mermaid: true,
+    //   // Install mermaid before enabling it
+    //   // mermaid: true,
 
-      // playground: {
-      //   presets: ["ts", "vue"],
-      // },
+    //   // playground: {
+    //   //   presets: ["ts", "vue"],
+    //   // },
 
-      // Install reveal.js before enabling it
-      // revealJs: {
-      //   plugins: ["highlight", "math", "search", "notes", "zoom"],
-      // },
+    //   // Install reveal.js before enabling it
+    //   // revealJs: {
+    //   //   plugins: ["highlight", "math", "search", "notes", "zoom"],
+    //   // },
 
-      // Install @vue/repl before enabling it
-      // vuePlayground: true,
+    //   // Install @vue/repl before enabling it
+    //   // vuePlayground: true,
 
-      // Install sandpack-vue3 before enabling it
-      // sandpack: true,
-    },
+    //   // Install sandpack-vue3 before enabling it
+    //   // sandpack: true,
+    // },
 
     // Install @vuepress/plugin-pwa and uncomment these if you want a PWA
     // pwa: {

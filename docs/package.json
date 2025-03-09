@@ -11,15 +11,15 @@
     "docs:update-package": "pnpm dlx vp-update"
   },
   "devDependencies": {
-    "@vuepress/bundler-vite": "2.0.0-rc.15",
-    "vue": "^3.5.8",
-    "vuepress": "2.0.0-rc.15",
-    "vuepress-theme-hope": "2.0.0-rc.56"
+    "@vuepress/bundler-vite": "2.0.0-rc.20",
+    "vue": "^3.5.13",
+    "vuepress": "2.0.0-rc.20",
+    "vuepress-theme-hope": "2.0.0-rc.74"
   },
   "dependencies": {
-    "@vuepress/plugin-markdown-image": "2.0.0-rc.47",
-    "@vuepress/plugin-markdown-tab": "2.0.0-rc.47",
-    "@vuepress/plugin-redirect": "2.0.0-rc.51",
-    "sass-embedded": "^1.79.3"
+    "@vuepress/plugin-markdown-image": "2.0.0-rc.82",
+    "@vuepress/plugin-markdown-tab": "2.0.0-rc.82",
+    "@vuepress/plugin-redirect": "2.0.0-rc.82",
+    "sass-embedded": "^1.85.1"
   }
 }
