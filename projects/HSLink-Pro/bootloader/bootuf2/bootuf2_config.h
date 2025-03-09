@@ -10,6 +10,7 @@
 #define CONFIG_BOARD              "HSLink Pro"
 #define CONFIG_BOOTUF2_INDEX_URL  "https://github.com/cherry-embedded/CherryDAP"
 #define CONFIG_BOOTUF2_JOIN_URL   "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=NXGLdOOrFypXfBoAmh_eLwmcAZ2doqxJ&authKey=CDerxhytwBfYn1jHcfmBwOOl2B73vRxGmPJ0utVTFrnjfwfTikpzJbYUUPhyicmK&noverify=0&group_code=975779851"
+#define DEFAULT_REASON "DEFAULT_REASON_DEFAULT_REASON_DEFAULT_REASON\r\n"
 
 #define CONFIG_BOOTUF2_CACHE_SIZE         4096
 #define CONFIG_BOOTUF2_SECTOR_SIZE        512

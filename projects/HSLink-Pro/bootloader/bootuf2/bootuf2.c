@@ -7,10 +7,11 @@
 #include "bootuf2.h"
 #include "usbd_core.h"
 
-char file_INFO[] = {
+const char file_INFO[] = {
    "CherryUSB UF2 BOOT\r\n"
    "Model: " CONFIG_PRODUCT "\r\n"
    "Board-ID: " CONFIG_BOARD "\r\n"
+    "Bootloader Reason: " DEFAULT_REASON
 };
 
 const char file_IDEX[] = {
@@ -37,11 +38,18 @@ const char file_JOIN[] = {
 
 const char file_ID__[12] = BOOTUF2_FAMILYID_ARRAY;
 
+enum {
+    FILE_ID = 0,
+    FILE_INFO = 1,
+    FILE_INDEX = 2,
+    FILE_JOIN = 3,
+};
+
 static struct bootuf2_FILE files[] = {
-   [0] = { .Name = file_ID__, .Content = NULL, .FileSize = 0 },
-   [1] = { .Name = "INFO_UF2TXT", .Content = file_INFO, .FileSize = sizeof(file_INFO) - 1 },
-   [2] = { .Name = "INDEX   HTM", .Content = file_IDEX, .FileSize = sizeof(file_IDEX) - 1 },
-   [3] = { .Name = "JOIN    HTM", .Content = file_JOIN, .FileSize = sizeof(file_JOIN) - 1 },
+   [FILE_ID] = { .Name = file_ID__, .Content = NULL, .FileSize = 0 },
+   [FILE_INFO] = { .Name = "INFO_UF2TXT", .Content = NULL, .FileSize = 0 }, // will be added when init
+   [FILE_INDEX] = { .Name = "INDEX   HTM", .Content = file_IDEX, .FileSize = sizeof(file_IDEX) - 1 },
+   [FILE_JOIN] = { .Name = "JOIN    HTM", .Content = file_JOIN, .FileSize = sizeof(file_JOIN) - 1 },
 };
 
 struct bootuf2_data {
@@ -245,10 +253,47 @@ int bootuf2_flash_write_internal(struct bootuf2_data *ctx, struct bootuf2_BLOCK 
 
    return 0;
 }
+// ai写的，不是很优雅，凑合用吧
+static void replaceSubstring(char *str, const char *oldWord, const char *newWord) {
+    char *pos;
+    char* buffer = (char*)malloc(512);
+    memset(buffer, 0, sizeof(buffer));
 
+    while ((pos = strstr(str, oldWord)) != NULL) {
+        memset(buffer, 0, sizeof(buffer));  // 每次循环前清空缓冲区
+        // 复制 `oldWord` 之前的部分
+        strncpy(buffer, str, pos - str);
+        // 添加 `newWord`
+        strcat(buffer, newWord);
+        // 复制 `oldWord` 之后的部分
+        strcat(buffer, pos + strlen(oldWord));
+        // 将结果复制回 `str`
+        strncpy(str, buffer, strlen(buffer) + 1);
+    }
+
+    free(buffer);
+}
+void bootuf2_SetReason(const char* reason) {
+    if (files[FILE_INFO].Content != NULL) {
+        free(files[FILE_INFO].Content);
+    }
+
+    // modify it to show why we keep in bootloader mode
+    // because of file_INFO is a string in .data section, we need to copy it and modify it
+    char* const file_INFO_ = (char*)malloc(strlen(file_INFO) + 100);
+    memset(file_INFO_, 0, strlen(file_INFO_) + 100);
+    strcpy(file_INFO_, file_INFO);
+    replaceSubstring(file_INFO_, DEFAULT_REASON, reason);
+    files[FILE_INFO].Content = file_INFO_;
+    files[FILE_INFO].FileSize = strlen(file_INFO_);
+}
 void bootuf2_init(void)
 {
    struct bootuf2_data *ctx;
+
+   if (files[FILE_INFO].Content == NULL) {
+       bootuf2_SetReason("DEFAULT_REASON");
+   }
 
    ctx = &bootuf2_disk;
 

@@ -102,7 +102,7 @@ struct bootuf2_ENTRY
 struct bootuf2_FILE
 {
    const char *const Name;
-   const void *const Content;
+   void * Content;
    uint32_t FileSize;
    uint16_t ClusterBeg;
    uint16_t ClusterEnd;

@@ -330,7 +330,7 @@ void HSP_Loop(void)
 
 void HSP_EnterBootloader(void)
 {
-    bl_setting.is_update = 1;
+    bl_setting.keep_bootloader = 1;
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);
