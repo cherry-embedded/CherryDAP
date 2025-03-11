@@ -1,6 +1,7 @@
 #include "BL_Setting_Common.h"
 #include "bootuf2.h"
 #include "usb_config.h"
+#include "ws2812.h"
 #include <board.h>
 #include <hpm_dma_mgr.h>
 #include <hpm_ewdg_drv.h>
@@ -64,65 +65,6 @@ static bool app_valid(void)
     return true;
 }
 
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
-static void show_rainbow(void)
-{
-    static int j = 0;
-    j++;
-    uint8_t r, g, b;
-    uint8_t pos = j & 255;
-    if (pos < 85)
-    {
-        r = pos * 3;
-        g = 255 - pos * 3;
-        b = 0;
-    }
-    else if (pos < 170)
-    {
-        pos -= 85;
-        r = 255 - pos * 3;
-        g = 0;
-        b = pos * 3;
-    }
-    else
-    {
-        pos -= 170;
-        r = 0;
-        g = pos * 3;
-        b = 255 - pos * 3;
-    }
-    printf("Rainbow: %d, %d, %d\n", r, g, b);
-    r = r / 16;
-    g = g / 16;
-    b = b / 16;
-    for (size_t i = 0; i < WS2812_LED_NUM; i++)
-    {
-        WS2812_SetPixel(i, r, g, b);
-    }
-    WS2812_Update(true);
-}
-
-static void show_fade_on(void)
-{
-    static uint8_t j = 0;
-    j++;
-    printf("FadeOn: %d\n", j);
-    for (size_t i = 0; i < WS2812_LED_NUM; i++)
-    {
-        WS2812_SetPixel(i, j, j, j);
-    }
-    WS2812_Update(true);
-}
-
-static void TurnOffLED(void)
-{
-    WS2812_SetPixel(0, 0, 0, 0);
-    WS2812_Update(true);
-    while (WS2812_IsBusy())
-        ;
-}
-#endif
-
 static void IOInit(void)
 {
     // 将输出全部设置为高阻态
@@ -177,10 +119,8 @@ int main(void)
     dma_mgr_init();
     board_init_usb(HPM_USB0);
     bootloader_button_init();
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     WS2812_Init();
-    TurnOffLED();
-#endif
+    WS2812_TurnOff();
 
     if (bl_setting.magic != BL_SETTING_MAGIC)
     {
@@ -245,19 +185,14 @@ __entry_bl:
             ppor_reset_mask_set_source_enable(HPM_PPOR, ppor_reset_software);
             ppor_sw_reset(HPM_PPOR, 1000);
         }
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
-        show_rainbow();
-//        show_fade_on();
+        WS2812_ShowRainbow();
         board_delay_ms(10);
-#endif
         ewdg_refresh(HPM_EWDG0);
     }
     return 0;
 
 __entry_app:
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
-    TurnOffLED();
-#endif
+    WS2812_TurnOff();
     USB_LOG_INFO("Jump to application @0x%x(0x%x)\r\n", CONFIG_BOOTUF2_APP_START, *(volatile uint32_t *)CONFIG_BOOTUF2_APP_START);
     jump_app();
     while (1)
