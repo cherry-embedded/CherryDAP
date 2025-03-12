@@ -10,3 +10,6 @@
 [submodule "projects/HSLink-Pro/third_party_components/rapidjson/rapidjson"]
 	path = projects/HSLink-Pro/third_party_components/rapidjson/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "projects/HSLink-Pro/third_party_components/multibutton/multibutton"]
+	path = projects/HSLink-Pro/third_party_components/multibutton/multibutton
+	url = https://github.com/0x1abin/MultiButton.git

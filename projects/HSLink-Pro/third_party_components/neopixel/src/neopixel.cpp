@@ -21,8 +21,8 @@ void NeoPixel::SetPixel(uint8_t pixel_idx, uint8_t r, uint8_t g, uint8_t b) {
     if (pixel_idx >= pixel_cnt) {
         return;
     }
-    buffer[pixel_idx * 3] = r;
-    buffer[pixel_idx * 3 + 1] = g;
+    buffer[pixel_idx * 3] = g;
+    buffer[pixel_idx * 3 + 1] = r;
     buffer[pixel_idx * 3 + 2] = b;
 }
 

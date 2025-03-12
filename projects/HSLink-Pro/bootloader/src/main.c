@@ -9,6 +9,7 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <hpm_ppor_drv.h>
+#include <multi_button.h>
 #include <usb_log.h>
 
 #if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
@@ -37,19 +38,6 @@ static void bootloader_button_init(void)
     gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 3, gpiom_soc_gpio0);
     gpio_set_pin_input(HPM_GPIO0, GPIO_OE_GPIOA, 3);
     gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
-}
-
-static bool bootloader_button_pressed(void)
-{
-    if (gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3) == 1)
-    {
-        board_delay_ms(5);
-        if (gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3) == 1)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 /**
@@ -111,6 +99,19 @@ extern const char *file_INFO;
 extern void msc_bootuf2_init(uint8_t busid, uint32_t reg_base);
 extern void bootuf2_SetReason(const char *reason);
 
+static bool button_is_pressed = false;
+
+static uint8_t read_button_pin(uint8_t button_id)
+{
+    return gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3);
+}
+
+static void button_press_cb(void *btn)
+{
+    printf("Button pressed\n");
+    button_is_pressed = true;
+}
+
 int main(void)
 {
     board_init();
@@ -140,17 +141,6 @@ int main(void)
         goto __entry_bl;
     }
 
-    // 检测2s内是否有按键按下
-    for (int i = 0; i < 2000 / 5; i++)
-    {
-        if (bootloader_button_pressed())
-        {
-            bootuf2_SetReason("BUTTON_PRESSED_IN_2S");
-            printf("BUTTON_PRESSED_IN_2S\n");
-            goto __entry_bl;
-        }
-    }
-
     // 检测APP是否合法
     if (!app_valid())
     {
@@ -165,6 +155,39 @@ int main(void)
         bl_setting.fail_cnt = 0;
         bootuf2_SetReason("FAIL_CNT_OVER_THRESHOLD");
         printf("FAIL_CNT_OVER_THRESHOLD\n");
+        goto __entry_bl;
+    }
+
+    Button btn;
+    button_init(&btn, read_button_pin, 1, 0);
+    button_attach(&btn, PRESS_DOWN, button_press_cb);
+    button_start(&btn);
+
+    // blink blue when booting, press button to enter bootloader
+    bool led_sta = false;
+    for (int i = 0; i < 2000 / 5; i++)
+    {
+        if (i % 100 == 0)
+        {
+            if (led_sta)
+            {
+                WS2812_SetColor(0);
+            }
+            else
+            {
+                WS2812_SetColor(0xFF / 8);
+            }
+            led_sta = !led_sta;
+        }
+        button_ticks();
+        board_delay_ms(5);
+    }
+
+    // 检测2s内是否有按键按下
+    if (button_is_pressed)
+    {
+        bootuf2_SetReason("BUTTON_PRESSED_IN_2S");
+        printf("BUTTON_PRESSED_IN_2S\n");
         goto __entry_bl;
     }
 

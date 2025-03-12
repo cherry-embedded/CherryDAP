@@ -29,5 +29,6 @@ sdk_inc(../common)
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 
 add_subdirectory(../third_party_components/neopixel ${CMAKE_CURRENT_BINARY_DIR}/neopixel)
+add_subdirectory(../third_party_components/multibutton ${CMAKE_CURRENT_BINARY_DIR}/multibutton)
 
 #generate_ide_projects()

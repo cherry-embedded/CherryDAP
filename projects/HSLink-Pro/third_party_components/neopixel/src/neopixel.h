@@ -51,6 +51,7 @@ public:
         this->config.init(config->user_data);
     }
 
+    __attribute__((section(".fast")))
     void Flush() override;
 
 private:
