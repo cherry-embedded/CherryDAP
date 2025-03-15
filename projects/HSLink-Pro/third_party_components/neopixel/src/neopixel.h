@@ -12,6 +12,12 @@ public:
         SPI_DMA
     };
 
+    enum class color_type_t: uint8_t {
+        COLOR_R,
+        COLOR_G,
+        COLOR_B
+    };
+
     NeoPixel(interface_type_t interfaceType, uint32_t pixel_cnt, uint8_t *buffer = nullptr);
 
     virtual ~NeoPixel();
@@ -21,6 +27,8 @@ public:
     void SetPixel(uint8_t pixel_idx, uint32_t color);
 
     void SetPixel(uint8_t pixel_idx, uint8_t r, uint8_t g, uint8_t b);
+
+    void ModifyPixel(uint8_t pixel_idx, color_type_t color, uint8_t value);
 
     virtual void Flush() = 0;
 

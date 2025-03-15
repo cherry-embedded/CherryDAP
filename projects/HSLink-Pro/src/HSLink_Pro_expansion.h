@@ -30,6 +30,14 @@ void HSP_Init(void);
  */
 void HSP_Loop(void);
 
+void HSP_WS2812_SetColor(uint8_t r, uint8_t g, uint8_t b);
+
+void HSP_WS2812_SetRed(uint8_t r);
+
+void HSP_WS2812_SetGreen(uint8_t g);
+
+void HSP_WS2812_SetBlue(uint8_t b);
+
 void HSP_EnterHSLinkBootloader(void);
 
 void HSP_EntrySysBootloader(void);

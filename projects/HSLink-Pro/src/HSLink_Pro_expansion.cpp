@@ -258,8 +258,10 @@ static void __WS2812_Config_Unlock(void *user_data) {
     enable_global_irq(CSR_MSTATUS_MIE_MASK);
 }
 
+NeoPixel *neopixel = nullptr;
+
 static void WS2812_Init(void) {
-    NeoPixel_GPIO_Polling neopixel(1);
+    neopixel = reinterpret_cast<NeoPixel *>(new NeoPixel_GPIO_Polling{1});
     NeoPixel_GPIO_Polling::interface_config_t config = {
             .init = __WS2812_Config_Init,
             .set_level = __WS2812_Config_SetLevel,
@@ -269,7 +271,39 @@ static void WS2812_Init(void) {
             .low_nop_cnt = 15,
             .user_data = nullptr,
     };
-    neopixel.SetInterfaceConfig(&config);
+    neopixel->SetInterfaceConfig(&config);
+}
+
+extern "C" void HSP_WS2812_SetColor(uint8_t r, uint8_t g, uint8_t b) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->SetPixel(0, r, g, b);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetRed(uint8_t r) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_R, r);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetGreen(uint8_t g) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_G, g);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetBlue(uint8_t b) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_B, b);
+    neopixel->Flush();
 }
 
 static uint32_t millis(void) {

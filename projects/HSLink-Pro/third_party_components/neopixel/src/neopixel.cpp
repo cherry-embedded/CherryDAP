@@ -3,6 +3,7 @@
 //
 
 #include <cstdlib>
+#include <cstdio>
 #include "neopixel.h"
 
 NeoPixel::NeoPixel(NeoPixel::interface_type_t interfaceType, uint32_t pixel_cnt, uint8_t *buffer) {
@@ -15,6 +16,7 @@ NeoPixel::NeoPixel(NeoPixel::interface_type_t interfaceType, uint32_t pixel_cnt,
         this->buffer = buffer;
         buffer_is_from_malloc = false;
     }
+    memset(this->buffer, 0, pixel_cnt * 3);
 }
 
 void NeoPixel::SetPixel(uint8_t pixel_idx, uint8_t r, uint8_t g, uint8_t b) {
@@ -28,6 +30,23 @@ void NeoPixel::SetPixel(uint8_t pixel_idx, uint8_t r, uint8_t g, uint8_t b) {
 
 void NeoPixel::SetPixel(uint8_t pixel_idx, uint32_t color) {
     this->SetPixel(pixel_idx, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
+}
+
+void NeoPixel::ModifyPixel(uint8_t pixel_idx, NeoPixel::color_type_t color, uint8_t value) {
+    if (pixel_idx >= pixel_cnt) {
+        return;
+    }
+    switch (color) {
+        case NeoPixel::color_type_t::COLOR_R:
+            buffer[pixel_idx * 3 + 1] = value;
+            break;
+        case NeoPixel::color_type_t::COLOR_G:
+            buffer[pixel_idx * 3] = value;
+            break;
+        case NeoPixel::color_type_t::COLOR_B:
+            buffer[pixel_idx * 3 + 2] = value;
+            break;
+    }
 }
 
 NeoPixel::~NeoPixel() {

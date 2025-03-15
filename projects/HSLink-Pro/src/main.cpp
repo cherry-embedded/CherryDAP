@@ -4,7 +4,6 @@
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
 #include <hpm_ewdg_drv.h>
-#include <neopixel.h>
 #include "board.h"
 #include "dap_main.h"
 #include "HSLink_Pro_expansion.h"
