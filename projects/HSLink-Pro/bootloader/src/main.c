@@ -103,7 +103,7 @@ static bool button_is_pressed = false;
 
 static uint8_t read_button_pin(uint8_t button_id)
 {
-    return gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3);
+    return gpio_read_pin(BOARD_BTN_GPIO_CTRL, BOARD_BTN_GPIO_INDEX, BOARD_BTN_GPIO_PIN);
 }
 
 static void button_press_cb(void *btn)
@@ -159,7 +159,7 @@ int main(void)
     }
 
     Button btn;
-    button_init(&btn, read_button_pin, 1, 0);
+    button_init(&btn, read_button_pin, BOARD_BTN_PRESSED_VALUE, 0);
     button_attach(&btn, PRESS_DOWN, button_press_cb);
     button_start(&btn);
 

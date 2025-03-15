@@ -194,6 +194,8 @@ void board_init_clock(void) {
     clock_add_to_group(clock_mchtmr0, 0);
     clock_add_to_group(clock_gptmr0, 0);
     clock_add_to_group(clock_gptmr1, 0);
+    clock_add_to_group(clock_spi0, 0);
+    clock_add_to_group(clock_spi1, 0);
     clock_add_to_group(clock_adc0, 0);
     clock_add_to_group(clock_rom, 0);
     clock_add_to_group(clock_gpio, 0);
@@ -260,13 +262,7 @@ void board_timer_create(uint32_t ms, board_timer_cb cb) {
 
 void board_init_gpio_pins(void) {
     init_gpio_pins();
-    gpio_set_pin_input(BOARD_APP_GPIO_CTRL, BOARD_APP_GPIO_INDEX, BOARD_APP_GPIO_PIN);
-}
-
-void board_init_led_pins(void) {
-    init_led_pins_as_gpio();
-    gpio_set_pin_output_with_initial(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX, BOARD_LED_GPIO_PIN,
-                                     board_get_led_gpio_off_level());
+    gpio_set_pin_input(BOARD_BTN_GPIO_CTRL, BOARD_BTN_GPIO_INDEX, BOARD_BTN_GPIO_PIN);
 }
 
 void board_init_usb(USB_Type *ptr) {
@@ -281,14 +277,6 @@ void board_init_usb(USB_Type *ptr) {
         /* As QFN48 and LQFP64 has no vbus pin, so should be call usb_phy_using_internal_vbus() API to use internal vbus. */
         usb_phy_using_internal_vbus(ptr);
     }
-}
-
-void board_led_write(uint8_t state) {
-    gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX, BOARD_LED_GPIO_PIN, state);
-}
-
-void board_led_toggle(void) {
-    gpio_toggle_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX, BOARD_LED_GPIO_PIN);
 }
 
 void board_init_uart(UART_Type *ptr) {
@@ -362,10 +350,6 @@ void board_disable_output_rgb_led(uint8_t color) {
 
 void board_enable_output_rgb_led(uint8_t color) {
     (void) color;
-}
-
-uint8_t board_get_led_gpio_off_level(void) {
-    return BOARD_LED_OFF_LEVEL;
 }
 
 void board_init_pmp(void) {

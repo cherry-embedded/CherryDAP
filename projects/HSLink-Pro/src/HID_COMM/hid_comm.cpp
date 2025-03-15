@@ -234,7 +234,27 @@ static void upgrade(Document &root, char *res)
     FillStatus(HID_RESPONSE_SUCCESS, res);
     usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
     clock_cpu_delay_ms(5); // 确保已经发送完毕
-    HSP_EnterBootloader();
+    HSP_EnterHSLinkBootloader();
+}
+
+static void entry_sys_bl(Document &root, char *res)
+{
+    (void) root;
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    clock_cpu_delay_ms(5); // 确保已经发送完毕
+    HSP_EntrySysBootloader();
+}
+
+static void entry_hslink_bl(Document &root, char *res)
+{
+    (void) root;
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    clock_cpu_delay_ms(5); // 确保已经发送完毕
+    HSP_EnterHSLinkBootloader();
 }
 
 static void get_setting(Document &root, char *res)
@@ -312,6 +332,8 @@ void HID_Handle()
             {"set_nickname", set_nickname},
             {"get_setting",  get_setting},
             {"upgrade",      upgrade},
+            {"entry_sys_bl", entry_sys_bl},
+            {"entry_hslink_bl", entry_hslink_bl}
     };
 
     Document root;

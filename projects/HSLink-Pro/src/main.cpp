@@ -56,71 +56,6 @@ static void EWDG_Init() {
     }
 }
 
-ATTR_RAMFUNC
-static void __WS2812_Config_Init(void *user_data)
-{
-    HPM_IOC->PAD[IOC_PAD_PA02].FUNC_CTL = IOC_PA02_FUNC_CTL_GPIO_A_02;
-    gpio_set_pin_output(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
-                        BOARD_LED_GPIO_PIN);
-    gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
-                   BOARD_LED_GPIO_PIN, 0);
-}
-ATTR_RAMFUNC
-static void __WS2812_Config_SetLevel(uint8_t level, void *user_data)
-{
-    gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
-                   BOARD_LED_GPIO_PIN, level);
-    __asm volatile("fence io, io");
-}
-ATTR_RAMFUNC
-static void __WS2812_Config_Lock(void *user_data)
-{
-    disable_global_irq(CSR_MSTATUS_MIE_MASK);
-}
-
-ATTR_RAMFUNC
-static void __WS2812_Config_Unlock(void *user_data)
-{
-    enable_global_irq(CSR_MSTATUS_MIE_MASK);
-}
-
-extern "C" void WS2812_ShowRainbow(NeoPixel* neopixel)
-{
-    if (!neopixel)
-        return;
-
-    static int j = 0;
-    j++;
-    uint8_t r, g, b;
-    uint8_t pos = j & 255;
-    if (pos < 85)
-    {
-        r = pos * 3;
-        g = 255 - pos * 3;
-        b = 0;
-    }
-    else if (pos < 170)
-    {
-        pos -= 85;
-        r = 255 - pos * 3;
-        g = 0;
-        b = pos * 3;
-    }
-    else
-    {
-        pos -= 170;
-        r = 0;
-        g = pos * 3;
-        b = 255 - pos * 3;
-    }
-    //    printf("Rainbow: %d, %d, %d\n", r, g, b);
-    r = r / 16;
-    g = g / 16;
-    b = b / 16;
-    neopixel->SetPixel(0, r, g, b);
-    neopixel->Flush();
-}
-
 [[noreturn]] // make compiler happy
 int main() {
     board_init();
@@ -141,18 +76,6 @@ int main() {
     uartx_preinit();
     USB_Configuration();
 
-    NeoPixel_GPIO_Polling neopixel(1);
-    NeoPixel_GPIO_Polling::interface_config_t config = {
-            .init = __WS2812_Config_Init,
-            .set_level = __WS2812_Config_SetLevel,
-            .lock = __WS2812_Config_Lock,
-            .unlock = __WS2812_Config_Unlock,
-            .high_nop_cnt = 45,
-            .low_nop_cnt = 15,
-            .user_data = nullptr,
-    };
-    neopixel.SetInterfaceConfig(&config);
-
     bl_setting.fail_cnt = 0;
 
     while (1) {
@@ -164,7 +87,5 @@ int main() {
 #ifdef CONFIG_USE_HID_CONFIG
         HID_Handle();
 #endif
-        WS2812_ShowRainbow(&neopixel);
-        board_delay_ms(10);
     }
 }

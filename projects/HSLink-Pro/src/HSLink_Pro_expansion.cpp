@@ -9,6 +9,8 @@
 #include <hpm_gpiom_drv.h>
 #include <hpm_l1c_drv.h>
 #include <hpm_romapi.h>
+#include <neopixel.h>
+#include <multi_button.h>
 #include "HSLink_Pro_expansion.h"
 #include "board.h"
 #include "hpm_gptmr_drv.h"
@@ -18,9 +20,6 @@
 #include "setting.h"
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
-#include <WS2812.h>
-#endif
 
 const double ADC_REF = 3.3;
 
@@ -40,12 +39,9 @@ static uint32_t pwm_current_reload;
 
 static uint64_t MCHTMR_CLK_FREQ = 0;
 
-volatile bool WS2812_Update_Flag = false;
-
 static const uint32_t CONFIG_P_EN = IOC_PAD_PA31;
 
-static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
-{
+static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq) {
     gptmr_channel_config_t config;
     uint32_t gptmr_freq;
 
@@ -60,8 +56,7 @@ static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq)
     gptmr_start_counter(USER_PWM, PWM_CHANNEL);
 }
 
-static void set_pwm_waveform_edge_aligned_duty(uint8_t duty)
-{
+static void set_pwm_waveform_edge_aligned_duty(uint8_t duty) {
     uint32_t cmp;
     if (duty > 100) {
         duty = 100;
@@ -70,8 +65,7 @@ static void set_pwm_waveform_edge_aligned_duty(uint8_t duty)
     gptmr_update_cmp(USER_PWM, PWM_CHANNEL, 0, cmp);
 }
 
-static void Power_Enable_Init(void)
-{
+static void Power_Enable_Init(void) {
     HPM_IOC->PAD[CONFIG_P_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN),
@@ -82,27 +76,23 @@ static void Power_Enable_Init(void)
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Power_Turn_On(void)
-{
+static inline void Power_Turn_On(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 1);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Power_Turn_Off(void)
-{
+static inline void Power_Turn_Off(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
 }
 
-static void Power_PWM_Init(void)
-{
+static void Power_PWM_Init(void) {
     // PA10 100k PWM，占空比50%
     HPM_IOC->PAD[IOC_PAD_PA10].FUNC_CTL = IOC_PA10_FUNC_CTL_GPTMR0_COMP_2;
     set_pwm_waveform_edge_aligned_frequency(DEFAULT_PWM_FREQ);
     set_pwm_waveform_edge_aligned_duty(DEFAULT_PWM_DUTY);
 }
 
-static void Power_Set_TVCC_Voltage(double voltage)
-{
+static void Power_Set_TVCC_Voltage(double voltage) {
     // voltage = -DAC + (1974/395)
     // DAC = -voltage + (1974/395)
 
@@ -119,8 +109,7 @@ static void Power_Set_TVCC_Voltage(double voltage)
     set_pwm_waveform_edge_aligned_duty(duty);
 }
 
-static void ADC_Init()
-{
+static void ADC_Init() {
     /* Configure the ADC clock from AHB (@200MHz by default)*/
     clock_set_adc_source(clock_adc0, clk_adc_src_ahb0);
 
@@ -146,8 +135,7 @@ static void ADC_Init()
     }
 }
 
-static void ADC_Channel_Init(USER_ADC_CHANNEL_t channel)
-{
+static void ADC_Channel_Init(USER_ADC_CHANNEL_t channel) {
     adc16_channel_config_t ch_cfg;
 
     /* get a default channel config */
@@ -167,8 +155,7 @@ static void ADC_Channel_Init(USER_ADC_CHANNEL_t channel)
 #endif
 }
 
-static uint16_t Get_ADC_Value(USER_ADC_CHANNEL_t channel)
-{
+static uint16_t Get_ADC_Value(USER_ADC_CHANNEL_t channel) {
     ADC_Channel_Init(channel);
 
     uint16_t result = 0;
@@ -183,34 +170,29 @@ static uint16_t Get_ADC_Value(USER_ADC_CHANNEL_t channel)
 }
 
 ATTR_ALWAYS_INLINE
-static inline void VREF_Init(void)
-{
+static inline void VREF_Init(void) {
     // VREF 的输入是 PB08
     HPM_IOC->PAD[IOC_PAD_PB08].FUNC_CTL = IOC_PAD_FUNC_CTL_ANALOG_MASK;
 }
 
 ATTR_ALWAYS_INLINE
-static inline void TVCC_Init(void)
-{
+static inline void TVCC_Init(void) {
     // TVCC 的输入是 PB09
     HPM_IOC->PAD[IOC_PAD_PB09].FUNC_CTL = IOC_PAD_FUNC_CTL_ANALOG_MASK;
 }
 
 ATTR_ALWAYS_INLINE
-static inline double Get_VREF_Voltage(void)
-{
+static inline double Get_VREF_Voltage(void) {
     return (double) Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
-static double inline Get_TVCC_Voltage(void)
-{
+static double inline Get_TVCC_Voltage(void) {
     return (double) Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
-static inline void BOOT_Init(void)
-{
+static inline void BOOT_Init(void) {
     // PA03
     HPM_IOC->PAD[IOC_PAD_PA03].FUNC_CTL = IOC_PA03_FUNC_CTL_GPIO_A_03;
 
@@ -220,8 +202,7 @@ static inline void BOOT_Init(void)
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Enable_Init(void)
-{
+static inline void Port_Enable_Init(void) {
     // PA04
     HPM_IOC->PAD[IOC_PAD_PA04].FUNC_CTL = IOC_PA04_FUNC_CTL_GPIO_A_04;
 
@@ -232,60 +213,93 @@ static inline void Port_Enable_Init(void)
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Turn_Enable(void)
-{
+static inline void Port_Turn_Enable(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Turn_Disable(void)
-{
+static inline void Port_Turn_Disable(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 0);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Power_Trun(bool on)
-{
+static inline void Power_Trun(bool on) {
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), on);
 }
 
 ATTR_ALWAYS_INLINE
-static inline void Port_Turn(bool on)
-{
+static inline void Port_Turn(bool on) {
     gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, on);
 }
 
-static uint32_t millis(void)
-{
+ATTR_RAMFUNC
+static void __WS2812_Config_Init(void *user_data) {
+    HPM_IOC->PAD[IOC_PAD_PA02].FUNC_CTL = IOC_PA02_FUNC_CTL_GPIO_A_02;
+    gpio_set_pin_output(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
+                        BOARD_LED_GPIO_PIN);
+    gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
+                   BOARD_LED_GPIO_PIN, 0);
+}
+
+ATTR_RAMFUNC
+static void __WS2812_Config_SetLevel(uint8_t level, void *user_data) {
+    gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
+                   BOARD_LED_GPIO_PIN, level);
+    __asm volatile("fence io, io");
+}
+
+ATTR_RAMFUNC
+static void __WS2812_Config_Lock(void *user_data) {
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+}
+
+ATTR_RAMFUNC
+static void __WS2812_Config_Unlock(void *user_data) {
+    enable_global_irq(CSR_MSTATUS_MIE_MASK);
+}
+
+static void WS2812_Init(void) {
+    NeoPixel_GPIO_Polling neopixel(1);
+    NeoPixel_GPIO_Polling::interface_config_t config = {
+            .init = __WS2812_Config_Init,
+            .set_level = __WS2812_Config_SetLevel,
+            .lock = __WS2812_Config_Lock,
+            .unlock = __WS2812_Config_Unlock,
+            .high_nop_cnt = 45,
+            .low_nop_cnt = 15,
+            .user_data = nullptr,
+    };
+    neopixel.SetInterfaceConfig(&config);
+}
+
+static uint32_t millis(void) {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
     return (uint32_t) (mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
 }
 
-static bool BOOT_Button_Pressed(void)
-{
-    static bool last_state = false;
-    bool current_state = gpio_read_pin(HPM_GPIO0, GPIO_DI_GPIOA, 3) == 1;
-    static uint64_t now = 0;
-
-    if (current_state == true) {
-        if (last_state == false) {
-            now = millis();
-            last_state = true;
-        } else {
-            if (millis() - now > 1000) // 长按1000ms
-            {
-                last_state = false;
-                return true;
-            }
-        }
-    } else {
-        last_state = false;
-    }
-    return false;
+static void Button_Init() {
+    static Button btn;
+    button_init(&btn, [](uint8_t) {
+        return gpio_read_pin(BOARD_BTN_GPIO_CTRL, BOARD_BTN_GPIO_INDEX, BOARD_BTN_GPIO_PIN);
+    }, BOARD_BTN_PRESSED_VALUE, 0);
+    button_attach(&btn, SINGLE_CLICK, [](void *) {
+        printf("single click, send reset to target\r\n");
+        // TODO
+    });
+    button_attach(&btn, DOUBLE_CLICK, [](void *) {
+        printf("double click, enter system Bootloader\n");
+        Power_Turn_Off();
+        HSP_EntrySysBootloader();
+    });
+    button_attach(&btn, LONG_PRESS_START, [](void *) {
+        printf("long press, enter Bootloader\n");
+        Power_Turn_Off();
+        HSP_EnterHSLinkBootloader();
+    });
+    button_start(&btn);
 }
 
-void HSP_Init(void)
-{
+extern "C" void HSP_Init(void) {
     MCHTMR_CLK_FREQ = clock_get_frequency(clock_mchtmr0);
     // 初始化电源部分
     Power_Enable_Init();
@@ -296,13 +310,11 @@ void HSP_Init(void)
     VREF_Init();
     TVCC_Init();
     BOOT_Init();
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
     WS2812_Init();
-#endif
+    Button_Init();
 }
 
-void HSP_Loop(void)
-{
+extern "C" void HSP_Loop(void) {
     // 检测VREF电压
     double vref = Get_VREF_Voltage();
 
@@ -316,23 +328,14 @@ void HSP_Loop(void)
         Port_Turn(HSLink_Setting.power.port_on);
     }
 
-    if (BOOT_Button_Pressed()) {
-        printf("Enter Bootloader\n");
-        Power_Turn_Off();
-
-        HSP_EnterBootloader();
-    }
-
-    if (WS2812_Update_Flag) {
-#if defined(CONFIG_WS2812) && CONFIG_WS2812 == 1
-        WS2812_Update(true);
-#endif
-        WS2812_Update_Flag = false;
+    static uint32_t last_btn_chk_time = 0;
+    if (millis() - last_btn_chk_time > TICKS_INTERVAL) {
+        last_btn_chk_time = millis();
+        button_ticks();
     }
 }
 
-void HSP_EnterBootloader(void)
-{
+extern "C" void HSP_EnterHSLinkBootloader(void) {
     bl_setting.keep_bootloader = 1;
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
@@ -345,6 +348,24 @@ void HSP_EnterBootloader(void)
             .index = 0,
             .peripheral = API_BOOT_PERIPH_AUTO,
             .src = API_BOOT_SRC_PRIMARY,
+            .tag = API_BOOT_TAG,
+    };
+
+    ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
+}
+
+extern "C" void HSP_EntrySysBootloader(void) {
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+    //disable_global_irq(CSR_MSTATUS_SIE_MASK);
+    disable_global_irq(CSR_MSTATUS_UIE_MASK);
+    l1c_dc_invalidate_all();
+    l1c_dc_disable();
+    fencei();
+
+    api_boot_arg_t boot_arg = {
+            .index = 0,
+            .peripheral = API_BOOT_PERIPH_UART,
+            .src = API_BOOT_SRC_ISP,
             .tag = API_BOOT_TAG,
     };
 
