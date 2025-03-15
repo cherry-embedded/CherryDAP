@@ -123,10 +123,7 @@
 /* User LED */
 #define BOARD_LED_GPIO_CTRL  HPM_GPIO0
 #define BOARD_LED_GPIO_INDEX GPIO_DI_GPIOA
-#define BOARD_LED_GPIO_PIN   10
-
-#define BOARD_LED_OFF_LEVEL 1
-#define BOARD_LED_ON_LEVEL  0
+#define BOARD_LED_GPIO_PIN   2
 
 /* 12V Power Enable*/
 #define BOARD_12V_EN_GPIO_CTRL  HPM_GPIO0
@@ -142,11 +139,11 @@
 #define BOARD_BUTTON_TINYUF2_PIN 9
 
 /* User button */
-#define BOARD_APP_GPIO_CTRL  HPM_GPIO0
-#define BOARD_APP_GPIO_INDEX GPIO_DI_GPIOA
-#define BOARD_APP_GPIO_PIN   3
-#define BOARD_APP_GPIO_IRQ   IRQn_GPIO0_A
-#define BOARD_BUTTON_PRESSED_VALUE 1
+#define BOARD_BTN_GPIO_CTRL  HPM_GPIO0
+#define BOARD_BTN_GPIO_INDEX GPIO_DI_GPIOA
+#define BOARD_BTN_GPIO_PIN   3
+#define BOARD_BTN_GPIO_IRQ   IRQn_GPIO0_A
+#define BOARD_BTN_PRESSED_VALUE 1
 
 /* spi section */
 #define BOARD_APP_SPI_BASE              HPM_SPI1
@@ -280,10 +277,7 @@ extern "C" {
 typedef void (*board_timer_cb)(void);
 
 void board_init_gpio_pins(void);
-void board_init_led_pins(void);
 void board_init_usb(USB_Type *ptr);
-void board_led_write(uint8_t state);
-void board_led_toggle(void);
 void board_init_console(void);
 void board_init_uart(UART_Type *ptr);
 uint32_t board_init_spi_clock(SPI_Type *ptr);

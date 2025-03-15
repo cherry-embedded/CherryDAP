@@ -9,13 +9,12 @@ option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
 
 set(APP_NAME "HSLink-Pro")
 set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-set(CMAKE_CXX_STANDARD 26)
 
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
 
 set(CUSTOM_GCC_LINKER_FILE
-    ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
+        ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
 )
 
 # CONFIG_USE_HPM_BOARD_JTAG_GPIO is for 20p output SWD+JTAG signal of hpm5301evklite
@@ -111,7 +110,7 @@ sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
-sdk_app_src(HSLink_Pro_expansion.c)
+sdk_app_src(HSLink_Pro_expansion.cpp)
 
 file(GLOB_RECURSE HID_COMM_SRC
         "HID_COMM/*.c"

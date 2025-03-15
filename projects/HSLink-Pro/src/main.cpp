@@ -11,14 +11,7 @@
 #include "usb_configuration.h"
 #include "setting.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-
-using namespace rapidjson;
-
-static void serial_number_init(void)
-{
+static void serial_number_init(void) {
 #define OTP_CHIP_UUID_IDX_START (88U)
 #define OTP_CHIP_UUID_IDX_END   (91U)
     uint32_t uuid_words[4];
@@ -33,8 +26,7 @@ static void serial_number_init(void)
 }
 
 ATTR_ALWAYS_INLINE
-static inline void SWDIO_DIR_Init(void)
-{
+static inline void SWDIO_DIR_Init(void) {
     HPM_IOC->PAD[SWDIO_DIR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), gpiom_soc_gpio0);
@@ -42,8 +34,7 @@ static inline void SWDIO_DIR_Init(void)
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
 }
 
-static void EWDG_Init()
-{
+static void EWDG_Init() {
     clock_add_to_group(clock_watchdog0, 0);
     ewdg_config_t config;
     ewdg_get_default_config(HPM_EWDG0, &config);
@@ -59,15 +50,13 @@ static void EWDG_Init()
 
     /* Initialize the WDG */
     hpm_stat_t status = ewdg_init(HPM_EWDG0, &config);
-    if (status != status_success)
-    {
+    if (status != status_success) {
         printf(" EWDG initialization failed, error_code=%d\n", status);
     }
 }
 
 [[noreturn]] // make compiler happy
-int main()
-{
+int main() {
     board_init();
     EWDG_Init();
     board_delay_ms(500);

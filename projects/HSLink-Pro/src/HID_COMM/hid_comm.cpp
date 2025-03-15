@@ -234,7 +234,48 @@ static void upgrade(Document &root, char *res)
     FillStatus(HID_RESPONSE_SUCCESS, res);
     usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
     clock_cpu_delay_ms(5); // 确保已经发送完毕
-    HSP_EnterBootloader();
+    HSP_EnterHSLinkBootloader();
+}
+
+static void entry_sys_bl(Document &root, char *res)
+{
+    (void) root;
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    clock_cpu_delay_ms(5); // 确保已经发送完毕
+    HSP_EntrySysBootloader();
+}
+
+static void entry_hslink_bl(Document &root, char *res)
+{
+    (void) root;
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
+    clock_cpu_delay_ms(5); // 确保已经发送完毕
+    HSP_EnterHSLinkBootloader();
+}
+
+static void set_hw_ver(Document &root, char *res) {
+    if (!root.HasMember("hw_ver") || !root["hw_ver"].IsString()) {
+        const char *message = "hw_ver not found";
+        USB_LOG_WRN("%s\n", message);
+        FillStatus(HID_RESPONSE_FAILED, res, message);
+        return;
+    }
+    auto hw_ver_s = std::string{root["hw_ver"].GetString()};
+    size_t pos1 = hw_ver_s.find('.');
+    size_t pos2 = hw_ver_s.find('.', pos1 + 1);
+
+    Setting_Version_t ver{0};
+    ver.major = std::stoi(hw_ver_s.substr(0, pos1));
+    ver.minor = std::stoi(hw_ver_s.substr(pos1 + 1, pos2 - pos1 - 1));
+    ver.patch = std::stoi(hw_ver_s.substr(pos2 + 1));
+
+    Setting_SaveHardwareVersion(ver);
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
 static void get_setting(Document &root, char *res)
@@ -312,6 +353,9 @@ void HID_Handle()
             {"set_nickname", set_nickname},
             {"get_setting",  get_setting},
             {"upgrade",      upgrade},
+            {"entry_sys_bl", entry_sys_bl},
+            {"entry_hslink_bl", entry_hslink_bl},
+            {"set_hw_ver", set_hw_ver}
     };
 
     Document root;
