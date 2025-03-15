@@ -53,6 +53,8 @@ This information includes:
 #include <WS2812.h>
 #endif
 
+#include "setting.h"
+
 #ifndef   __STATIC_INLINE
 #define __STATIC_INLINE                        static inline
 #endif
@@ -612,11 +614,12 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN  (void) {
            - 1: release device hardware reset.
 */
 __STATIC_FORCEINLINE void     PIN_nRESET_OUT (uint32_t bit) {
+    printf("PIN_nRESET_OUT bit = %d, level = %d\n", bit, Setting_GetSRSTLevel());
     if(bit & 0x01) {
-       gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), true);
+       gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), Setting_GetSRSTLevel());
     }
     else {
-       gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), false);
+       gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !Setting_GetSRSTLevel());
        extern uint8_t software_reset(void);
        uint8_t ret = software_reset();
         (void)ret;
