@@ -261,17 +261,21 @@ static void __WS2812_Config_Unlock(void *user_data) {
 NeoPixel *neopixel = nullptr;
 
 static void WS2812_Init(void) {
-    neopixel = reinterpret_cast<NeoPixel *>(new NeoPixel_GPIO_Polling{1});
-    NeoPixel_GPIO_Polling::interface_config_t config = {
-            .init = __WS2812_Config_Init,
-            .set_level = __WS2812_Config_SetLevel,
-            .lock = __WS2812_Config_Lock,
-            .unlock = __WS2812_Config_Unlock,
-            .high_nop_cnt = 45,
-            .low_nop_cnt = 15,
-            .user_data = nullptr,
-    };
-    neopixel->SetInterfaceConfig(&config);
+    if (Setting_IsHardwareVersion(0, 0, 0) or
+        Setting_IsHardwareVersion(1, 0, 0xFF) or
+        Setting_IsHardwareVersion(1, 1, 0xFF)) {
+        neopixel = reinterpret_cast<NeoPixel *>(new NeoPixel_GPIO_Polling{1});
+        NeoPixel_GPIO_Polling::interface_config_t config = {
+                .init = __WS2812_Config_Init,
+                .set_level = __WS2812_Config_SetLevel,
+                .lock = __WS2812_Config_Lock,
+                .unlock = __WS2812_Config_Unlock,
+                .high_nop_cnt = 45,
+                .low_nop_cnt = 15,
+                .user_data = nullptr,
+        };
+        neopixel->SetInterfaceConfig(&config);
+    }
 }
 
 extern "C" void HSP_WS2812_SetColor(uint8_t r, uint8_t g, uint8_t b) {

@@ -61,6 +61,8 @@ void Setting_Init(void);
 
 void Setting_Save(void);
 
+void Setting_SaveHardwareVersion(Setting_Version_t hw_ver);
+
 /**
  * @brief 比较硬件版本号是否相同，如果输入的是UINT8_MAX，则不比较这一位以及后面的版本号
  * @return 如果硬件版本号相同，返回true，否则返回false

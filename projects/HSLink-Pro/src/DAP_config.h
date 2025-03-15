@@ -649,9 +649,11 @@ It is recommended to provide the following LEDs for status indication:
            - 0: Connect LED OFF: debugger is not connected to CMSIS-DAP Debug Unit.
 */
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit) {
+    if (!HSLink_Setting.led) {
+        return;
+    }
     if (bit & 0x01) {
-        // TODO lightness from settings
-        HSP_WS2812_SetGreen(255 / 8);
+        HSP_WS2812_SetGreen(255 * HSLink_Setting.led_brightness / 100);
     } else {
         HSP_WS2812_SetGreen(0);
     }
@@ -663,9 +665,11 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit) {
            - 0: Target Running LED OFF: program execution in target stopped.
 */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit) {
+    if (!HSLink_Setting.led) {
+        return;
+    }
     if (bit & 0x01) {
-        // TODO lightness from settings
-        HSP_WS2812_SetBlue(255 / 8);
+        HSP_WS2812_SetBlue(255 * HSLink_Setting.led_brightness / 100);
     } else {
         HSP_WS2812_SetBlue(0);
     }
