@@ -7,17 +7,17 @@
 #include "BL_Setting_Common.h"
 
 HSLink_Setting_t HSLink_Setting = {
-    .boost = false,
-    .swd_port_mode = PORT_MODE_SPI,
-    .jtag_port_mode = PORT_MODE_SPI,
-    .power = {
-        .voltage = 3.3,
-        .power_on = false,
-        .port_on = false,
-    },
-    .reset = RESET_NRST,
-    .led = false,
-    .led_brightness = 0,
+        .boost = false,
+        .swd_port_mode = PORT_MODE_SPI,
+        .jtag_port_mode = PORT_MODE_SPI,
+        .power = {
+                .voltage = 3.3,
+                .power_on = false,
+                .port_on = false,
+        },
+        .reset = RESET_NRST,
+        .led = false,
+        .led_brightness = 0,
 };
 
 Setting_Version_t HSLink_Hardware_Version;
@@ -33,7 +33,7 @@ BL_Setting_t bl_setting;
 #define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)    // 128K
 #define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - APP_OFFSET - SETTING_E2P_MANEGE_SIZE * 2)    // 1M - 0x20000 - 256K = 640K
 
-static const uint32_t HARDWARE_VER_ADDR = 69;
+static const uint32_t HARDWARE_VER_ADDR = 70;
 
 static const char *e2p_name = "HSP";
 static uint32_t setting_eeprom_id;
@@ -76,6 +76,7 @@ static Setting_Version_t get_hardware_version(void)
 void Setting_Init(void)
 {
     HSLink_Hardware_Version = get_hardware_version();
+    printf("Hardware version: %d.%d.%d\n", HSLink_Hardware_Version.major, HSLink_Hardware_Version.minor, HSLink_Hardware_Version.patch);
 
     e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
     e2p.nor_config.base_addr = BOARD_FLASH_BASE_ADDRESS;
@@ -96,8 +97,7 @@ void Setting_Init(void)
     setting_eeprom_id = e2p_generate_id(e2p_name);
     HSLink_Setting_t temp;
     e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &temp);
-    if (temp.magic != SETTING_MAGIC)
-    {
+    if (temp.magic != SETTING_MAGIC) {
         // 第一次烧录，使用默认设置
         printf("First boot, use default setting\n");
         Setting_Save();
