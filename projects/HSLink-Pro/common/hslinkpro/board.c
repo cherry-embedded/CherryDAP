@@ -4,6 +4,7 @@
  *
  */
 
+#include <eeprom_emulation.h>
 #include "board.h"
 #include "hpm_uart_drv.h"
 #include "hpm_sdk_version.h"
@@ -118,6 +119,10 @@ void board_print_banner(void) {
                              " |_|  |_|_____/|______|_|_| |_|_|\\_\\ |_|   |_|  \\___/ \n"
                              "                                                      \n"
                              "                                                      \n";
+    printf("Hardware version: %d.%d.%d\n",
+           HSLink_Hardware_Version.major,
+           HSLink_Hardware_Version.minor,
+           HSLink_Hardware_Version.patch);
 #ifdef SDK_VERSION_STRING
     printf("hpm_sdk: %s\n", SDK_VERSION_STRING);
 #endif
@@ -135,6 +140,63 @@ void board_print_clock_freq(void) {
     printf("==============================\n");
 }
 
+static e2p_t e2p;
+
+static uint32_t setting_e2p_read(uint8_t *buf, uint32_t addr, uint32_t size) {
+    return nor_flash_read(&e2p.nor_config, buf, addr, size);
+}
+
+static uint32_t setting_e2p_write(uint8_t *buf, uint32_t addr, uint32_t size) {
+    return nor_flash_write(&e2p.nor_config, buf, addr, size);
+}
+
+static void setting_e2p_erase(uint32_t start_addr, uint32_t size) {
+    nor_flash_erase(&e2p.nor_config, start_addr, size);
+}
+
+static void e2p_init() {
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+
+    e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
+    e2p.nor_config.base_addr = BOARD_FLASH_BASE_ADDRESS;
+    e2p.config.start_addr = e2p.nor_config.base_addr + SETTING_E2P_MANAGE_OFFSET;
+    e2p.config.erase_size = SETTING_E2P_ERASE_SIZE;
+    e2p.config.sector_cnt = SETTING_E2P_SECTOR_CNT;
+    e2p.config.version = 0x4553; /* 'E' 'S' */
+    e2p.nor_config.opt_header = BOARD_APP_XPI_NOR_CFG_OPT_HDR;
+    e2p.nor_config.opt0 = BOARD_APP_XPI_NOR_CFG_OPT_OPT0;
+    e2p.nor_config.opt1 = BOARD_APP_XPI_NOR_CFG_OPT_OPT1;
+    e2p.config.flash_read = setting_e2p_read;
+    e2p.config.flash_write = setting_e2p_write;
+    e2p.config.flash_erase = setting_e2p_erase;
+
+    nor_flash_init(&e2p.nor_config);
+    e2p_config(&e2p);
+
+    enable_global_irq(CSR_MSTATUS_MIE_MASK);
+}
+
+version_t HSLink_Hardware_Version;
+
+static void load_hardware_version(void) {
+    // first version and diy devices did not write version into otp
+    // we should read version from flash firstly
+    // if not exist, we should read from otp
+    // if not exist either, we marked it as 0.0.0
+    // we would also notice user in upper to write version into flash
+    uint32_t id = e2p_generate_id(e2p_hw_ver_name);
+    if (E2P_ERROR_BAD_ID != e2p_read(id, sizeof(version_t), (uint8_t *) &HSLink_Hardware_Version)) {
+//        printf("Load hardware version from flash\r\n");
+        return;
+    }
+//    printf("Load hardware version from otp\r\n");
+    uint32_t version = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(HARDWARE_VER_ADDR);
+    HSLink_Hardware_Version.major = (version >> 24) & 0xFF;
+    HSLink_Hardware_Version.minor = (version >> 16) & 0xFF;
+    HSLink_Hardware_Version.patch = (version >> 8) & 0xFF;
+    HSLink_Hardware_Version.reserved = version & 0xFF;
+}
+
 void board_init(void) {
     init_py_pins_as_pgpio();
     board_init_usb_dp_dm_pins();
@@ -142,6 +204,11 @@ void board_init(void) {
     board_init_clock();
     board_init_console();
     board_init_pmp();
+
+    e2p_init();
+    load_hardware_version();
+
+    // print info
 #if BOARD_SHOW_CLOCK
     board_print_clock_freq();
 #endif

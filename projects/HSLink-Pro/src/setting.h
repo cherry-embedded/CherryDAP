@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "BL_Setting_Common.h"
+#include "board.h"
 
 typedef enum {
     PORT_MODE_GPIO = 0,
@@ -21,13 +22,6 @@ typedef enum {
     RESET_POR,
     RESET_ARM_SWD_SOFT,
 } Setting_ResetBit_t;
-
-typedef struct {
-    uint8_t major;
-    uint8_t minor;
-    uint8_t patch;
-    uint8_t reserved;
-} Setting_Version_t;
 
 #define SETTING_CLEAR_RESET_MODE(reset, mode) (reset &= ~(1 << mode))
 #define SETTING_SET_RESET_MODE(reset, mode) (reset |= (1 << mode))
@@ -49,7 +43,6 @@ typedef struct {
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
-extern Setting_Version_t HSLink_Hardware_Version;
 extern BL_Setting_t bl_setting;
 
 #ifdef __cplusplus
@@ -61,7 +54,7 @@ void Setting_Init(void);
 
 void Setting_Save(void);
 
-void Setting_SaveHardwareVersion(Setting_Version_t hw_ver);
+void Setting_SaveHardwareVersion(version_t hw_ver);
 
 /**
  * @brief 比较硬件版本号是否相同，如果输入的是UINT8_MAX，则不比较这一位以及后面的版本号
