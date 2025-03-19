@@ -119,6 +119,7 @@ void board_print_banner(void) {
                              " |_|  |_|_____/|______|_|_| |_|_|\\_\\ |_|   |_|  \\___/ \n"
                              "                                                      \n"
                              "                                                      \n";
+    printf("Software version: " CONFIG_BUILD_VERSION "\n");
     printf("Hardware version: %d.%d.%d\n",
            HSLink_Hardware_Version.major,
            HSLink_Hardware_Version.minor,
@@ -263,6 +264,7 @@ void board_init_clock(void) {
     clock_add_to_group(clock_gptmr1, 0);
     clock_add_to_group(clock_spi0, 0);
     clock_add_to_group(clock_spi1, 0);
+    clock_add_to_group(clock_spi2, 0);
     clock_add_to_group(clock_adc0, 0);
     clock_add_to_group(clock_rom, 0);
     clock_add_to_group(clock_gpio, 0);

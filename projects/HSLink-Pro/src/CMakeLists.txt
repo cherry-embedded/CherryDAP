@@ -12,6 +12,7 @@ set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
+set(CONFIG_HPM_SPI 1)
 
 set(CUSTOM_GCC_LINKER_FILE
         ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
@@ -123,6 +124,8 @@ sdk_app_src(usb_configuration.c)
 sdk_compile_options("-g")
 
 sdk_ld_options("-lm")
+
+#sdk_compile_definitions("WS2812_TEST")
 
 add_subdirectory(third_party_components)
 

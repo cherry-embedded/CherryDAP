@@ -16,6 +16,9 @@ NeoPixel::NeoPixel(NeoPixel::interface_type_t interfaceType, uint32_t pixel_cnt,
         this->buffer = buffer;
         buffer_is_from_malloc = false;
     }
+    if (this->buffer == nullptr) {
+        printf("malloc failed\n");
+    }
     memset(this->buffer, 0, pixel_cnt * 3);
 }
 

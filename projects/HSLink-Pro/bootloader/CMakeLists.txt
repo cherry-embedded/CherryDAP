@@ -20,12 +20,7 @@ set(EXTRA_C_FLAGS "-Werror=return-type -fno-exceptions")
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
-#target_compile_options(hpm_sdk_lib_itf INTERFACE
-#        $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti -fno-exceptions>
-#)
-
 project(HSLink-Pro-Bootloader)
-
 
 sdk_app_src(main.c)
 sdk_app_src(msc_bootuf2.c)

@@ -11,6 +11,8 @@
 #include <hpm_romapi.h>
 #include <neopixel.h>
 #include <multi_button.h>
+#include <hpm_ewdg_drv.h>
+#include <hpm_spi.h>
 #include "HSLink_Pro_expansion.h"
 #include "board.h"
 #include "hpm_gptmr_drv.h"
@@ -263,8 +265,9 @@ NeoPixel *neopixel = nullptr;
 static void WS2812_Init(void) {
     if (Setting_IsHardwareVersion(0, 0, 0) or
         Setting_IsHardwareVersion(1, 0, 0xFF) or
-        Setting_IsHardwareVersion(1, 1, 0xFF)) {
-        neopixel = reinterpret_cast<NeoPixel *>(new NeoPixel_GPIO_Polling{1});
+        Setting_IsHardwareVersion(1, 1, 0xFF)
+            ) {
+        auto _neopixel = new NeoPixel_GPIO_Polling{1};
         NeoPixel_GPIO_Polling::interface_config_t config = {
                 .init = __WS2812_Config_Init,
                 .set_level = __WS2812_Config_SetLevel,
@@ -274,7 +277,42 @@ static void WS2812_Init(void) {
                 .low_nop_cnt = 15,
                 .user_data = nullptr,
         };
-        neopixel->SetInterfaceConfig(&config);
+        _neopixel->SetInterfaceConfig(&config);
+        neopixel = reinterpret_cast<NeoPixel *>(_neopixel);
+    } else if (Setting_IsHardwareVersion(1, 2, 0xFF)) {
+        auto _neopixel = new NeoPixel_SPI_Polling{1};
+        NeoPixel_SPI_Polling::interface_config_t config = {
+                .init = [](void *) {
+                    HPM_IOC->PAD[IOC_PAD_PA07].FUNC_CTL = IOC_PA07_FUNC_CTL_SPI0_MOSI;
+
+                    spi_initialize_config_t init_config;
+                    hpm_spi_get_default_init_config(&init_config);
+                    init_config.direction = msb_first;
+                    init_config.mode = spi_master_mode;
+                    init_config.clk_phase = spi_sclk_sampling_odd_clk_edges;
+                    init_config.clk_polarity = spi_sclk_low_idle;
+                    init_config.data_len = 8;
+                    /* step.1  initialize spi */
+                    if (hpm_spi_initialize(HPM_SPI0, &init_config) != status_success) {
+                        printf("SPI init failed!\r\n");
+                        while (1) {
+                        }
+                    }
+
+                    /* step.2  set spi sclk frequency for master */
+                    if (hpm_spi_set_sclk_frequency(HPM_SPI0, 8 * 1000 * 1000) != status_success) {
+                        printf("hpm_spi_set_sclk_frequency fail\n");
+                        while (1) {
+                        }
+                    }
+                },
+                .trans = [](uint8_t *data, uint32_t len, void *user_data) {
+                    hpm_spi_transmit_blocking(HPM_SPI0, data, len, 0xFFFF);
+                },
+                .user_data = nullptr
+        };
+        _neopixel->SetInterfaceConfig(&config);
+        neopixel = reinterpret_cast<NeoPixel *>(_neopixel);
     }
 }
 
@@ -350,6 +388,26 @@ extern "C" void HSP_Init(void) {
     BOOT_Init();
     WS2812_Init();
     Button_Init();
+
+#ifdef WS2812_TEST
+    printf("blue\r\n");
+    HSP_WS2812_SetBlue(100);
+    board_delay_ms(1000);
+    HSP_WS2812_SetBlue(0);
+    ewdg_refresh(HPM_EWDG0);
+
+    printf("green\r\n");
+    HSP_WS2812_SetGreen(100);
+    board_delay_ms(1000);
+    HSP_WS2812_SetGreen(0);
+    ewdg_refresh(HPM_EWDG0);
+
+    printf("red\r\n");
+    HSP_WS2812_SetRed(100);
+    board_delay_ms(1000);
+    HSP_WS2812_SetRed(0);
+    ewdg_refresh(HPM_EWDG0);
+#endif
 }
 
 extern "C" void HSP_Loop(void) {
