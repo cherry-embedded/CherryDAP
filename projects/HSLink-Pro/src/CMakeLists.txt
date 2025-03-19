@@ -125,7 +125,7 @@ sdk_compile_options("-g")
 
 sdk_ld_options("-lm")
 
-sdk_compile_definitions("WS2812_TEST")
+#sdk_compile_definitions("WS2812_TEST")
 
 add_subdirectory(third_party_components)
 

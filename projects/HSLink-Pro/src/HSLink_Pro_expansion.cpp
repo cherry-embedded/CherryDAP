@@ -237,6 +237,7 @@ static inline void Port_Turn(bool on) {
 ATTR_RAMFUNC
 static void __WS2812_Config_Init(void *user_data) {
     HPM_IOC->PAD[IOC_PAD_PA02].FUNC_CTL = IOC_PA02_FUNC_CTL_GPIO_A_02;
+//    HPM_IOC->PAD[IOC_PAD_PA07].FUNC_CTL = IOC_PA07_FUNC_CTL_GPIO_A_07;
     gpio_set_pin_output(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
                         BOARD_LED_GPIO_PIN);
     gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
@@ -263,9 +264,9 @@ static void __WS2812_Config_Unlock(void *user_data) {
 NeoPixel *neopixel = nullptr;
 
 static void WS2812_Init(void) {
-    if (Setting_IsHardwareVersion(0, 0, 0) or
-        Setting_IsHardwareVersion(1, 0, 0xFF) or
-        Setting_IsHardwareVersion(1, 1, 0xFF)
+    if (CheckHardwareVersion(0, 0, 0) or
+        CheckHardwareVersion(1, 0, 0xFF) or
+        CheckHardwareVersion(1, 1, 0xFF)
             ) {
         auto _neopixel = new NeoPixel_GPIO_Polling{1};
         NeoPixel_GPIO_Polling::interface_config_t config = {
@@ -279,7 +280,7 @@ static void WS2812_Init(void) {
         };
         _neopixel->SetInterfaceConfig(&config);
         neopixel = reinterpret_cast<NeoPixel *>(_neopixel);
-    } else if (Setting_IsHardwareVersion(1, 2, 0xFF)) {
+    } else if (CheckHardwareVersion(1, 2, 0xFF)) {
         auto _neopixel = new NeoPixel_SPI_Polling{1};
         NeoPixel_SPI_Polling::interface_config_t config = {
                 .init = [](void *) {
@@ -305,9 +306,6 @@ static void WS2812_Init(void) {
                         while (1) {
                         }
                     }
-                    // make the line to be low
-                    uint8_t a = 0;
-                    hpm_spi_transmit_blocking(HPM_SPI0, &a, 1, 0xFFFF);
                 },
                 .trans = [](uint8_t *data, uint32_t len, void *user_data) {
                     hpm_spi_transmit_blocking(HPM_SPI0, data, len, 0xFFFF);
@@ -350,6 +348,38 @@ extern "C" void HSP_WS2812_SetBlue(uint8_t b) {
     neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_B, b);
     neopixel->Flush();
 }
+#ifdef WS2812_TEST
+extern "C" void WS2812_ShowRainbow() {
+    if (!neopixel)
+        return;
+
+    static int j = 0;
+    j++;
+    uint8_t r, g, b;
+    uint8_t pos = j & 255;
+    if (pos < 85) {
+        r = pos * 3;
+        g = 255 - pos * 3;
+        b = 0;
+    } else if (pos < 170) {
+        pos -= 85;
+        r = 255 - pos * 3;
+        g = 0;
+        b = pos * 3;
+    } else {
+        pos -= 170;
+        r = 0;
+        g = pos * 3;
+        b = 255 - pos * 3;
+    }
+    //    printf("Rainbow: %d, %d, %d\n", r, g, b);
+    r = r / 16;
+    g = g / 16;
+    b = b / 16;
+    neopixel->SetPixel(0, r, g, b);
+    neopixel->Flush();
+}
+#endif
 
 static uint32_t millis(void) {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
@@ -410,6 +440,12 @@ extern "C" void HSP_Init(void) {
     board_delay_ms(1000);
     HSP_WS2812_SetRed(0);
     ewdg_refresh(HPM_EWDG0);
+
+    for (auto i = 0; i <1000; i++) {
+        WS2812_ShowRainbow();
+        board_delay_ms(10);
+        ewdg_refresh(HPM_EWDG0);
+    }
 #endif
 }
 

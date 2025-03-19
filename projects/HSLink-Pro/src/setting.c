@@ -69,22 +69,9 @@ void Setting_SaveHardwareVersion(version_t hw_ver) {
     printf("hardware version update to %d.%d.%d\n", hw_ver.major, hw_ver.minor, hw_ver.patch);
 }
 
-uint8_t Setting_IsHardwareVersion(uint8_t major, uint8_t minor, uint8_t patch) {
-    if (major == UINT8_MAX) {
-        return 1;
-    } else if (minor == UINT8_MAX) {
-        return HSLink_Hardware_Version.major == major;
-    } else if (patch == UINT8_MAX) {
-        return HSLink_Hardware_Version.major == major && HSLink_Hardware_Version.minor == minor;
-    } else {
-        return HSLink_Hardware_Version.major == major && HSLink_Hardware_Version.minor == minor &&
-               HSLink_Hardware_Version.patch == patch;
-    }
-}
-
 uint8_t Setting_GetSRSTLevel(void) {
     uint8_t level = 1;
-    if (Setting_IsHardwareVersion(1, 2, UINT8_MAX)) {
+    if (CheckHardwareVersion(1, 2, UINT8_MAX)) {
         level = 0;
     }
     return level;

@@ -209,6 +209,7 @@ __entry_bl:
             ppor_sw_reset(HPM_PPOR, 1000);
         }
         WS2812_ShowRainbow();
+//        WS2812_ShowFadeOn();
         board_delay_ms(10);
         ewdg_refresh(HPM_EWDG0);
     }

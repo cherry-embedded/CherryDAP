@@ -45,6 +45,19 @@ typedef struct {
 
 extern version_t HSLink_Hardware_Version;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+/**
+ * @brief 比较硬件版本号是否相同，如果输入的是UINT8_MAX，则不比较这一位以及后面的版本号
+ * @return 如果硬件版本号相同，返回true，否则返回false
+ */
+bool CheckHardwareVersion(uint8_t major, uint8_t minor, uint8_t patch);
+
+#ifdef __cplusplus
+}
+#endif
+
 /* ACMP desction */
 #define BOARD_ACMP             HPM_ACMP
 #define BOARD_ACMP_CLK         clock_acmp0

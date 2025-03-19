@@ -31,13 +31,13 @@ void NeoPixel_SPI_Polling::Flush() {
     for (uint32_t j = 0; j < 3 * pixel_cnt; j++) {
         uint8_t byte = buffer[j];
         for (auto i = 0; i < 8; i++) {
-            if (byte & 0x01) { // positive
+            if (byte & 0x80) { // positive
                 spi_buffer[j * 8 + i] = _bit1_pulse_width;
             } else {  // negative
                 spi_buffer[j * 8 + i] = _bit0_pulse_width;
             }
-            byte >>= 1;
+            byte <<= 1;
         }
     }
-    this->config.trans(spi_buffer, pixel_cnt * 3 * 8, config.user_data);
+    this->config.trans(spi_buffer, pixel_cnt * 3 * 8 + 75, config.user_data);
 }

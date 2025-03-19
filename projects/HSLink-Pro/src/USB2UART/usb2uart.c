@@ -117,7 +117,7 @@ void usb2uart_handler(void) {
 
 void uartx_preinit(void) {
     // board_init_uart(UART_BASE);
-    if (Setting_IsHardwareVersion(1, 2, 0xFF)) {
+    if (CheckHardwareVersion(1, 2, 0xFF)) {
         PIN_UART_DTR = IOC_PAD_PA06;
         PIN_UART_RTS = IOC_PAD_PA05;
     } else {

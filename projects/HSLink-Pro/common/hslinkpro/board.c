@@ -198,6 +198,19 @@ static void load_hardware_version(void) {
     HSLink_Hardware_Version.reserved = version & 0xFF;
 }
 
+bool CheckHardwareVersion(uint8_t major, uint8_t minor, uint8_t patch) {
+    if (major == UINT8_MAX) {
+        return true;
+    } else if (minor == UINT8_MAX) {
+        return HSLink_Hardware_Version.major == major;
+    } else if (patch == UINT8_MAX) {
+        return HSLink_Hardware_Version.major == major && HSLink_Hardware_Version.minor == minor;
+    } else {
+        return HSLink_Hardware_Version.major == major && HSLink_Hardware_Version.minor == minor &&
+               HSLink_Hardware_Version.patch == patch;
+    }
+}
+
 void board_init(void) {
     init_py_pins_as_pgpio();
     board_init_usb_dp_dm_pins();
