@@ -18,7 +18,7 @@ NeoPixel_SPI_Polling::NeoPixel_SPI_Polling(uint32_t pixel_cnt, uint8_t *buffer, 
     if (this->spi_buffer == nullptr) {
         printf("malloc failed\r\n");
     }
-    memset(spi_buffer, 0, pixel_cnt * 3 * 8 + 75);
+    memset(this->spi_buffer, 0, pixel_cnt * 3 * 8 + 75);
 }
 
 NeoPixel_SPI_Polling::~NeoPixel_SPI_Polling() {
@@ -31,12 +31,12 @@ void NeoPixel_SPI_Polling::Flush() {
     for (uint32_t j = 0; j < 3 * pixel_cnt; j++) {
         uint8_t byte = buffer[j];
         for (auto i = 0; i < 8; i++) {
-            if (byte & 0x80) { // positive
+            if (byte & 0x01) { // positive
                 spi_buffer[j * 8 + i] = _bit1_pulse_width;
             } else {  // negative
                 spi_buffer[j * 8 + i] = _bit0_pulse_width;
             }
-            byte <<= 1;
+            byte >>= 1;
         }
     }
     this->config.trans(spi_buffer, pixel_cnt * 3 * 8, config.user_data);

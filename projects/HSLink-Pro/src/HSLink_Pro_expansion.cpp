@@ -305,6 +305,9 @@ static void WS2812_Init(void) {
                         while (1) {
                         }
                     }
+                    // make the line to be low
+                    uint8_t a = 0;
+                    hpm_spi_transmit_blocking(HPM_SPI0, &a, 1, 0xFFFF);
                 },
                 .trans = [](uint8_t *data, uint32_t len, void *user_data) {
                     hpm_spi_transmit_blocking(HPM_SPI0, data, len, 0xFFFF);
