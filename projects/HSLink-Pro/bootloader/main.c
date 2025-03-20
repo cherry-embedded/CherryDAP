@@ -1,7 +1,7 @@
 #include "BL_Setting_Common.h"
 #include "bootuf2.h"
+#include "third_party_components/port/neopixel/ws2812.h"
 #include "usb_config.h"
-#include "ws2812.h"
 #include <board.h>
 #include <hpm_dma_mgr.h>
 #include <hpm_ewdg_drv.h>
@@ -209,6 +209,7 @@ __entry_bl:
             ppor_sw_reset(HPM_PPOR, 1000);
         }
         WS2812_ShowRainbow();
+//        WS2812_ShowFadeOn();
         board_delay_ms(10);
         ewdg_refresh(HPM_EWDG0);
     }

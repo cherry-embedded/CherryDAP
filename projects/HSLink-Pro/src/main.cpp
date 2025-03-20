@@ -68,8 +68,6 @@ int main() {
 
     Setting_Init();
 
-    printf("version: " CONFIG_BUILD_VERSION "\n");
-
     HSP_Init();
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
     uartx_preinit();

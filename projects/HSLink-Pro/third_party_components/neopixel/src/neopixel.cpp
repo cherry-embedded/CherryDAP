@@ -16,6 +16,9 @@ NeoPixel::NeoPixel(NeoPixel::interface_type_t interfaceType, uint32_t pixel_cnt,
         this->buffer = buffer;
         buffer_is_from_malloc = false;
     }
+    if (this->buffer == nullptr) {
+        printf("malloc failed\n");
+    }
     memset(this->buffer, 0, pixel_cnt * 3);
 }
 
@@ -36,6 +39,7 @@ void NeoPixel::ModifyPixel(uint8_t pixel_idx, NeoPixel::color_type_t color, uint
     if (pixel_idx >= pixel_cnt) {
         return;
     }
+//    printf("ModifyPixel before %d %d %d\n", buffer[pixel_idx * 3], buffer[pixel_idx * 3 + 1], buffer[pixel_idx * 3 + 2]);
     switch (color) {
         case NeoPixel::color_type_t::COLOR_R:
             buffer[pixel_idx * 3 + 1] = value;
@@ -47,6 +51,7 @@ void NeoPixel::ModifyPixel(uint8_t pixel_idx, NeoPixel::color_type_t color, uint
             buffer[pixel_idx * 3 + 2] = value;
             break;
     }
+//    printf("ModifyPixel after %d %d %d\n", buffer[pixel_idx * 3], buffer[pixel_idx * 3 + 1], buffer[pixel_idx * 3 + 2]);
 }
 
 NeoPixel::~NeoPixel() {

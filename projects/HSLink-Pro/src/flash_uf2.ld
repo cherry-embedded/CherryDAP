@@ -6,7 +6,6 @@
 ENTRY(_start)
 
 STACK_SIZE = _stack_size;
-HEAP_SIZE = _heap_size;
 UF2_BOOTLOADER_RESERVED_LENGTH = DEFINED(_uf2_bl_length) ? _uf2_bl_length : 0x20000;
 
 MEMORY
@@ -177,6 +176,9 @@ SECTIONS
         PROVIDE(__ramfunc_end__ = .);
     } > ILM
 
+    PROVIDE(__heap_start__ = .);
+    __heap_end__ = ORIGIN(ILM) + LENGTH(ILM);
+
     __tdata_load_addr__ = etext + SIZEOF(.data) + SIZEOF(.fast);
     .tdata : AT(__tdata_load_addr__) {
         . = ALIGN(8);
@@ -279,13 +281,6 @@ SECTIONS
         . = ALIGN(8);
     } > DLM
 
-    .heap (NOLOAD) : {
-        . = ALIGN(8);
-        __heap_start__ = .;
-        . += HEAP_SIZE;
-        __heap_end__ = .;
-    } > DLM
-
     .stack (NOLOAD) : {
         . = ALIGN(16);
         __stack_base__ = .;
@@ -298,4 +293,5 @@ SECTIONS
     __fw_size__ = SIZEOF(.start) + SIZEOF(.vectors) + SIZEOF(.rel) + SIZEOF(.text) + SIZEOF(.data) + SIZEOF(.fast) + SIZEOF(.tdata) + SIZEOF(.noncacheable.init) + SIZEOF(.fast_ram.init);
     __last_addr__ = __fast_ram_init_load_addr__ + SIZEOF(.fast_ram.init);
     ASSERT(((__fw_size__ <= LENGTH(XPI0)) && (__last_addr__ <= (ORIGIN(XPI0) + LENGTH(XPI0)))), "******  FAILED! XPI0 has not enough space!  ******")
+
 }

@@ -7,6 +7,7 @@
 
 #ifndef _HPM_BOARD_H
 #define _HPM_BOARD_H
+
 #include <stdio.h>
 #include <stdarg.h>
 #include "hpm_common.h"
@@ -14,12 +15,48 @@
 #include "hpm_soc.h"
 #include "hpm_soc_feature.h"
 #include "pinmux.h"
+
 #if !defined(CONFIG_NDEBUG_CONSOLE) || !CONFIG_NDEBUG_CONSOLE
+
 #include "hpm_debug_console.h"
+
 #endif
 
 #define BOARD_NAME          "hslinkpro"
 #define BOARD_UF2_SIGNATURE (0x0A4D5048UL)
+
+#define APP_OFFSET (0x20000)
+#define SETTING_E2P_RX_SIZE        (512)
+#define SETTING_E2P_BLOCK_SIZE_MAX (32)
+#define SETTING_E2P_ERASE_SIZE     (4096)
+#define SETTING_E2P_SECTOR_CNT     (32)
+#define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)    // 128K
+#define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - APP_OFFSET - SETTING_E2P_MANEGE_SIZE * 2)    // 1M - 0x20000 - 256K = 640K
+
+static const char *const e2p_hw_ver_name = "hw_ver";
+static const uint32_t HARDWARE_VER_ADDR = 70;
+
+typedef struct {
+    uint8_t major;
+    uint8_t minor;
+    uint8_t patch;
+    uint8_t reserved;
+} version_t;
+
+extern version_t HSLink_Hardware_Version;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/**
+ * @brief 比较硬件版本号是否相同，如果输入的是UINT8_MAX，则不比较这一位以及后面的版本号
+ * @return 如果硬件版本号相同，返回true，否则返回false
+ */
+bool CheckHardwareVersion(uint8_t major, uint8_t minor, uint8_t patch);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* ACMP desction */
 #define BOARD_ACMP             HPM_ACMP
@@ -277,26 +314,45 @@ extern "C" {
 typedef void (*board_timer_cb)(void);
 
 void board_init_gpio_pins(void);
+
 void board_init_usb(USB_Type *ptr);
+
 void board_init_console(void);
+
 void board_init_uart(UART_Type *ptr);
+
 uint32_t board_init_spi_clock(SPI_Type *ptr);
+
 void board_init_spi_pins(SPI_Type *ptr);
+
 uint32_t board_init_adc_clock(void *ptr, bool clk_src_bus);
+
 void board_init_adc16_pins(void);
+
 void board_init_acmp_pins(void);
+
 void board_init_acmp_clock(ACMP_Type *ptr);
+
 void board_disable_output_rgb_led(uint8_t color);
+
 void board_enable_output_rgb_led(uint8_t color);
+
 void board_write_spi_cs(uint32_t pin, uint8_t state);
+
 void board_init_spi_pins_with_gpio_as_cs(SPI_Type *ptr);
 
 void board_init(void);
+
 void board_init_usb_dp_dm_pins(void);
+
 void board_init_clock(void);
+
 void board_delay_us(uint32_t us);
+
 void board_delay_ms(uint32_t ms);
+
 void board_timer_create(uint32_t ms, board_timer_cb cb);
+
 void board_ungate_mchtmr_at_lp_mode(void);
 
 uint8_t board_get_led_gpio_off_level(void);
@@ -306,6 +362,7 @@ void board_init_pmp(void);
 uint32_t board_init_uart_clock(UART_Type *ptr);
 
 uint32_t board_init_i2c_clock(I2C_Type *ptr);
+
 void board_init_i2c(I2C_Type *ptr);
 
 void board_init_gptmr_channel_pin(GPTMR_Type *ptr, uint32_t channel, bool as_comp);

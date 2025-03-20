@@ -268,7 +268,7 @@ static void set_hw_ver(Document &root, char *res) {
     size_t pos1 = hw_ver_s.find('.');
     size_t pos2 = hw_ver_s.find('.', pos1 + 1);
 
-    Setting_Version_t ver{0};
+    version_t ver{0};
     ver.major = std::stoi(hw_ver_s.substr(0, pos1));
     ver.minor = std::stoi(hw_ver_s.substr(pos1 + 1, pos2 - pos1 - 1));
     ver.patch = std::stoi(hw_ver_s.substr(pos2 + 1));
