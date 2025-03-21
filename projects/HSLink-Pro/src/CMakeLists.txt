@@ -55,9 +55,6 @@ sdk_src(../../../CherryUSB/port/hpm/usb_dc_hpm.c)
 sdk_src(../../../CherryUSB/class/cdc/usbd_cdc_acm.c)
 sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
 
-# swj_clock default use keil swd frequency boost
-sdk_compile_definitions(-DBOOST_KEIL_SWD_FREQ=0)
-
 sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
 sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
 
