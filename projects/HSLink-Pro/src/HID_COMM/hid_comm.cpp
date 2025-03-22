@@ -70,16 +70,14 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
         0xC0 /*     END_COLLECTION	             */
 };
 
-void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
-{
+void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes) {
     (void) busid;
     (void) ep;
     USB_LOG_DBG("actual in len:%d\r\n", nbytes);
     // custom_state = HID_STATE_IDLE;
 }
 
-void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
-{
+void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes) {
     (void) busid;
     HID_ReadState = HID_STATE_DONE;
     // usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);// 重新开启读取
@@ -95,8 +93,7 @@ struct usbd_endpoint hid_custom_out_ep = {
         .ep_cb = usbd_hid_custom_out_callback,
 };
 
-static void FillStatus(HID_Response_t status, char *res, const char *message)
-{
+static void FillStatus(HID_Response_t status, char *res, const char *message) {
     StringBuffer buffer;
     Writer writer(buffer);
     writer.StartObject();
@@ -108,13 +105,11 @@ static void FillStatus(HID_Response_t status, char *res, const char *message)
     std::strcpy(res, buffer.GetString());
 }
 
-static void FillStatus(HID_Response_t status, char *res)
-{
+static void FillStatus(HID_Response_t status, char *res) {
     FillStatus(status, res, "");
 }
 
-static void Hello(Document &root, char *res)
-{
+static void Hello(Document &root, char *res) {
     (void) root;
     StringBuffer buffer;
 
@@ -128,10 +123,21 @@ static void Hello(Document &root, char *res)
     writer.String("HSLink-Pro");
 
     writer.Key("version");
-    writer.String(CONFIG_BUILD_VERSION);
+    char version[32];
+    snprintf(version, 32, "%d.%d.%d",
+             bl_setting.app_version.major,
+             bl_setting.app_version.minor,
+             bl_setting.app_version.patch
+    );
+    writer.String(version);
 
     writer.Key("bootloader");
-    writer.String("1.0.0"); // TODO: Update as needed
+    snprintf(version, 32, "%d.%d.%d",
+             bl_setting.bl_version.major,
+             bl_setting.bl_version.minor,
+             bl_setting.bl_version.patch
+    );
+    writer.String(version);
 
     writer.Key("hardware");
     if ((HSLink_Hardware_Version.major == 0x00 &&
@@ -159,8 +165,7 @@ static void Hello(Document &root, char *res)
     std::strcpy(res, buffer.GetString());
 }
 
-static void settings(Document &root, char *res)
-{
+static void settings(Document &root, char *res) {
     if (!root.HasMember("data") || !root["data"].IsObject()) {
         const char *message = "data not found";
         USB_LOG_WRN("%s\n", message);
@@ -177,8 +182,7 @@ static void settings(Document &root, char *res)
         return;
     }
     HSLink_Setting.boost = data["boost"].GetBool();
-    auto mode = [](const char *mode)
-    {
+    auto mode = [](const char *mode) {
         if (strcmp(mode, "spi") == 0) {
             return PORT_MODE_SPI;
         }
@@ -211,8 +215,7 @@ static void settings(Document &root, char *res)
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void set_nickname(Document &root, char *res)
-{
+static void set_nickname(Document &root, char *res) {
     if (!root.HasMember("nickname") || !root["nickname"].IsString()) {
         const char *message = "nickname not found";
         USB_LOG_WRN("%s\n", message);
@@ -227,8 +230,7 @@ static void set_nickname(Document &root, char *res)
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void upgrade(Document &root, char *res)
-{
+static void upgrade(Document &root, char *res) {
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -237,8 +239,7 @@ static void upgrade(Document &root, char *res)
     HSP_EnterHSLinkBootloader();
 }
 
-static void entry_sys_bl(Document &root, char *res)
-{
+static void entry_sys_bl(Document &root, char *res) {
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -247,8 +248,7 @@ static void entry_sys_bl(Document &root, char *res)
     HSP_EntrySysBootloader();
 }
 
-static void entry_hslink_bl(Document &root, char *res)
-{
+static void entry_hslink_bl(Document &root, char *res) {
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -278,8 +278,7 @@ static void set_hw_ver(Document &root, char *res) {
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void get_setting(Document &root, char *res)
-{
+static void get_setting(Document &root, char *res) {
     (void) root;
     StringBuffer buffer;
     Writer writer(buffer);
@@ -328,41 +327,37 @@ static void get_setting(Document &root, char *res)
     std::strcpy(res, buffer.GetString());
 }
 
-static void HID_Write(const std::string &res)
-{
+static void HID_Write(const std::string &res) {
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res.c_str());
 }
 
-static void HID_Write(const char *res)
-{
+static void HID_Write(const char *res) {
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res);
 }
 
 using HID_Command_t = std::function<void(Document &, char *res)>;
 
-void HID_Handle()
-{
+void HID_Handle() {
     if (HID_ReadState == HID_STATE_BUSY) {
         return; // 接收中，不处理
     }
     memset(HID_write_buffer + 1, 0, HID_PACKET_SIZE - 1);
 
     static std::unordered_map<std::string_view, HID_Command_t> hid_command = {
-            {"Hello",        Hello},
-            {"settings",     settings},
-            {"set_nickname", set_nickname},
-            {"get_setting",  get_setting},
-            {"upgrade",      upgrade},
-            {"entry_sys_bl", entry_sys_bl},
+            {"Hello",           Hello},
+            {"settings",        settings},
+            {"set_nickname",    set_nickname},
+            {"get_setting",     get_setting},
+            {"upgrade",         upgrade},
+            {"entry_sys_bl",    entry_sys_bl},
             {"entry_hslink_bl", entry_hslink_bl},
-            {"set_hw_ver", set_hw_ver}
+            {"set_hw_ver",      set_hw_ver}
     };
 
     Document root;
     const auto parse = reinterpret_cast<char *>(HID_read_buffer + 1);
     root.Parse(parse);
-    [&]()
-    {
+    [&]() {
         if (root.HasParseError()
             || root.HasMember("name") == false
                 ) {

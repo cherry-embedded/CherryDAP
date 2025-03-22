@@ -129,6 +129,10 @@ int main(void)
         bl_setting.magic = BL_SETTING_MAGIC;
     }
 
+    bl_setting.bl_version.major = CONFIG_BUILD_VERSION_MAJOR;
+    bl_setting.bl_version.minor = CONFIG_BUILD_VERSION_MINOR;
+    bl_setting.bl_version.patch = CONFIG_BUILD_VERSION_PATCH;
+
     bl_setting.fail_cnt += 1;
 
     //        bl_setting.keep_bootloader = true;
