@@ -73,6 +73,10 @@ int main() {
     uartx_preinit();
     USB_Configuration();
 
+    bl_setting.app_version.major = CONFIG_BUILD_VERSION_MAJOR;
+    bl_setting.app_version.minor = CONFIG_BUILD_VERSION_MINOR;
+    bl_setting.app_version.patch = CONFIG_BUILD_VERSION_PATCH;
+
     bl_setting.fail_cnt = 0;
 
     while (1) {
