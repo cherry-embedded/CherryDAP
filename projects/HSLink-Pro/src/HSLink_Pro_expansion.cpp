@@ -465,7 +465,7 @@ extern "C" void HSP_EnterHSLinkBootloader(void) {
 extern "C" void HSP_EntrySysBootloader(void) {
     neopixel->SetPixel(0, 0, 0, 0);
     neopixel->Flush();
-    
+
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);
