@@ -4,6 +4,12 @@
 #include <cstring>
 #include "cstdint"
 
+struct Color {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+};
+
 class NeoPixel {
 public:
     enum class interface_type_t : uint8_t {
@@ -27,6 +33,8 @@ public:
     void SetPixel(uint8_t pixel_idx, uint32_t color);
 
     void SetPixel(uint8_t pixel_idx, uint8_t r, uint8_t g, uint8_t b);
+
+    void SetPixel(uint8_t pixel_idx, const Color &color);
 
     void ModifyPixel(uint8_t pixel_idx, color_type_t color, uint8_t value);
 

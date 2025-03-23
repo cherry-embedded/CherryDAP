@@ -35,6 +35,15 @@ void NeoPixel::SetPixel(uint8_t pixel_idx, uint32_t color) {
     this->SetPixel(pixel_idx, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
 }
 
+void NeoPixel::SetPixel(uint8_t pixel_idx, const Color &color) {
+    if (pixel_idx >= pixel_cnt) {
+        return;
+    }
+    buffer[pixel_idx * 3] = color.g;
+    buffer[pixel_idx * 3 + 1] = color.r;
+    buffer[pixel_idx * 3 + 2] = color.b;
+}
+
 void NeoPixel::ModifyPixel(uint8_t pixel_idx, NeoPixel::color_type_t color, uint8_t value) {
     if (pixel_idx >= pixel_cnt) {
         return;

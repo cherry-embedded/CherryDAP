@@ -5,6 +5,7 @@
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
 #include "BL_Setting_Common.h"
+#include "led_extern.h"
 
 HSLink_Setting_t HSLink_Setting = {
         .boost = false,
@@ -48,6 +49,9 @@ static void load_settings(void) {
 void Setting_Init(void) {
     load_settings();
 
+    LED_SetBrightness(HSLink_Setting.led_brightness);
+    LED_SetBoost(HSLink_Setting.boost);
+    
     print_param();
 }
 
@@ -57,6 +61,10 @@ void Setting_Save(void) {
     HSLink_Setting.magic = SETTING_MAGIC;
     e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &HSLink_Setting);
     enable_global_irq(CSR_MSTATUS_MIE_MASK);
+
+    LED_SetBrightness(HSLink_Setting.led_brightness);
+    LED_SetBoost(HSLink_Setting.boost);
+
     printf("settings update to ");
     print_param();
 }

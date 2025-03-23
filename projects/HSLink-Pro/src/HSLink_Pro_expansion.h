@@ -22,6 +22,9 @@ extern "C"
 
 extern volatile bool VREF_ENABLE;
 
+typedef struct  NeoPixel NeoPixel;
+extern NeoPixel *neopixel;
+
 /**
  * @brief 外部扩展初始化
  */
@@ -47,6 +50,8 @@ void HSP_EntrySysBootloader(void);
 void Power_Turn_On(void);
 
 void Power_Turn_Off(void);
+
+uint64_t millis();
 
 #ifdef __cplusplus
 }

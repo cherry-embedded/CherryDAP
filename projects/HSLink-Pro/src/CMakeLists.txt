@@ -94,6 +94,7 @@ sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 sdk_app_src(main.cpp)
 sdk_app_src(dp_common.c)
 sdk_app_src(setting.c)
+sdk_app_src(led_extern.cpp)
 
 if (CONFIG_BUILD_VERSION)
     sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")

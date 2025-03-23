@@ -381,9 +381,9 @@ extern "C" void WS2812_ShowRainbow() {
 }
 #endif
 
-static uint32_t millis(void) {
+uint64_t millis() {
     uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
-    return (uint32_t) (mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
+    return (uint64_t) (mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
 }
 
 static void Button_Init() {

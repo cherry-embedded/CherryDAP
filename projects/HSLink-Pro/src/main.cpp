@@ -10,6 +10,7 @@
 #include "usb2uart.h"
 #include "usb_configuration.h"
 #include "setting.h"
+#include "LED.h"
 
 static void serial_number_init(void) {
 #define OTP_CHIP_UUID_IDX_START (88U)
@@ -73,6 +74,8 @@ int main() {
     uartx_preinit();
     USB_Configuration();
 
+    led.SetNeoPixel(neopixel);
+
     bl_setting.app_version.major = CONFIG_BUILD_VERSION_MAJOR;
     bl_setting.app_version.minor = CONFIG_BUILD_VERSION_MINOR;
     bl_setting.app_version.patch = CONFIG_BUILD_VERSION_PATCH;
@@ -88,5 +91,6 @@ int main() {
 #ifdef CONFIG_USE_HID_CONFIG
         HID_Handle();
 #endif
+        led.Handle();
     }
 }

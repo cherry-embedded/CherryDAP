@@ -298,6 +298,7 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #include "hpm_csr_drv.h"
 #include "hpm_clock_drv.h"
 #include "HSLink_Pro_expansion.h"
+#include "led_extern.h"
 
 #define JTAG_SPI_BASE               HPM_SPI2
 #define JTAG_SPI_BASE_CLOCK_NAME    clock_spi2
@@ -687,11 +688,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
     if (!HSLink_Setting.led) {
         return;
     }
-    if (bit & 0x01) {
-        HSP_WS2812_SetGreen(255 * HSLink_Setting.led_brightness / 100);
-    } else {
-        HSP_WS2812_SetGreen(0);
-    }
+    LED_SetConnectMode(bit & 0x01);
 }
 
 /** Debug Unit: Set status Target Running LED.
@@ -704,11 +701,8 @@ __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
     if (!HSLink_Setting.led) {
         return;
     }
-    if (bit & 0x01) {
-        HSP_WS2812_SetBlue(255 * HSLink_Setting.led_brightness / 100);
-    } else {
-        HSP_WS2812_SetBlue(0);
-    }
+
+    LED_SetRunningMode(bit & 0x01);
 }
 
 ///@}
