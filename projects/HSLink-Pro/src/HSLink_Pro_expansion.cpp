@@ -317,37 +317,6 @@ static void WS2812_Init(void) {
     }
 }
 
-extern "C" void HSP_WS2812_SetColor(uint8_t r, uint8_t g, uint8_t b) {
-    if (!neopixel) {
-        return;
-    }
-    neopixel->SetPixel(0, r, g, b);
-    neopixel->Flush();
-}
-
-extern "C" void HSP_WS2812_SetRed(uint8_t r) {
-    if (!neopixel) {
-        return;
-    }
-    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_R, r);
-    neopixel->Flush();
-}
-
-extern "C" void HSP_WS2812_SetGreen(uint8_t g) {
-    if (!neopixel) {
-        return;
-    }
-    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_G, g);
-    neopixel->Flush();
-}
-
-extern "C" void HSP_WS2812_SetBlue(uint8_t b) {
-    if (!neopixel) {
-        return;
-    }
-    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_B, b);
-    neopixel->Flush();
-}
 #ifdef WS2812_TEST
 extern "C" void WS2812_ShowRainbow() {
     if (!neopixel)
@@ -474,6 +443,8 @@ extern "C" void HSP_Loop(void) {
 
 extern "C" void HSP_EnterHSLinkBootloader(void) {
     bl_setting.keep_bootloader = 1;
+    neopixel->SetPixel(0, 0, 0, 0);
+    neopixel->Flush();
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);
@@ -492,6 +463,9 @@ extern "C" void HSP_EnterHSLinkBootloader(void) {
 }
 
 extern "C" void HSP_EntrySysBootloader(void) {
+    neopixel->SetPixel(0, 0, 0, 0);
+    neopixel->Flush();
+
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);

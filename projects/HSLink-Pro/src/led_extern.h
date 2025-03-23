@@ -22,6 +22,8 @@ void LED_SetBrightness(uint8_t brightness);
 
 void LED_SetBoost(bool boost);
 
+void LED_SetEnable(bool enable);
+
 #ifdef __cplusplus
 }
 #endif

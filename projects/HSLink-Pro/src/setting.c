@@ -51,7 +51,8 @@ void Setting_Init(void) {
 
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
-    
+    LED_SetEnable(HSLink_Setting.led);
+
     print_param();
 }
 
@@ -64,6 +65,7 @@ void Setting_Save(void) {
 
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
+    LED_SetEnable(HSLink_Setting.led);
 
     printf("settings update to ");
     print_param();

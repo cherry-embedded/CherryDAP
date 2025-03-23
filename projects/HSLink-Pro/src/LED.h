@@ -27,6 +27,7 @@ private:
     LEDMode mode = LEDMode::IDLE;
     uint8_t brightness = 0;
     bool boost = false;
+    bool enable = false;
 
     uint8_t lerp(uint8_t a, uint8_t b, float t)
     {
@@ -59,7 +60,7 @@ private:
         uint32_t segmentTime = totalCycle / 3;  // 每个阶段约 2000ms
 
         auto segment = elapsed / segmentTime;
-        float t = ((float)elapsed - segment * segmentTime) / segmentTime;
+        float t = ((float) elapsed - segment * segmentTime) / segmentTime;
         size_t next = (segment + 1) % 3;
 
         // 用 const 数组定义 Idle 状态下的颜色序列
@@ -106,6 +107,12 @@ private:
         this->neopixel->Flush();
     }
 
+    void TurnOff()
+    {
+        this->neopixel->SetPixel(0, 0, 0, 0);
+        this->neopixel->Flush();
+    }
+
 public:
     LED() = default;
 
@@ -129,6 +136,15 @@ public:
         this->boost = boost;
     }
 
+    void SetEnable(bool enable)
+    {
+        this->enable = enable;
+        if (!enable)
+        {
+            TurnOff();
+        }
+    }
+
     void Handle()
     {
         // 10ms 更新一次
@@ -138,6 +154,9 @@ public:
             return;
         }
         lastUpdateTime = now;
+        if (!enable) {
+            return;
+        }
         switch (this->mode) {
             case LEDMode::IDLE:
                 updateIdleEffect();

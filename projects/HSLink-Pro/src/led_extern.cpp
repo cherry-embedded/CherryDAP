@@ -38,4 +38,9 @@ void LED_SetBoost(bool boost)
     led.SetBoost(boost);
 }
 
+void LED_SetEnable(bool enable)
+{
+    led.SetEnable(enable);
+}
+
 }
