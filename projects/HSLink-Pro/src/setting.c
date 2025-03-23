@@ -15,7 +15,7 @@ HSLink_Setting_t HSLink_Setting = {
                 .power_on = false,
                 .port_on = false,
         },
-        .reset = RESET_NRST,
+        .reset = 0,
         .led = false,
         .led_brightness = 0,
 };

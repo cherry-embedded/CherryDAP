@@ -20,6 +20,8 @@ extern "C"
 {
 #endif
 
+extern volatile bool VREF_ENABLE;
+
 /**
  * @brief 外部扩展初始化
  */
@@ -41,6 +43,10 @@ void HSP_WS2812_SetBlue(uint8_t b);
 void HSP_EnterHSLinkBootloader(void);
 
 void HSP_EntrySysBootloader(void);
+
+void Power_Turn_On(void);
+
+void Power_Turn_Off(void);
 
 #ifdef __cplusplus
 }

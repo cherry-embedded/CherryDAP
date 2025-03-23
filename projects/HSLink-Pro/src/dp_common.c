@@ -11,6 +11,7 @@
 #include "swd_host.h"
 #include "setting.h"
 #include <stdlib.h>
+#include "HSLink_Pro_expansion.h"
 
 #define SPI_MAX_SRC_CLOCK  (80000000U)
 #define SPI_MID_SRC_CLOCK  (60000000U)
@@ -113,4 +114,14 @@ uint8_t software_reset(void)
     ret |= swd_read_word(NVIC_AIRCR, &val);
     ret |= swd_write_word(NVIC_AIRCR, VECTKEY | (val & SCB_AIRCR_PRIGROUP_Msk) | SYSRESETREQ);
     return ret;
+}
+
+void por_reset(void)
+{
+    if ((!VREF_ENABLE && HSLink_Setting.power.power_on)
+        || VREF_ENABLE) {
+        Power_Turn_Off();
+        board_delay_ms(10);
+        Power_Turn_On();
+    }
 }

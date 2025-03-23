@@ -79,7 +79,7 @@ int main() {
 
     bl_setting.fail_cnt = 0;
 
-    while (1) {
+    while (true) {
         ewdg_refresh(HPM_EWDG0);
         chry_dap_handle();
         chry_dap_usb2uart_handle();

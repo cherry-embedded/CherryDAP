@@ -23,6 +23,8 @@
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
 
+volatile bool VREF_ENABLE = false;
+
 const double ADC_REF = 3.3;
 
 GPTMR_Type *const USER_PWM = HPM_GPTMR0;
@@ -77,13 +79,11 @@ static void Power_Enable_Init(void) {
                    HSLink_Setting.power.power_on);
 }
 
-ATTR_ALWAYS_INLINE
-static inline void Power_Turn_On(void) {
+void Power_Turn_On(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 1);
 }
 
-ATTR_ALWAYS_INLINE
-static inline void Power_Turn_Off(void) {
+void Power_Turn_Off(void) {
     gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
 }
 
@@ -457,10 +457,12 @@ extern "C" void HSP_Loop(void) {
         Power_Set_TVCC_Voltage(vref);
         Power_Turn_On();
         Port_Turn_Enable();
+        VREF_ENABLE = true;
     } else {
         Power_Trun(HSLink_Setting.power.power_on);
         Power_Set_TVCC_Voltage(HSLink_Setting.power.voltage); // TVCC恢复默认设置
         Port_Turn(HSLink_Setting.power.port_on);
+        VREF_ENABLE = false;
     }
 
     static uint32_t last_btn_chk_time = 0;
