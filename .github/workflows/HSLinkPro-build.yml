@@ -108,3 +108,4 @@ jobs:
           artifacts: 'releases/*'
           # tag: ${{ github.ref }}
           allowUpdates: true
+          generateReleaseNotes: true
