@@ -84,7 +84,7 @@ __attribute__ ((section(".nor_cfg_option"), used)) const uint32_t option[4] = {0
 ATTR_PLACE_AT(".uf2_signature") __attribute__((used)) const uint32_t uf2_signature = BOARD_UF2_SIGNATURE;
 #endif
 
-static uint64_t MCHTMR_CLK_FREQ = 0;
+static uint32_t MCHTMR_CLK_FREQ = 0;
 
 void board_init_console(void) {
 #if !defined(CONFIG_NDEBUG_CONSOLE) || !CONFIG_NDEBUG_CONSOLE
@@ -143,7 +143,7 @@ void board_print_clock_freq(void) {
     printf("==============================\n");
     printf("cpu0:\t\t %luHz\n", clock_get_frequency(clock_cpu0));
     printf("ahb:\t\t %luHz\n", clock_get_frequency(clock_ahb));
-    printf("mchtmr0:\t %luHz\n", clock_get_frequency(clock_mchtmr0));
+    printf("mchtmr0:\t\t %luHz\n", clock_get_frequency(clock_mchtmr0));
     printf("xpi0:\t\t %luHz\n", clock_get_frequency(clock_xpi0));
     printf("==============================\n");
 }

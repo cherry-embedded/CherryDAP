@@ -84,7 +84,7 @@ void elog_port_output_unlock(void) {
  */
 const char *elog_port_get_time(void) {
     static char time[16];
-    snprintf(time, 16, "%lu", millis() % 0xFFFFFFFF);
+    snprintf(time, 16, "%lu", (uint32_t)(millis() % 0xFFFFFFFF));
     return time;
 }
 
