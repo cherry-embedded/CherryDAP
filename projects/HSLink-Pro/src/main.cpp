@@ -1,16 +1,17 @@
-#include <hid_comm.h>
-#include <hpm_romapi.h>
-#include <hpm_dma_mgr.h>
-#include <hpm_gpio_drv.h>
-#include <hpm_gpiom_drv.h>
-#include <hpm_ewdg_drv.h>
+#include "HSLink_Pro_expansion.h"
+#include "LED.h"
 #include "board.h"
 #include "dap_main.h"
-#include "HSLink_Pro_expansion.h"
+#include "setting.h"
 #include "usb2uart.h"
 #include "usb_configuration.h"
-#include "setting.h"
-#include "LED.h"
+#include <elog.h>
+#include <hid_comm.h>
+#include <hpm_dma_mgr.h>
+#include <hpm_ewdg_drv.h>
+#include <hpm_gpio_drv.h>
+#include <hpm_gpiom_drv.h>
+#include <hpm_romapi.h>
 
 static void serial_number_init(void) {
 #define OTP_CHIP_UUID_IDX_START (88U)

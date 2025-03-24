@@ -1,11 +1,12 @@
 #include "setting.h"
 
-#include <hpm_romapi.h>
+#include "BL_Setting_Common.h"
 #include "board.h"
 #include "eeprom_emulation.h"
 #include "hpm_nor_flash.h"
-#include "BL_Setting_Common.h"
 #include "led_extern.h"
+#include <elog.h>
+#include <hpm_romapi.h>
 
 HSLink_Setting_t HSLink_Setting = {
         .boost = false,
@@ -48,12 +49,11 @@ static void load_settings(void) {
 
 void Setting_Init(void) {
     load_settings();
+    print_param();
 
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
     LED_SetEnable(HSLink_Setting.led);
-
-    print_param();
 }
 
 void Setting_Save(void) {

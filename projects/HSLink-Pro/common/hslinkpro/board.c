@@ -5,6 +5,7 @@
  */
 
 #include <eeprom_emulation.h>
+#include <hpm_mchtmr_drv.h>
 #include "board.h"
 #include "hpm_uart_drv.h"
 #include "hpm_sdk_version.h"
@@ -15,6 +16,10 @@
 #include "hpm_pllctlv2_drv.h"
 #include "hpm_i2c_drv.h"
 #include "hpm_pcfg_drv.h"
+
+#if defined(CONFIG_USE_ELOG)
+#include <elog.h>
+#endif
 
 static board_timer_cb timer_cb;
 
@@ -78,6 +83,8 @@ __attribute__ ((section(".nor_cfg_option"), used)) const uint32_t option[4] = {0
 #if defined(FLASH_UF2) && FLASH_UF2
 ATTR_PLACE_AT(".uf2_signature") __attribute__((used)) const uint32_t uf2_signature = BOARD_UF2_SIGNATURE;
 #endif
+
+static uint64_t MCHTMR_CLK_FREQ = 0;
 
 void board_init_console(void) {
 #if !defined(CONFIG_NDEBUG_CONSOLE) || !CONFIG_NDEBUG_CONSOLE
@@ -219,6 +226,19 @@ void board_init(void) {
     board_init_console();
     board_init_pmp();
 
+#if defined(CONFIG_USE_ELOG)
+    elog_init();
+
+    elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+    elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
+
+    elog_start();
+#endif
+
     e2p_init();
     load_hardware_version();
 
@@ -229,6 +249,11 @@ void board_init(void) {
 #if BOARD_SHOW_BANNER
     board_print_banner();
 #endif
+}
+
+uint64_t millis() {
+    uint64_t mchtmr_count = mchtmr_get_count(HPM_MCHTMR);
+    return (uint64_t) (mchtmr_count * 1000 / MCHTMR_CLK_FREQ);
 }
 
 void board_init_usb_dp_dm_pins(void) {
@@ -305,6 +330,8 @@ void board_init_clock(void) {
     clock_set_source_divider(clock_mchtmr0, clk_src_osc24m, 1);
     clock_set_source_divider(clock_gptmr0, clk_src_pll1_clk0, 8);
     clock_set_source_divider(clock_gptmr1, clk_src_pll1_clk0, 8);
+
+    MCHTMR_CLK_FREQ = clock_get_frequency(clock_mchtmr0);
 }
 
 void board_delay_us(uint32_t us) {

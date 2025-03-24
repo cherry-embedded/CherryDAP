@@ -5,10 +5,11 @@
 #ifndef HSLINK_PRO_LED_H
 #define HSLINK_PRO_LED_H
 
+#include "HSLink_Pro_expansion.h"
+#include "board.h"
+#include "neopixel.h"
 #include <cmath>
 #include <cstdio>
-#include "neopixel.h"
-#include "HSLink_Pro_expansion.h"
 
 constexpr Color COLOR_BLUE = {0, 0, 255};
 constexpr Color COLOR_WHITE = {255, 255, 255};
@@ -54,6 +55,9 @@ private:
 
     void updateIdleEffect()
     {
+        if (!neopixel) {
+            return;
+        }
         const uint32_t totalCycle = 3000; // 总周期 6000ms（6秒）
         auto now = millis();
         uint32_t elapsed = now % totalCycle;
@@ -79,6 +83,9 @@ private:
 
     void updateConnectedEffect()
     {
+        if (!neopixel) {
+            return;
+        }
         auto finalColor = scaleColor(COLOR_GREEN, this->brightness);
         this->neopixel->SetPixel(0, finalColor);
         this->neopixel->Flush();
@@ -86,6 +93,9 @@ private:
 
     void updateRunningEffect()
     {
+        if (!neopixel) {
+            return;
+        }
         const uint64_t breathingPeriod = 2000; // 呼吸周期 2000ms
         uint64_t now = millis();
         uint64_t elapsed = now % breathingPeriod;
@@ -109,6 +119,9 @@ private:
 
     void TurnOff()
     {
+        if (!neopixel) {
+            return;
+        }
         this->neopixel->SetPixel(0, 0, 0, 0);
         this->neopixel->Flush();
     }
