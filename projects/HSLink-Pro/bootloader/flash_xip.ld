@@ -23,7 +23,8 @@ MEMORY
 
 __nor_cfg_option_load_addr__ = ORIGIN(XPI0) + 0x400;
 __boot_header_load_addr__ = ORIGIN(XPI0) + 0x1000;
-__app_load_addr__ = ORIGIN(XPI0) + 0x3000;
+__fal_tabel_addr__ = ORIGIN(XPI0) + 0x3000;
+__app_load_addr__ = ORIGIN(XPI0) + 0x3200;
 __boot_header_length__ = __boot_header_end__ - __boot_header_start__;
 __app_offset__ = __app_load_addr__ - __boot_header_load_addr__;
 
@@ -41,6 +42,10 @@ SECTIONS
         KEEP(*(.dc_info))
         __boot_header_end__ = .;
     } > XPI0
+
+    .fal_tabel __fal_tabel_addr__ : {
+        KEEP(*(FalPartTable))
+    }
 
     .start __app_load_addr__ : {
         . = ALIGN(8);

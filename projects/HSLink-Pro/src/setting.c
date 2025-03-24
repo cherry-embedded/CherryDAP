@@ -2,8 +2,8 @@
 
 #include "BL_Setting_Common.h"
 #include "board.h"
-#include "eeprom_emulation.h"
-#include "hpm_nor_flash.h"
+//#include "eeprom_emulation.h"
+//#include "hpm_nor_flash.h"
 #include "led_extern.h"
 #include <elog.h>
 #include <hpm_romapi.h>
@@ -33,22 +33,22 @@ static void print_param(void) {
     printf("nickname: %s\n", HSLink_Setting.nickname);
 }
 
-static void load_settings(void) {
-    uint32_t setting_eeprom_id = e2p_generate_id(e2p_name);
-    HSLink_Setting_t temp = {0};
-    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &temp);
-    if (temp.magic != SETTING_MAGIC) {
-        // 第一次烧录，使用默认设置
-        printf("First boot, use default setting\n");
-        Setting_Save();
-        return;
-    } else {
-        memcpy(&HSLink_Setting, &temp, sizeof(HSLink_Setting_t));
-    }
-}
+//static void load_settings(void) {
+//    uint32_t setting_eeprom_id = e2p_generate_id(e2p_name);
+//    HSLink_Setting_t temp = {0};
+//    e2p_read(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &temp);
+//    if (temp.magic != SETTING_MAGIC) {
+//        // 第一次烧录，使用默认设置
+//        printf("First boot, use default setting\n");
+//        Setting_Save();
+//        return;
+//    } else {
+//        memcpy(&HSLink_Setting, &temp, sizeof(HSLink_Setting_t));
+//    }
+//}
 
 void Setting_Init(void) {
-    load_settings();
+//    load_settings();
     print_param();
 
     LED_SetBrightness(HSLink_Setting.led_brightness);
@@ -57,26 +57,26 @@ void Setting_Init(void) {
 }
 
 void Setting_Save(void) {
-    disable_global_irq(CSR_MSTATUS_MIE_MASK);
-    uint32_t setting_eeprom_id = e2p_generate_id(e2p_name);
-    HSLink_Setting.magic = SETTING_MAGIC;
-    e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &HSLink_Setting);
-    enable_global_irq(CSR_MSTATUS_MIE_MASK);
-
-    LED_SetBrightness(HSLink_Setting.led_brightness);
-    LED_SetBoost(HSLink_Setting.boost);
-    LED_SetEnable(HSLink_Setting.led);
-
-    printf("settings update to ");
-    print_param();
+//    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+//    uint32_t setting_eeprom_id = e2p_generate_id(e2p_name);
+//    HSLink_Setting.magic = SETTING_MAGIC;
+//    e2p_write(setting_eeprom_id, sizeof(HSLink_Setting_t), (uint8_t *) &HSLink_Setting);
+//    enable_global_irq(CSR_MSTATUS_MIE_MASK);
+//
+//    LED_SetBrightness(HSLink_Setting.led_brightness);
+//    LED_SetBoost(HSLink_Setting.boost);
+//    LED_SetEnable(HSLink_Setting.led);
+//
+//    printf("settings update to ");
+//    print_param();
 }
 
 void Setting_SaveHardwareVersion(version_t hw_ver) {
-    disable_global_irq(CSR_MSTATUS_MIE_MASK);
-    uint32_t id = e2p_generate_id(e2p_hw_ver_name);
-    e2p_write(id, sizeof(version_t), (uint8_t *) &hw_ver);
-    enable_global_irq(CSR_MSTATUS_MIE_MASK);
-    printf("hardware version update to %d.%d.%d\n", hw_ver.major, hw_ver.minor, hw_ver.patch);
+//    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+//    uint32_t id = e2p_generate_id(e2p_hw_ver_name);
+//    e2p_write(id, sizeof(version_t), (uint8_t *) &hw_ver);
+//    enable_global_irq(CSR_MSTATUS_MIE_MASK);
+//    printf("hardware version update to %d.%d.%d\n", hw_ver.major, hw_ver.minor, hw_ver.patch);
 }
 
 uint8_t Setting_GetSRSTLevel(void) {

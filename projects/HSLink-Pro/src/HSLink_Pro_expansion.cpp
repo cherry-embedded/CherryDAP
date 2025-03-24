@@ -18,10 +18,7 @@
 #include "hpm_gptmr_drv.h"
 #include "hpm_gpio_drv.h"
 #include "hpm_adc16_drv.h"
-#include "hpm_mchtmr_drv.h"
 #include "setting.h"
-#include "eeprom_emulation.h"
-#include "hpm_nor_flash.h"
 
 volatile bool VREF_ENABLE = false;
 

@@ -9,9 +9,11 @@ add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/rapidjson ${CMAKE_CURRENT_BINARY_
 
 add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/multibutton ${CMAKE_CURRENT_BINARY_DIR}/multibutton)
 
-if (CONFIG_USE_ELOG)
-    sdk_compile_options(-DCONFIG_USE_ELOG=1)
-    sdk_inc(port/easylogger)
-    sdk_src(port/easylogger/elog_port.c)
-    add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/EasyLogger ${CMAKE_CURRENT_BINARY_DIR}/EasyLogger)
-endif ()
+sdk_inc(../../common/easylogger)
+sdk_src(../../common/easylogger/elog_port.c)
+add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/EasyLogger ${CMAKE_CURRENT_BINARY_DIR}/EasyLogger)
+
+sdk_inc(../../common/fal)
+sdk_src(../../common/fal/fal_hpm_internal_port.c)
+sdk_src(../../common/fal/fal_parts.c)
+add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/fal ${CMAKE_CURRENT_BINARY_DIR}/fal)
