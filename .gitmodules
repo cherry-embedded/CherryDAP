@@ -16,3 +16,6 @@
 [submodule "projects/HSLink-Pro/third_party_components/EasyLogger/EasyLogger"]
 	path = projects/HSLink-Pro/third_party_components/EasyLogger/EasyLogger
 	url = https://github.com/armink/EasyLogger.git
+[submodule "projects/HSLink-Pro/third_party_components/fal/fal"]
+	path = projects/HSLink-Pro/third_party_components/fal/fal
+	url = https://github.com/HSLink/fal.git
