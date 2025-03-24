@@ -18,6 +18,7 @@
 #include "hpm_pcfg_drv.h"
 #include "fal_cfg.h"
 #include <elog.h>
+#include "flashdb.h"
 
 static board_timer_cb timer_cb;
 
@@ -84,6 +85,7 @@ __attribute__((used)) const uint32_t uf2_signature = BOARD_UF2_SIGNATURE;
 #endif
 
 static uint32_t MCHTMR_CLK_FREQ = 0;
+struct fdb_kvdb env_db = {0};
 
 void board_init_console(void)
 {
@@ -150,42 +152,6 @@ void board_print_clock_freq(void)
     printf("==============================\n");
 }
 
-//static e2p_t e2p;
-//
-//static uint32_t setting_e2p_read(uint8_t *buf, uint32_t addr, uint32_t size) {
-//    return nor_flash_read(&e2p.nor_config, buf, addr, size);
-//}
-//
-//static uint32_t setting_e2p_write(uint8_t *buf, uint32_t addr, uint32_t size) {
-//    return nor_flash_write(&e2p.nor_config, buf, addr, size);
-//}
-//
-//static void setting_e2p_erase(uint32_t start_addr, uint32_t size) {
-//    nor_flash_erase(&e2p.nor_config, start_addr, size);
-//}
-
-//static void e2p_init() {
-//    disable_global_irq(CSR_MSTATUS_MIE_MASK);
-//
-//    e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
-//    e2p.nor_config.base_addr = BOARD_FLASH_BASE_ADDRESS;
-//    e2p.config.start_addr = e2p.nor_config.base_addr + SETTING_E2P_MANAGE_OFFSET;
-//    e2p.config.erase_size = SETTING_E2P_ERASE_SIZE;
-//    e2p.config.sector_cnt = SETTING_E2P_SECTOR_CNT;
-//    e2p.config.version = 0x4553; /* 'E' 'S' */
-//    e2p.nor_config.opt_header = BOARD_APP_XPI_NOR_CFG_OPT_HDR;
-//    e2p.nor_config.opt0 = BOARD_APP_XPI_NOR_CFG_OPT_OPT0;
-//    e2p.nor_config.opt1 = BOARD_APP_XPI_NOR_CFG_OPT_OPT1;
-//    e2p.config.flash_read = setting_e2p_read;
-//    e2p.config.flash_write = setting_e2p_write;
-//    e2p.config.flash_erase = setting_e2p_erase;
-//
-//    nor_flash_init(&e2p.nor_config);
-//    e2p_config(&e2p);
-//
-//    enable_global_irq(CSR_MSTATUS_MIE_MASK);
-//}
-
 version_t HSLink_Hardware_Version;
 
 static void load_hardware_version(void)
@@ -244,6 +210,16 @@ void board_init(void)
 
     fal_init();
     fal_parts_init();
+
+    if (FDB_NO_ERR != fdb_kvdb_init(
+                          &env_db,
+                          "env_db",
+                          "flashdb",
+                          NULL,
+                          NULL
+                          )) {
+        log_w("Failed to init env db");
+    }
 
     //    e2p_init();
     //    load_hardware_version();

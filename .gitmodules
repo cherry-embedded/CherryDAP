@@ -19,3 +19,6 @@
 [submodule "projects/HSLink-Pro/third_party_components/fal/fal"]
 	path = projects/HSLink-Pro/third_party_components/fal/fal
 	url = https://github.com/HSLink/fal.git
+[submodule "projects/HSLink-Pro/third_party_components/flashdb/FlashDB"]
+	path = projects/HSLink-Pro/third_party_components/flashdb/FlashDB
+	url = https://github.com/armink/FlashDB.git

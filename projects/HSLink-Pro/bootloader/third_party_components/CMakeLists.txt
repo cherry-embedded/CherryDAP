@@ -15,3 +15,6 @@ sdk_inc(../../common/fal)
 sdk_src(../../common/fal/fal_hpm_internal_port.c)
 sdk_src(../../common/fal/fal_parts.c)
 add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/fal ${CMAKE_CURRENT_BINARY_DIR}/fal)
+
+sdk_inc(../../common/flashdb)
+add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/flashdb ${CMAKE_CURRENT_BINARY_DIR}/flashdb)

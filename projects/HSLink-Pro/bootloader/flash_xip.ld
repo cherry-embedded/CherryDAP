@@ -8,7 +8,7 @@ ENTRY(_start)
 STACK_SIZE = _stack_size;
 HEAP_SIZE = _heap_size;
 /* BL给128K */
-_flash_size = 128K;
+_flash_size = 128K - 0x400;
 
 /* 预留512字节的空间到AHB_SRAM给bootloader做配置 */
 __bootloader_reserved_length__ = 512;

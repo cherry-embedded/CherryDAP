@@ -53,7 +53,7 @@ sdk_inc(../common)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 
-#sdk_compile_options(-O2)
+sdk_compile_options(-O2)
 
 add_subdirectory(third_party_components)
 

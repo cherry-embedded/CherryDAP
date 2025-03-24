@@ -37,7 +37,7 @@ extern const struct fal_flash_dev hpm_internal_flash;
 //  magicword               分区名           Flash 设备名  偏移地址   大小
 #define FAL_PART_TABLE                                                              \
 {                                                                               \
-    {FAL_PART_MAGIC_WORD,   "bl",       "hpm_internal",     0x400,          128 * 1024,     0},       \
+    {FAL_PART_MAGIC_WORD,   "bl",       "hpm_internal",     0x400,          127 * 1024,     0},       \
     {FAL_PART_MAGIC_WORD,   "app",      "hpm_internal",     128 * 1024,     704 * 1024,     0},       \
     {FAL_PART_MAGIC_WORD,   "flashdb",  "hpm_internal",     800 * 1024,     16 * 1024,      0},       \
     {FAL_PART_MAGIC_WORD,   "bl_b",     "hpm_internal",     896 * 1024,     128 * 1024,     0},       \
