@@ -13,3 +13,6 @@
 [submodule "projects/HSLink-Pro/third_party_components/multibutton/multibutton"]
 	path = projects/HSLink-Pro/third_party_components/multibutton/multibutton
 	url = https://github.com/0x1abin/MultiButton.git
+[submodule "projects/HSLink-Pro/third_party_components/EasyLogger/EasyLogger"]
+	path = projects/HSLink-Pro/third_party_components/EasyLogger/EasyLogger
+	url = https://github.com/armink/EasyLogger.git
