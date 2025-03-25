@@ -45,3 +45,5 @@
 
 /* print debug information */
 #define FDB_DEBUG_ENABLE
+
+#define FDB_STR_KV_VALUE_MAX_SIZE 1024

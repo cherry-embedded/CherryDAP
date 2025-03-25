@@ -192,7 +192,7 @@ static void settings(Document &root, char *res) {
     HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
 
     const Value &power = data["power"];
-    HSLink_Setting.power.voltage = power["vref"].GetDouble();
+    HSLink_Setting.power.vref = power["vref"].GetDouble();
     HSLink_Setting.power.power_on = power["power_on"].GetBool();
     HSLink_Setting.power.port_on = power["port_on"].GetBool();
 
@@ -296,7 +296,7 @@ static void get_setting(Document &root, char *res) {
     writer.Key("power");
     writer.StartObject();
     writer.Key("vref");
-    writer.Double(HSLink_Setting.power.voltage);
+    writer.Double(HSLink_Setting.power.vref);
     writer.Key("power_on");
     writer.Bool(HSLink_Setting.power.power_on);
     writer.Key("port_on");

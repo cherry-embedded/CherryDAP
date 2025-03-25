@@ -418,7 +418,7 @@ extern "C" void HSP_Loop(void) {
         VREF_ENABLE = true;
     } else {
         Power_Trun(HSLink_Setting.power.power_on);
-        Power_Set_TVCC_Voltage(HSLink_Setting.power.voltage); // TVCC恢复默认设置
+        Power_Set_TVCC_Voltage(HSLink_Setting.power.vref); // TVCC恢复默认设置
         Port_Turn(HSLink_Setting.power.port_on);
         VREF_ENABLE = false;
     }

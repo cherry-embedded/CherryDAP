@@ -12,7 +12,7 @@ typedef enum {
 } PORT_Mode_t;
 
 typedef struct {
-    double voltage;
+    double vref;
     bool power_on;
     bool port_on;
 } Setting_Power_t;

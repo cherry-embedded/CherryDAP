@@ -17,8 +17,10 @@
 #include "hpm_i2c_drv.h"
 #include "hpm_pcfg_drv.h"
 #include "fal_cfg.h"
-#include <elog.h>
 #include "flashdb.h"
+
+#define LOG_TAG "board"
+#include <elog.h>
 
 static board_timer_cb timer_cb;
 
@@ -85,7 +87,7 @@ __attribute__((used)) const uint32_t uf2_signature = BOARD_UF2_SIGNATURE;
 #endif
 
 static uint32_t MCHTMR_CLK_FREQ = 0;
-struct fdb_kvdb env_db = {0};
+struct fdb_kvdb env_db = { 0 };
 
 void board_init_console(void)
 {
@@ -161,17 +163,20 @@ static void load_hardware_version(void)
     // if not exist, we should read from otp
     // if not exist either, we marked it as 0.0.0
     // we would also notice user in upper to write version into flash
-    //    uint32_t id = e2p_generate_id(e2p_hw_ver_name);
-    //    if (E2P_ERROR_BAD_ID != e2p_read(id, sizeof(version_t), (uint8_t *) &HSLink_Hardware_Version)) {
-    ////        printf("Load hardware version from flash\r\n");
-    //        return;
-    //    }
-    //    printf("Load hardware version from otp\r\n");
+    char *hw_ver = fdb_kv_get(&env_db, "hw_ver");
+    if (hw_ver != NULL) {
+        sscanf(hw_ver, "%d.%d.%d", &HSLink_Hardware_Version.major, &HSLink_Hardware_Version.minor, &HSLink_Hardware_Version.patch);
+        log_d("Load hardware version from env db %d.%d.%d",
+              HSLink_Hardware_Version.major, HSLink_Hardware_Version.minor, HSLink_Hardware_Version.patch);
+        return;
+    }
     uint32_t version = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(HARDWARE_VER_ADDR);
     HSLink_Hardware_Version.major = (version >> 24) & 0xFF;
     HSLink_Hardware_Version.minor = (version >> 16) & 0xFF;
     HSLink_Hardware_Version.patch = (version >> 8) & 0xFF;
     HSLink_Hardware_Version.reserved = version & 0xFF;
+    log_d("Load hardware version from otp %d.%d.%d",
+          HSLink_Hardware_Version.major, HSLink_Hardware_Version.minor, HSLink_Hardware_Version.patch);
 }
 
 bool CheckHardwareVersion(uint8_t major, uint8_t minor, uint8_t patch)
@@ -216,13 +221,11 @@ void board_init(void)
                           "env_db",
                           "flashdb",
                           NULL,
-                          NULL
-                          )) {
+                          NULL)) {
         log_w("Failed to init env db");
     }
 
-    //    e2p_init();
-    //    load_hardware_version();
+    load_hardware_version();
 
     // print info
 #if BOARD_SHOW_CLOCK
