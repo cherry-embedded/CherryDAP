@@ -48,8 +48,8 @@ extern "C" void WS2812_Init() {
                 .set_level = __WS2812_Config_SetLevel,
                 .lock = __WS2812_Config_Lock,
                 .unlock = __WS2812_Config_Unlock,
-                .high_nop_cnt = 45,
-                .low_nop_cnt = 15,
+                .high_nop_cnt = 65,
+                .low_nop_cnt = 18,
                 .user_data = nullptr,
         };
         neopixel_gpio->SetInterfaceConfig(&config);

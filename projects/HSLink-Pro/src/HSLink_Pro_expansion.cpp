@@ -269,8 +269,8 @@ static void WS2812_Init(void) {
                 .set_level = __WS2812_Config_SetLevel,
                 .lock = __WS2812_Config_Lock,
                 .unlock = __WS2812_Config_Unlock,
-                .high_nop_cnt = 45,
-                .low_nop_cnt = 15,
+                .high_nop_cnt = 65,
+                .low_nop_cnt = 18,
                 .user_data = nullptr,
         };
         _neopixel->SetInterfaceConfig(&config);
@@ -313,6 +313,37 @@ static void WS2812_Init(void) {
 }
 
 #ifdef WS2812_TEST
+extern "C" void HSP_WS2812_SetColor(uint8_t r, uint8_t g, uint8_t b) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->SetPixel(0, r, g, b);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetRed(uint8_t r) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_R, r);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetGreen(uint8_t g) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_G, g);
+    neopixel->Flush();
+}
+
+extern "C" void HSP_WS2812_SetBlue(uint8_t b) {
+    if (!neopixel) {
+        return;
+    }
+    neopixel->ModifyPixel(0, NeoPixel::color_type_t::COLOR_B, b);
+    neopixel->Flush();
+}
 extern "C" void WS2812_ShowRainbow() {
     if (!neopixel)
         return;

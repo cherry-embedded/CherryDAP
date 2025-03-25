@@ -37,8 +37,8 @@ static int init(void) {
     rom_xpi_nor_get_property(nor_cfg->xpi_base, &nor_cfg->nor_config, xpi_nor_property_sector_size, &nor_cfg->sector_size);
     __asm volatile("fence.i");
     return status_success;
-    /* do nothing now */
 }
+
 ATTR_RAMFUNC
 static int read(long offset, uint8_t *buf, size_t size) {
     uint32_t addr = hpm_internal_flash.addr + offset;

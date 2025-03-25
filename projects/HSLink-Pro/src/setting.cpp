@@ -47,7 +47,7 @@ ATTR_PLACE_AT(".bl_setting")
 BL_Setting_t bl_setting;
 
 static void store_settings(void);
-static void store_settings(void);
+static void load_settings(void);
 static void update_settings(void);
 
 static std::string stringify_settings() {

@@ -130,6 +130,7 @@ sdk_app_inc(HID_COMM)
 sdk_app_src(usb_configuration.c)
 
 sdk_compile_options("-g")
+sdk_compile_options(-O2)
 
 sdk_ld_options("-lm")
 
