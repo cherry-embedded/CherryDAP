@@ -269,8 +269,8 @@ static void WS2812_Init(void) {
                 .set_level = __WS2812_Config_SetLevel,
                 .lock = __WS2812_Config_Lock,
                 .unlock = __WS2812_Config_Unlock,
-                .high_nop_cnt = 65,
-                .low_nop_cnt = 18,
+                .high_nop_cnt = 50,
+                .low_nop_cnt = 15,
                 .user_data = nullptr,
         };
         _neopixel->SetInterfaceConfig(&config);
