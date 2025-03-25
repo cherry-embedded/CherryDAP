@@ -27,14 +27,7 @@
 
 #define BL_SIZE (128 * 1024)
 #define BL_B_SLOT_SIZE BL_SIZE
-#define SETTING_E2P_RX_SIZE        (512)
-#define SETTING_E2P_BLOCK_SIZE_MAX (32)
-#define SETTING_E2P_ERASE_SIZE     (4096)
-#define SETTING_E2P_SECTOR_CNT     (32)
-#define SETTING_E2P_MANEGE_SIZE    (SETTING_E2P_ERASE_SIZE * SETTING_E2P_SECTOR_CNT)    // 128K
-#define SETTING_E2P_MANAGE_OFFSET  (BOARD_FLASH_SIZE - BL_SIZE - SETTING_E2P_MANEGE_SIZE - BL_B_SLOT_SIZE)    // 1M - 0x20000 - 256K = 640K
 
-static const char *const e2p_hw_ver_name = "hw_ver";
 static const uint32_t HARDWARE_VER_ADDR = 70;
 
 typedef struct {
@@ -45,6 +38,8 @@ typedef struct {
 } version_t;
 
 extern version_t HSLink_Hardware_Version;
+
+extern struct fdb_kvdb env_db;
 
 #ifdef __cplusplus
 extern "C" {

@@ -28,8 +28,7 @@ if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPI
     set(CONFIG_USE_SPI_JTAG 1)
 endif ()
 
-set(CONFIG_EEPROM_EMULATION 1)
-set(HEAP_SIZE 0x8000)
+#set(CONFIG_EEPROM_EMULATION 1)
 set(STACK_SIZE 0x5000)
 
 #set(HPM_SDK_LD_NO_NANO_SPECS 1)
@@ -95,7 +94,7 @@ sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
 
 sdk_app_src(main.cpp)
 sdk_app_src(dp_common.c)
-sdk_app_src(setting.c)
+sdk_app_src(setting.cpp)
 sdk_app_src(led_extern.cpp)
 
 if (CONFIG_BUILD_VERSION)
@@ -130,7 +129,7 @@ sdk_app_src(${HID_COMM_SRC})
 sdk_app_inc(HID_COMM)
 sdk_app_src(usb_configuration.c)
 
-sdk_compile_options("-g")
+sdk_compile_options(-O2)
 
 sdk_ld_options("-lm")
 

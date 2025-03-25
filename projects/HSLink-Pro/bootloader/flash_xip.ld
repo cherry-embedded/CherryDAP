@@ -8,7 +8,7 @@ ENTRY(_start)
 STACK_SIZE = _stack_size;
 HEAP_SIZE = _heap_size;
 /* BL给128K */
-_flash_size = 128K;
+_flash_size = 128K - 0x400;
 
 /* 预留512字节的空间到AHB_SRAM给bootloader做配置 */
 __bootloader_reserved_length__ = 512;
@@ -23,7 +23,8 @@ MEMORY
 
 __nor_cfg_option_load_addr__ = ORIGIN(XPI0) + 0x400;
 __boot_header_load_addr__ = ORIGIN(XPI0) + 0x1000;
-__app_load_addr__ = ORIGIN(XPI0) + 0x3000;
+__fal_tabel_addr__ = ORIGIN(XPI0) + 0x3000;
+__app_load_addr__ = ORIGIN(XPI0) + 0x3200;
 __boot_header_length__ = __boot_header_end__ - __boot_header_start__;
 __app_offset__ = __app_load_addr__ - __boot_header_load_addr__;
 
@@ -41,6 +42,10 @@ SECTIONS
         KEEP(*(.dc_info))
         __boot_header_end__ = .;
     } > XPI0
+
+    .fal_tabel __fal_tabel_addr__ : {
+        KEEP(*(FalPartTable))
+    }
 
     .start __app_load_addr__ : {
         . = ALIGN(8);

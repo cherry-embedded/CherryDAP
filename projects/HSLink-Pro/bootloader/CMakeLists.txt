@@ -12,7 +12,6 @@ set(CONFIG_USB_DEVICE_MSC 1)
 set(CUSTOM_GCC_LINKER_FILE
         ${CMAKE_CURRENT_SOURCE_DIR}/flash_xip.ld
 )
-set(CONFIG_EEPROM_EMULATION 1)
 
 set(HEAP_SIZE 0x8000)
 set(STACK_SIZE 0x2000)
@@ -53,6 +52,8 @@ sdk_inc(.)
 sdk_inc(../common)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
+
+sdk_compile_options(-O2)
 
 add_subdirectory(third_party_components)
 
