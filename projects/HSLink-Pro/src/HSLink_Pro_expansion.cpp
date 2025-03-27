@@ -461,6 +461,27 @@ extern "C" void HSP_Loop(void) {
     }
 }
 
+extern "C" void HSP_Reboot(void) {
+    bl_setting.keep_bootloader = 0;
+    neopixel->SetPixel(0, 0, 0, 0);
+    neopixel->Flush();
+    disable_global_irq(CSR_MSTATUS_MIE_MASK);
+    //disable_global_irq(CSR_MSTATUS_SIE_MASK);
+    disable_global_irq(CSR_MSTATUS_UIE_MASK);
+    l1c_dc_invalidate_all();
+    l1c_dc_disable();
+    fencei();
+
+    api_boot_arg_t boot_arg = {
+            .index = 0,
+            .peripheral = API_BOOT_PERIPH_AUTO,
+            .src = API_BOOT_SRC_PRIMARY,
+            .tag = API_BOOT_TAG,
+    };
+
+    ROM_API_TABLE_ROOT->run_bootloader(&boot_arg);
+}
+
 extern "C" void HSP_EnterHSLinkBootloader(void) {
     bl_setting.keep_bootloader = 1;
     neopixel->SetPixel(0, 0, 0, 0);

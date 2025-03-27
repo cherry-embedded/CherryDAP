@@ -25,9 +25,6 @@
 #define BOARD_NAME          "hslinkpro"
 #define BOARD_UF2_SIGNATURE (0x0A4D5048UL)
 
-#define BL_SIZE (128 * 1024)
-#define BL_B_SLOT_SIZE BL_SIZE
-
 static const uint32_t HARDWARE_VER_ADDR = 70;
 
 typedef struct {

@@ -35,6 +35,8 @@ void HSP_Init(void);
  */
 void HSP_Loop(void);
 
+void HSP_Reboot(void);
+
 void HSP_EnterHSLinkBootloader(void);
 
 void HSP_EntrySysBootloader(void);
