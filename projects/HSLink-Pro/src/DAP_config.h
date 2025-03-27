@@ -644,13 +644,21 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 */
 __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
+    static uint8_t SRST_Level = 0xFF;
+    if (SRST_Level == 0xFF) {
+        if (CheckHardwareVersion(1, 2, UINT8_MAX)) {
+            SRST_Level = 0;
+        } else {
+            SRST_Level = 1;
+        }
+    }
     if (bit & 0x01) {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), Setting_GetSRSTLevel());
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), SRST_Level);
         }
     } else {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !Setting_GetSRSTLevel());
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !SRST_Level);
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
             software_reset();

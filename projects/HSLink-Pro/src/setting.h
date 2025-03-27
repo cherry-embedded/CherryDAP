@@ -56,8 +56,6 @@ void Setting_Save(void);
 
 void Setting_SaveHardwareVersion(version_t hw_ver);
 
-uint8_t Setting_GetSRSTLevel(void);
-
 #ifdef __cplusplus
 }
 #endif

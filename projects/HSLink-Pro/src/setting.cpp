@@ -178,11 +178,3 @@ void Setting_SaveHardwareVersion(version_t hw_ver) {
             std::to_string(hw_ver.patch);
     fdb_kv_set(&env_db, "hw_ver", hw_ver_str.c_str());
 }
-
-uint8_t Setting_GetSRSTLevel(void) {
-    uint8_t level = 1;
-    if (CheckHardwareVersion(1, 2, UINT8_MAX)) {
-        level = 0;
-    }
-    return level;
-}
