@@ -20,3 +20,7 @@ add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/fal ${CMAKE_CURRENT_BINARY_DIR}/f
 
 sdk_inc(../../common/flashdb)
 add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/flashdb ${CMAKE_CURRENT_BINARY_DIR}/flashdb)
+
+add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/b64.c ${CMAKE_CURRENT_BINARY_DIR}/b64.c)
+
+add_subdirectory(${THIRD_PARTY_COMPONENTS_DIR}/crc32 ${CMAKE_CURRENT_BINARY_DIR}/crc32)

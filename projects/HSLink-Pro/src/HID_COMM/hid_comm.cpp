@@ -4,6 +4,13 @@
 #include "setting.h"
 #include "usb_configuration.h"
 #include "HSLink_Pro_expansion.h"
+#include "fal.h"
+#include "fal_cfg.h"
+#include <b64.h>
+#include "crc32.h"
+
+#define LOG_TAG "HID_COMM"
+#include "elog.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
 
@@ -13,8 +20,8 @@
 
 using namespace rapidjson;
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_read_buffer[HID_PACKET_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE];
@@ -33,6 +40,8 @@ const char *response_str[] = {
         "success",
         "failed"
 };
+
+std::string_view filed_miss_msg = "Some fields are missing";
 
 static volatile HID_State_t HID_ReadState = HID_STATE_BUSY;
 
@@ -93,6 +102,26 @@ struct usbd_endpoint hid_custom_out_ep = {
         .ep_cb = usbd_hid_custom_out_callback,
 };
 
+static bool CheckField(const Value &object, std::pair<std::string_view, Type> field) {
+    auto &[field_name, field_type] = field;
+    if (!object.HasMember(field_name.data())) {
+        return false;
+    }
+    if (object[field_name.data()].GetType() != field_type) {
+        return false;
+    }
+    return true;
+}
+
+static bool CheckFields(const Value &object, std::vector<std::pair<std::string_view, Type>> fields) {
+    for (auto &field: fields) {
+        if (!CheckField(object, field)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static void FillStatus(HID_Response_t status, char *res, const char *message) {
     StringBuffer buffer;
     Writer writer(buffer);
@@ -103,6 +132,10 @@ static void FillStatus(HID_Response_t status, char *res, const char *message) {
     writer.String(message);
     writer.EndObject();
     std::strcpy(res, buffer.GetString());
+}
+
+static void FillStatus(HID_Response_t status, char *res, std::string_view message) {
+    FillStatus(status, res, message.data());
 }
 
 static void FillStatus(HID_Response_t status, char *res) {
@@ -327,6 +360,151 @@ static void get_setting(Document &root, char *res) {
     std::strcpy(res, buffer.GetString());
 }
 
+static void erase_bl_b(Document &root, char *res) {
+    fal_partition_erase(bl_b_part,0, bl_b_part->len);
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+}
+
+static void write_bl_b(Document &root, char *res) {
+#define PACK_SIZE 512
+    if (!CheckFields(root,
+                     {{"addr", Type::kNumberType},
+                      {"len",  Type::kNumberType},
+                      {"data", Type::kStringType}})) {
+        FillStatus(HID_RESPONSE_FAILED, res, filed_miss_msg);
+        return;
+    }
+    auto addr = root["addr"].GetInt();
+    auto len = root["len"].GetInt();
+    auto data_b64 = root["data"].GetString();
+    auto data_b64_len = root["data"].GetStringLength();
+    log_d("addr: 0x%X, len: %d, data_len: %d", addr, len, data_b64_len);
+    //    elog_hexdump("b64", 16, data_b64, data_b64_len);
+    if (addr + len > bl_b_part->len) {
+        const char *message = "addr out of range";
+        USB_LOG_WRN("%s\n", message);
+        FillStatus(HID_RESPONSE_FAILED, res, message);
+        return;
+    }
+    if (len % 4 != 0) {
+        char msg[64];
+        snprintf(msg, sizeof(msg), "len %d not multiple of 4", len);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
+        return;
+    }
+    if (addr % 512 != 0) {
+        log_w("addr %d not multiple of 512", addr);
+        return;
+    }
+    log_i("addr: 0x%X, len: %d", addr, len);
+    size_t data_len = 0;
+    uint8_t *data = b64_decode_ex(data_b64, data_b64_len, &data_len);
+    log_d("solve b64 data_len: %d", data_len);
+    //    elog_hexdump(LOG_TAG, 16, data, data_len);
+    if (data_len != len) {
+        log_w("data_len != len");
+        FillStatus(HID_RESPONSE_FAILED, res, "data_len != len");
+        return;
+    }
+    if (data_len > PACK_SIZE) {
+        char msg[64];
+        snprintf(msg, sizeof(msg), "data_len %d > %d", data_len, PACK_SIZE);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
+        return;
+    }
+    fal_partition_write(bl_b_part, addr, data, len);
+    log_i("write %d bytes to 0x%X done", len, addr + bl_b_part->offset);
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+    free(data);
+}
+
+static void upgrade_bl(Document &root, char *res) {
+    if (!CheckFields(root,
+                     {{"len", Type::kNumberType},
+                      {"crc", Type::kStringType}})) {
+        FillStatus(HID_RESPONSE_FAILED, res, filed_miss_msg);
+        return;
+    }
+    auto len = root["len"].GetInt();
+    auto crc_str = root["crc"].GetString();
+    auto crc = strtoul(crc_str + 2, nullptr, 16);
+    if (len > bl_b_part->len) {
+        char msg[64];
+        snprintf(msg, sizeof(msg), "len %d > %d", len, bl_b_part->len);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
+        return;
+    }
+    if (len % 4) {
+        log_w("len %% 4 != 0");
+        FillStatus(HID_RESPONSE_FAILED, res, "len %% 4 != 0");
+        return;
+    }
+
+    {
+        uint32_t crc_calc = 0xFFFFFFFF;
+        const uint32_t CRC_CALC_LEN = 8 * 1024;
+        auto buf = std::make_unique<uint8_t[]>(CRC_CALC_LEN);
+        for (uint32_t i = 0; i < len; i += CRC_CALC_LEN) {
+            auto calc_len = std::min(CRC_CALC_LEN, len - i);
+            fal_partition_read(bl_b_part, i, buf.get(), calc_len);
+            crc_calc = CRC_CalcArray_Software(buf.get(), calc_len, crc_calc);
+            //        log_d("crc calc 0x%x", crc_calc);
+        }
+        if (crc != crc_calc) {
+            log_w("crc != crc_calc recv 0x%x calc 0x%x", crc, crc_calc);
+            FillStatus(HID_RESPONSE_FAILED, res, "crc != crc_calc");
+            return;
+        }
+    }
+
+    log_d("crc check pass, start copy...");
+    {
+        constexpr uint32_t COPY_LEN = 4 * 1024;
+        auto buf = std::make_unique<uint8_t[]>(COPY_LEN);
+        fal_partition_erase(bl_part, 0, bl_part->len);
+        for (size_t i = 0; i < bl_part->len; i += COPY_LEN) {
+            auto copy_len = std::min(COPY_LEN, (uint32_t)(bl_part->len - i));
+            log_d("copy from 0x%X to 0x%X, size 0x%X",
+                  i + bl_b_part->offset,
+                  i + bl_part->offset,
+                  copy_len);
+            fal_partition_read(bl_b_part, i, buf.get(), copy_len);
+            fal_partition_write(bl_part, i, buf.get(), copy_len);
+        }
+    }
+    log_d("copy done");
+    {
+        const uint32_t COMP_LEN = 1024;
+        auto buf_1 = std::make_unique<uint8_t[]>(COMP_LEN);
+        auto buf_2 = std::make_unique<uint8_t[]>(COMP_LEN);
+        for (size_t i = 0; i < bl_part->len; i += COMP_LEN) {
+            auto comp_len = std::min(COMP_LEN, (uint32_t)(bl_part->len - i));
+            fal_partition_read(bl_b_part, i, buf_1.get(), comp_len);
+            fal_partition_read(bl_part, i, buf_2.get(), comp_len);
+            if (memcmp(buf_1.get(), buf_2.get(), comp_len) != 0) {
+                log_w("copy fail at 0x%X", i);
+                FillStatus(HID_RESPONSE_FAILED, res, "copy done check failed");
+                log_d("in b slot");
+                elog_hexdump(LOG_TAG, 16, buf_1.get(), comp_len);
+                log_d("in bl");
+                elog_hexdump(LOG_TAG, 16, buf_2.get(), comp_len);
+                // TODO should we roll back bl? or copy it again?
+            }
+        }
+    }
+
+    log_d("check done");
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+
+    board_delay_ms(1000);
+
+    HSP_Reboot();
+}
+
 static void HID_Write(const std::string &res) {
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res.c_str());
 }
@@ -351,7 +529,10 @@ void HID_Handle() {
             {"upgrade",         upgrade},
             {"entry_sys_bl",    entry_sys_bl},
             {"entry_hslink_bl", entry_hslink_bl},
-            {"set_hw_ver",      set_hw_ver}
+            {"set_hw_ver",      set_hw_ver},
+            {"erase_bl_b",      erase_bl_b},
+            {"write_bl_b",      write_bl_b},
+            {"upgrade_bl",      upgrade_bl}
     };
 
     Document root;
