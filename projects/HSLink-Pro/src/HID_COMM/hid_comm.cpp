@@ -6,20 +6,20 @@
 #include "HSLink_Pro_expansion.h"
 #include "fal.h"
 #include "fal_cfg.h"
+#include <b64.h>
+#include "crc32.h"
 
 #define LOG_TAG "HID_COMM"
 #include "elog.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
 
-#include "projects/HSLink-Pro/third_party_components/crc32/crc32.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 using namespace rapidjson;
 
-#include <b64.h>
 #include <functional>
 #include <unordered_map>
 
@@ -387,7 +387,10 @@ static void write_bl_b(Document &root, char *res) {
         return;
     }
     if (len % 4 != 0) {
-        log_w("len %d not multiple of 4", len);
+        char msg[64];
+        snprintf(msg, sizeof(msg), "len %d not multiple of 4", len);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
         return;
     }
     if (addr % 512 != 0) {
@@ -401,10 +404,14 @@ static void write_bl_b(Document &root, char *res) {
     //    elog_hexdump(LOG_TAG, 16, data, data_len);
     if (data_len != len) {
         log_w("data_len != len");
+        FillStatus(HID_RESPONSE_FAILED, res, "data_len != len");
         return;
     }
     if (data_len > PACK_SIZE) {
-        log_w("data_len > %d", PACK_SIZE);
+        char msg[64];
+        snprintf(msg, sizeof(msg), "data_len %d > %d", data_len, PACK_SIZE);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
         return;
     }
     fal_partition_write(bl_b_part, addr, data, len);
@@ -424,11 +431,15 @@ static void upgrade_bl(Document &root, char *res) {
     auto crc_str = root["crc"].GetString();
     auto crc = strtoul(crc_str + 2, nullptr, 16);
     if (len > bl_b_part->len) {
-        log_w("len > %d", bl_b_part->len);
+        char msg[64];
+        snprintf(msg, sizeof(msg), "len %d > %d", len, bl_b_part->len);
+        log_w(msg);
+        FillStatus(HID_RESPONSE_FAILED, res, msg);
         return;
     }
     if (len % 4) {
         log_w("len %% 4 != 0");
+        FillStatus(HID_RESPONSE_FAILED, res, "len %% 4 != 0");
         return;
     }
 
@@ -444,6 +455,7 @@ static void upgrade_bl(Document &root, char *res) {
         }
         if (crc != crc_calc) {
             log_w("crc != crc_calc recv 0x%x calc 0x%x", crc, crc_calc);
+            FillStatus(HID_RESPONSE_FAILED, res, "crc != crc_calc");
             return;
         }
     }
@@ -474,6 +486,7 @@ static void upgrade_bl(Document &root, char *res) {
             fal_partition_read(bl_part, i, buf_2.get(), comp_len);
             if (memcmp(buf_1.get(), buf_2.get(), comp_len) != 0) {
                 log_w("copy fail at 0x%X", i);
+                FillStatus(HID_RESPONSE_FAILED, res, "copy done check failed");
                 log_d("in b slot");
                 elog_hexdump(LOG_TAG, 16, buf_1.get(), comp_len);
                 log_d("in bl");
@@ -484,6 +497,10 @@ static void upgrade_bl(Document &root, char *res) {
     }
 
     log_d("check done");
+
+    FillStatus(HID_RESPONSE_SUCCESS, res);
+
+    board_delay_ms(1000);
 
     HSP_Reboot();
 }
