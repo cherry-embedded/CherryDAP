@@ -6,22 +6,20 @@
 #include "HSLink_Pro_expansion.h"
 #include "fal.h"
 #include "fal_cfg.h"
+#include "crc32.h"
+#include <b64.h>
 
-#define LOG_TAG "HID_COMM"
-#include "elog.h"
-
-#ifdef CONFIG_USE_HID_CONFIG
-
-#include "projects/HSLink-Pro/third_party_components/crc32/crc32.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 using namespace rapidjson;
 
-#include <b64.h>
 #include <functional>
 #include <unordered_map>
+
+#define LOG_TAG "HID_COMM"
+#include "elog.h"
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_read_buffer[HID_PACKET_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t HID_write_buffer[HID_PACKET_SIZE];
@@ -544,5 +542,3 @@ void HID_Handle() {
     usbd_ep_start_write(0, HID_IN_EP, HID_write_buffer, HID_PACKET_SIZE);
     usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);
 }
-
-#endif

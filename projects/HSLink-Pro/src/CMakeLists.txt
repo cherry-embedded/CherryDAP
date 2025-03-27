@@ -118,7 +118,6 @@ sdk_app_src(USB2UART/usb2uart.c)
 sdk_app_inc(USB2UART)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
-sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
 sdk_app_src(HSLink_Pro_expansion.cpp)
 
 file(GLOB_RECURSE HID_COMM_SRC
