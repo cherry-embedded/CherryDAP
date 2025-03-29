@@ -9,7 +9,7 @@ STACK_SIZE = _stack_size;
 
 MEMORY
 {
-    XPI0 (rx) : ORIGIN = 0x80000000 + BL_SIZE, LENGTH = 752K    /* see `common/fal/fal_cfg.h` */
+    XPI0 (rx) : ORIGIN = 0x80000000 + 128K, LENGTH = 752K    /* see `common/fal/fal_cfg.h` */
     ILM (wx) : ORIGIN = 0x00000000, LENGTH = 128K
     DLM (w) : ORIGIN = 0x00080300, LENGTH = 128K - 768
     AHB_SRAM (w) : ORIGIN = 0xF0400000, LENGTH = 32k
