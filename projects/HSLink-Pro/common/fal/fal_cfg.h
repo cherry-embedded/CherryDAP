@@ -38,8 +38,8 @@ extern const struct fal_flash_dev hpm_internal_flash;
 #define FAL_PART_TABLE                                                              \
 {                                                                               \
     {FAL_PART_MAGIC_WORD,   "bl",       "hpm_internal",     0x400,          127 * 1024,     0},       \
-    {FAL_PART_MAGIC_WORD,   "app",      "hpm_internal",     128 * 1024,     704 * 1024,     0},       \
-    {FAL_PART_MAGIC_WORD,   "flashdb",  "hpm_internal",     800 * 1024,     16 * 1024,      0},       \
+    {FAL_PART_MAGIC_WORD,   "app",      "hpm_internal",     128 * 1024,     752 * 1024,     0},       \
+    {FAL_PART_MAGIC_WORD,   "flashdb",  "hpm_internal",     880 * 1024,     16 * 1024,      0},       \
     {FAL_PART_MAGIC_WORD,   "bl_b",     "hpm_internal",     896 * 1024,     128 * 1024,     0},       \
 }
 #else
