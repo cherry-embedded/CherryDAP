@@ -119,13 +119,13 @@ static void parse_settings(std::string_view json) {
     HSLink_Setting.power.power_on = power["power_on"].GetBool();
     HSLink_Setting.power.port_on = power["port_on"].GetBool();
 
+    HSLink_Setting.reset = 0;
     for (auto &reset: root["reset"].GetArray()) {
-        if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST) && strcmp(reset.GetString(), "nrst") == 0) {
+        if (strcmp(reset.GetString(), "nrst") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_NRST);
-        } else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR) && strcmp(reset.GetString(), "por") == 0) {
+        } else if (strcmp(reset.GetString(), "por") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_POR);
-        } else if (!SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT) && strcmp(
-                                                                                                reset.GetString(), "arm_swd_soft") == 0) {
+        } else if (strcmp(reset.GetString(), "arm_swd_soft") == 0) {
             SETTING_SET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT);
         }
     }
