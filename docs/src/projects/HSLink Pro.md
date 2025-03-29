@@ -32,7 +32,7 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 | 16 | UART_RTS | CDC的RTS信号输出，可用于ESP32等MCU串口自动下载 |
 | 17 | NC | 未连接 |
 | 18 | UART_TX | 串口TX信号 |
-| 19 | GND | 地 |
+| 19 | +5V | +5V 电源输出 |
 | 20 | UART_RX | 串口RX信号 |
 
 ## 支持特性
