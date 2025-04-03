@@ -1,5 +1,7 @@
 .vscode
 **/Drivers/**
+**/managed_components/**
+.codemap
 **/MDK-ARM/DebugConfig/**
 **/MDK-ARM/RTE/**
 **/obj/**
