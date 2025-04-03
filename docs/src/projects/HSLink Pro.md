@@ -6,6 +6,29 @@ HSLink Pro 是一款使用 HPM5301 芯片的一个 CherryDAP 实现。其中主�
 
 ![](image/2024-09-23-22-25-12.png)
 
+## 支持特性
+
+目前 HSLink Pro 支持的特性有：
+
+- [x] 提供最高80MHz的 SWD 和 JTAG 速率
+- [x] 电平转换功能，适配任意电平的目标板
+- [x] 同时支持 SWD 和 JTAG 协议
+- [x] 支持为目标板提供最高 1A 负载的供电能力
+- [x] 支持虚拟串口功能
+- [x] 支持串口的 DTR/RTS 控制，可为 ESP32 等MCU提供自动下载
+- [x] 支持SWD模式下对 Arm 芯片进行写`SYSRESETREQ` 和 `VECTRESET` 软复位
+- [x] 支持通过上位机进行持久化配置
+- [x] 支持通过上位机进行固件升级
+- [x] 可通过上位机设置是否开启速度Boost
+- [x] 可通过上位机设置是否开启电平转换
+- [x] 可通过上位机设置是否固定输出电源
+- [x] 可通过上位机设置是否开启软复位
+- [x] 支持更多复位方式，例如POR
+
+上位机下载地址：
+
+<https://github.com/HSLink/HSLinkUpper/releases>
+
 ## 引脚定义
 
 HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.com/20-pin_J-Link_Connector)定义。目前的引脚定义分配如下：
@@ -35,28 +58,30 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 | 19 | +5V | +5V 电源输出 |
 | 20 | UART_RX | 串口RX信号 |
 
-## 支持特性
+## 上位机配置项
 
-目前 HSLink Pro 支持的特性有：
+* 速度Boost
+  * 启用后实际的速度是Keil中配置的速度（以及其他通过`DAP_SWJ_Clock`接口调用设置的速度）的10倍，上限80M
+* SWD/JTAG输出方式
+  * SPI模式为使用SPI外设模拟时序
+  * GPIO模式为GPIO模拟时序
 
-- [x] 提供最高80MHz的 SWD 和 JTAG 速率
-- [x] 电平转换功能，适配任意电平的目标板
-- [x] 同时支持 SWD 和 JTAG 协议
-- [x] 支持为目标板提供最高 1A 负载的供电能力
-- [x] 支持虚拟串口功能
-- [x] 支持串口的 DTR/RTS 控制，可为 ESP32 等MCU提供自动下载
-- [x] 支持SWD模式下对 Arm 芯片进行写`SYSRESETREQ` 和 `VECTRESET` 软复位
-- [x]  支持通过上位机进行持久化配置
-- [x]  支持通过上位机进行固件升级
-- [x] 可通过上位机设置是否开启速度Boost
-- [x] 可通过上位机设置是否开启电平转换
-- [x] 可通过上位机设置是否固定输出电源
-- [x] 可通过上位机设置是否开启软复位
-- [x] 支持更多复位方式，例如POR
+* 参考电压
+  * 在Vref没有电压输入或电压小于等于1.6V时，调试器内部Tvcc的电压
 
-上位机下载地址：
+* 上电开启电源输出
+  * 在Vref没有电压输入或电压小于等于1.6V时，调试器是否输出Tvcc。
+  * 在Vref没有电压输入或电压小于等于1.6V时，调试器是否输出+5V（可能随着版本迭代而改变是否受控）
 
-<https://github.com/HSLink/HSLinkUpper/releases>
+* 上电开启IO输出
+  * 在Vref没有电压输入或电压小于等于1.6V时，调试器是否输出信号。
+
+* 默认复位方式
+  * 调用`PIN_nRESET_OUT`时的复位行为
+
+* 启用LED，LED亮度
+  * 是否启用板载的LED，以及其亮度
+
 
 ## HSLink Pro 升级流程
 
@@ -76,13 +101,19 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 
 ### 回退
 
-一般来说，新Bootloader版本均能启动各版本APP，旧Bootloader能启动旧版本APP，进入Bootloader将所需固件拖入`CHERRYUF2`即可。但我们并未对其进行仔细测试。如果遇到恶性问题，请在QQ群中或是[Issues · cherry-embedded/CherryDAP](https://github.com/cherry-embedded/CherryDAP/issues)处提出，我们将在**master**分支尽快修复。
+一般来说，新Bootloader版本均能启动各版本APP，但新Bootloader可能会导致旧App持久化存储出现问题。旧Bootloader能启动旧版本APP。回滚只需要进入Bootloader将所需固件拖入`CHERRYUF2`即可。
+
+需要注意的是，**我们并未对回滚进行仔细测试**。如果遇到恶性问题，请在QQ群中或是[Issues · cherry-embedded/CherryDAP](https://github.com/cherry-embedded/CherryDAP/issues)处提出，我们将在**master**分支尽快修复。
+
+### 使用上位机升级（需要软件版本大于等于2.4.0）
+
+首先，在设备设置页面连接设备，然后切换到设备升级。对于升级Bootloader，选择固件后升级Bootloader即可。对于升级App，点击进入Bootloader后选择固件后点击升级APP即可。
 
 ## FAQ
 
-### 为什么 HSLink Pro 没有电源输出？
+### 为什么 HSLink Pro 没有电源/信号输出？
 
-当Vref引脚悬空的时候，默认`Tvcc`和`+5V`引脚均不会输出电源，并且所有端口的电平将默认为`3.3V`。只有当`Vref`引脚上施加`1.6V`以上的电压的时候，`Tvcc`才会输出一个与`Vref`相同的电压，`+5V`引脚才会输出`5V`电压。
+如果Vref低于1.6V或悬空，默认并不会输出电源和信号。接入Vref后Tvcc自动生成一个相同的电压输出，信号电平也将调整为相同的电压。也可以通过上位机配置**上电开启电源输出**与**上电开启IO输出**，在Vref低于1.6V时使用配置的电压。
 
 ### 我的HSLink似乎变砖了？
 
