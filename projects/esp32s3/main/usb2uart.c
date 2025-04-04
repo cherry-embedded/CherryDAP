@@ -163,22 +163,6 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     // uart_enable_pattern_det_baud_intr(UART_NUM_1, '+', 3, 9, 0, 0);
     //Reset the pattern queue length to record at most 20 pattern positions.
     // uart_pattern_queue_reset(UART_NUM_1, 20);
-
-    DAP_Setup();
-
-    usbd_desc_register(0, &cmsisdap_descriptor);
-    // usbd_msosv2_desc_register(0, cmsisdap_descriptor.msosv2_descriptor); /*register winusb*/
-
-    /*!< winusb */
-    usbd_add_interface(0, &dap_intf);
-    usbd_add_endpoint(0, &dap_out_ep);
-    usbd_add_endpoint(0, &dap_in_ep);
-
-    /*!< cdc acm */
-    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf1));
-    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf2));
-    usbd_add_endpoint(0, &cdc_out_ep);
-    usbd_add_endpoint(0, &cdc_in_ep);
 }
 
 void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
