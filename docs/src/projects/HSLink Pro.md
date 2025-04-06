@@ -115,6 +115,20 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 
 如果Vref低于1.6V或悬空，默认并不会输出电源和信号。接入Vref后Tvcc自动生成一个相同的电压输出，信号电平也将调整为相同的电压。也可以通过上位机配置**上电开启电源输出**与**上电开启IO输出**，在Vref低于1.6V时使用配置的电压。
 
+### 在下载时串口会有乱码？
+
+![hslink_uart_messy](image/hslink_uart_messy.png)
+
+很抱歉，这是**HSLink V1.0 V1.2.0 V1.2.1**的硬件缺陷。
+
+对于**HSLink V1.2.0 V1.2.1**，可以尝试刮线飞电阻来解决，使用镊子刮开此线上的阻焊，注意不要刮开旁边一根，使用0402或者0603的100k电阻连接。
+
+请注意，由于此线电压约为5V，请确保**对端IO口耐压5V**!
+
+![hslink_uart_fly_pullup_v1.2.0_1](image/hslink_uart_fly_pullup_v1.2.0_1.png)
+
+![hslink_uart_fly_pullup_v1.2.0_2](image/hslink_uart_fly_pullup_v1.2.0_2.jpg)
+
 ### 我的HSLink似乎变砖了？
 
 一般情况下正常升级不会出现问题，但是如果出现了问题，可以尝试以下救砖方式：
