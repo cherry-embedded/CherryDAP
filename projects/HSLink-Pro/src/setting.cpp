@@ -83,7 +83,7 @@ static std::string stringify_settings() {
             writer.String("nrst");
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
-            writer.String("swd_soft");
+            writer.String("arm_swd_soft");
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR)) {
             writer.String("por");
