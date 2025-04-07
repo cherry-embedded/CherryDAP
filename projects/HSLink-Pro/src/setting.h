@@ -32,6 +32,7 @@ typedef struct {
     bool boost;
     PORT_Mode_t swd_port_mode;
     PORT_Mode_t jtag_port_mode;
+    bool jtag_single_bit_mode;
     Setting_Power_t power;
     uint8_t reset; //这是一个Bitmap，用来存储多种设置，每一位的功能见Setting_ResetBit_t
     bool led;

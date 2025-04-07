@@ -47,10 +47,13 @@ ATTR_PLACE_AT(".bl_setting")
 BL_Setting_t bl_setting;
 
 static void store_settings(void);
+
 static void load_settings(void);
+
 static void update_settings(void);
 
-static std::string stringify_settings() {
+static std::string stringify_settings()
+{
     StringBuffer buffer;
     Writer writer(buffer);
     writer.StartObject();
@@ -63,6 +66,9 @@ static std::string stringify_settings() {
 
     writer.Key("jtag_port_mode");
     writer.String(HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+
+    writer.Key("jtag_single_bit_mode");
+    writer.Bool(HSLink_Setting.jtag_single_bit_mode);
 
     writer.Key("power");
     {
@@ -101,18 +107,32 @@ static std::string stringify_settings() {
     return std::string{buffer.GetString(), buffer.GetSize()};
 }
 
-static void parse_settings(std::string_view json) {
+static void parse_settings(std::string_view json)
+{
     Document root;
     root.Parse(json.data());
     HSLink_Setting.boost = root["boost"].GetBool();
-    auto mode = [](const char *mode) {
+    auto mode = [](const char *mode)
+    {
         if (strcmp(mode, "spi") == 0) {
             return PORT_MODE_SPI;
         }
         return PORT_MODE_GPIO;
     };
+
+    // 判断是否存在某个键，如果有返回那个键，没有的话返回默认值,bool类型
+    auto get_value_bool = [&](const Value &val, const char *key, bool default_value) -> bool
+    {
+        if (val.HasMember(key)) {
+            printf("key: %s, value: %d\n", key, val[key].GetBool());
+            return val[key].GetBool();
+        }
+        return default_value;
+    };
+
     HSLink_Setting.swd_port_mode = mode(root["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(root["jtag_port_mode"].GetString());
+    HSLink_Setting.jtag_single_bit_mode = get_value_bool(root, "jtag_single_bit_mode", false);
 
     const Value &power = root["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
@@ -134,7 +154,8 @@ static void parse_settings(std::string_view json) {
     HSLink_Setting.led_brightness = root["led_brightness"].GetUint();
 }
 
-static void load_settings(void) {
+static void load_settings(void)
+{
     char *settings_json_c_str = fdb_kv_get(&env_db, "settings");
     if (settings_json_c_str == NULL) {
         log_w("settings not found, use default");
@@ -147,31 +168,36 @@ static void load_settings(void) {
     log_d("settings loaded %s", settings_json_str.c_str());
 }
 
-static void store_settings(void) {
+static void store_settings(void)
+{
     auto settings_json_str = stringify_settings();
     fdb_kv_set(&env_db, "settings", settings_json_str.c_str());
     log_d("settings stored %s", settings_json_str.c_str());
 }
 
-static void update_settings(void) {
+static void update_settings(void)
+{
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
     LED_SetEnable(HSLink_Setting.led);
 }
 
-void Setting_Init(void) {
+void Setting_Init(void)
+{
     load_settings();
 
     update_settings();
 }
 
-void Setting_Save(void) {
+void Setting_Save(void)
+{
     store_settings();
 
     update_settings();
 }
 
-void Setting_SaveHardwareVersion(version_t hw_ver) {
+void Setting_SaveHardwareVersion(version_t hw_ver)
+{
     std::string hw_ver_str =
             std::to_string(hw_ver.major) + "." +
             std::to_string(hw_ver.minor) + "." +
