@@ -65,6 +65,10 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 * SWD/JTAG输出方式
   * SPI模式为使用SPI外设模拟时序
   * GPIO模式为GPIO模拟时序
+  * JTAG_SHIFT 加速
+    * 该设置项只有当JTAG输出方式设置为SPI时才会生效
+    * 选择启用代表将使用SPI外设模拟JTAG的单bit数据（可能会导致一些兼容性问题）
+    * 选择禁用代表将使用GPIO模拟JTAG的单bit数据（兼容性较好）
 
 * 参考电压
   * 在Vref没有电压输入或电压小于等于1.6V时，调试器内部Tvcc的电压
