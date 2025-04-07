@@ -380,7 +380,7 @@ static void write_bl_b(Document &root, char *res) {
     auto data_b64_len = root["data"].GetStringLength();
     log_d("addr: 0x%X, len: %d, data_len: %d", addr, len, data_b64_len);
     //    elog_hexdump("b64", 16, data_b64, data_b64_len);
-    if (addr + len > bl_b_part->len) {
+    if (size_t(addr + len) > bl_b_part->len) {
         const char *message = "addr out of range";
         USB_LOG_WRN("%s\n", message);
         FillStatus(HID_RESPONSE_FAILED, res, message);
@@ -402,7 +402,7 @@ static void write_bl_b(Document &root, char *res) {
     uint8_t *data = b64_decode_ex(data_b64, data_b64_len, &data_len);
     log_d("solve b64 data_len: %d", data_len);
     //    elog_hexdump(LOG_TAG, 16, data, data_len);
-    if (data_len != len) {
+    if (data_len != (size_t)len) {
         log_w("data_len != len");
         FillStatus(HID_RESPONSE_FAILED, res, "data_len != len");
         return;
@@ -430,7 +430,7 @@ static void upgrade_bl(Document &root, char *res) {
     auto len = root["len"].GetInt();
     auto crc_str = root["crc"].GetString();
     auto crc = strtoul(crc_str + 2, nullptr, 16);
-    if (len > bl_b_part->len) {
+    if ((size_t)len > bl_b_part->len) {
         char msg[64];
         snprintf(msg, sizeof(msg), "len %d > %d", len, bl_b_part->len);
         log_w(msg);
@@ -447,7 +447,7 @@ static void upgrade_bl(Document &root, char *res) {
         uint32_t crc_calc = 0xFFFFFFFF;
         const uint32_t CRC_CALC_LEN = 8 * 1024;
         auto buf = std::make_unique<uint8_t[]>(CRC_CALC_LEN);
-        for (uint32_t i = 0; i < len; i += CRC_CALC_LEN) {
+        for (uint32_t i = 0; i < (size_t)len; i += CRC_CALC_LEN) {
             auto calc_len = std::min(CRC_CALC_LEN, len - i);
             fal_partition_read(bl_b_part, i, buf.get(), calc_len);
             crc_calc = CRC_CalcArray_Software(buf.get(), calc_len, crc_calc);
