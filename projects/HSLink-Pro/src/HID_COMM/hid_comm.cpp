@@ -10,6 +10,7 @@
 #include "crc32.h"
 
 #define LOG_TAG "HID_COMM"
+
 #include "elog.h"
 
 #ifdef CONFIG_USE_HID_CONFIG
@@ -79,14 +80,16 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
         0xC0 /*     END_COLLECTION	             */
 };
 
-void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes) {
+void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
     (void) busid;
     (void) ep;
     USB_LOG_DBG("actual in len:%d\r\n", nbytes);
     // custom_state = HID_STATE_IDLE;
 }
 
-void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes) {
+void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
     (void) busid;
     HID_ReadState = HID_STATE_DONE;
     // usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);// 重新开启读取
@@ -102,7 +105,8 @@ struct usbd_endpoint hid_custom_out_ep = {
         .ep_cb = usbd_hid_custom_out_callback,
 };
 
-static bool CheckField(const Value &object, std::pair<std::string_view, Type> field) {
+static bool CheckField(const Value &object, std::pair<std::string_view, Type> field)
+{
     auto &[field_name, field_type] = field;
     if (!object.HasMember(field_name.data())) {
         return false;
@@ -113,7 +117,8 @@ static bool CheckField(const Value &object, std::pair<std::string_view, Type> fi
     return true;
 }
 
-static bool CheckFields(const Value &object, std::vector<std::pair<std::string_view, Type>> fields) {
+static bool CheckFields(const Value &object, std::vector<std::pair<std::string_view, Type>> fields)
+{
     for (auto &field: fields) {
         if (!CheckField(object, field)) {
             return false;
@@ -122,7 +127,8 @@ static bool CheckFields(const Value &object, std::vector<std::pair<std::string_v
     return true;
 }
 
-static void FillStatus(HID_Response_t status, char *res, const char *message) {
+static void FillStatus(HID_Response_t status, char *res, const char *message)
+{
     StringBuffer buffer;
     Writer writer(buffer);
     writer.StartObject();
@@ -134,15 +140,18 @@ static void FillStatus(HID_Response_t status, char *res, const char *message) {
     std::strcpy(res, buffer.GetString());
 }
 
-static void FillStatus(HID_Response_t status, char *res, std::string_view message) {
+static void FillStatus(HID_Response_t status, char *res, std::string_view message)
+{
     FillStatus(status, res, message.data());
 }
 
-static void FillStatus(HID_Response_t status, char *res) {
+static void FillStatus(HID_Response_t status, char *res)
+{
     FillStatus(status, res, "");
 }
 
-static void Hello(Document &root, char *res) {
+static void Hello(Document &root, char *res)
+{
     (void) root;
     StringBuffer buffer;
 
@@ -198,13 +207,23 @@ static void Hello(Document &root, char *res) {
     std::strcpy(res, buffer.GetString());
 }
 
-static void settings(Document &root, char *res) {
+static void settings(Document &root, char *res)
+{
     if (!root.HasMember("data") || !root["data"].IsObject()) {
         const char *message = "data not found";
         USB_LOG_WRN("%s\n", message);
         FillStatus(HID_RESPONSE_FAILED, res, message);
         return;
     }
+
+    auto get_value_bool = [&](const Value &val, const char *key, bool default_value) -> bool
+    {
+        if (val.HasMember(key)) {
+            printf("key: %s, value: %d\n", key, val[key].GetBool());
+            return val[key].GetBool();
+        }
+        return default_value;
+    };
 
     const Value &data = root["data"].GetObject();
 
@@ -215,7 +234,8 @@ static void settings(Document &root, char *res) {
         return;
     }
     HSLink_Setting.boost = data["boost"].GetBool();
-    auto mode = [](const char *mode) {
+    auto mode = [](const char *mode)
+    {
         if (strcmp(mode, "spi") == 0) {
             return PORT_MODE_SPI;
         }
@@ -223,6 +243,7 @@ static void settings(Document &root, char *res) {
     };
     HSLink_Setting.swd_port_mode = mode(data["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
+    HSLink_Setting.jtag_single_bit_mode = get_value_bool(data, "jtag_single_bit_mode", false);
 
     const Value &power = data["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
@@ -248,7 +269,8 @@ static void settings(Document &root, char *res) {
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void set_nickname(Document &root, char *res) {
+static void set_nickname(Document &root, char *res)
+{
     if (!root.HasMember("nickname") || !root["nickname"].IsString()) {
         const char *message = "nickname not found";
         USB_LOG_WRN("%s\n", message);
@@ -263,7 +285,8 @@ static void set_nickname(Document &root, char *res) {
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void upgrade(Document &root, char *res) {
+static void upgrade(Document &root, char *res)
+{
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -272,7 +295,8 @@ static void upgrade(Document &root, char *res) {
     HSP_EnterHSLinkBootloader();
 }
 
-static void entry_sys_bl(Document &root, char *res) {
+static void entry_sys_bl(Document &root, char *res)
+{
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -281,7 +305,8 @@ static void entry_sys_bl(Document &root, char *res) {
     HSP_EntrySysBootloader();
 }
 
-static void entry_hslink_bl(Document &root, char *res) {
+static void entry_hslink_bl(Document &root, char *res)
+{
     (void) root;
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -290,7 +315,8 @@ static void entry_hslink_bl(Document &root, char *res) {
     HSP_EnterHSLinkBootloader();
 }
 
-static void set_hw_ver(Document &root, char *res) {
+static void set_hw_ver(Document &root, char *res)
+{
     if (!root.HasMember("hw_ver") || !root["hw_ver"].IsString()) {
         const char *message = "hw_ver not found";
         USB_LOG_WRN("%s\n", message);
@@ -311,7 +337,8 @@ static void set_hw_ver(Document &root, char *res) {
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void get_setting(Document &root, char *res) {
+static void get_setting(Document &root, char *res)
+{
     (void) root;
     StringBuffer buffer;
     Writer writer(buffer);
@@ -325,6 +352,9 @@ static void get_setting(Document &root, char *res) {
 
     writer.Key("jtag_port_mode");
     writer.String(HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
+
+    writer.Key("jtag_single_bit_mode");
+    writer.Bool(HSLink_Setting.jtag_single_bit_mode);
 
     writer.Key("power");
     writer.StartObject();
@@ -360,12 +390,14 @@ static void get_setting(Document &root, char *res) {
     std::strcpy(res, buffer.GetString());
 }
 
-static void erase_bl_b(Document &root, char *res) {
-    fal_partition_erase(bl_b_part,0, bl_b_part->len);
+static void erase_bl_b(Document &root, char *res)
+{
+    fal_partition_erase(bl_b_part, 0, bl_b_part->len);
     FillStatus(HID_RESPONSE_SUCCESS, res);
 }
 
-static void write_bl_b(Document &root, char *res) {
+static void write_bl_b(Document &root, char *res)
+{
 #define PACK_SIZE 512
     if (!CheckFields(root,
                      {{"addr", Type::kNumberType},
@@ -402,7 +434,7 @@ static void write_bl_b(Document &root, char *res) {
     uint8_t *data = b64_decode_ex(data_b64, data_b64_len, &data_len);
     log_d("solve b64 data_len: %d", data_len);
     //    elog_hexdump(LOG_TAG, 16, data, data_len);
-    if (data_len != (size_t)len) {
+    if (data_len != (size_t) len) {
         log_w("data_len != len");
         FillStatus(HID_RESPONSE_FAILED, res, "data_len != len");
         return;
@@ -420,7 +452,8 @@ static void write_bl_b(Document &root, char *res) {
     free(data);
 }
 
-static void upgrade_bl(Document &root, char *res) {
+static void upgrade_bl(Document &root, char *res)
+{
     if (!CheckFields(root,
                      {{"len", Type::kNumberType},
                       {"crc", Type::kStringType}})) {
@@ -430,7 +463,7 @@ static void upgrade_bl(Document &root, char *res) {
     auto len = root["len"].GetInt();
     auto crc_str = root["crc"].GetString();
     auto crc = strtoul(crc_str + 2, nullptr, 16);
-    if ((size_t)len > bl_b_part->len) {
+    if ((size_t) len > bl_b_part->len) {
         char msg[64];
         snprintf(msg, sizeof(msg), "len %d > %d", len, bl_b_part->len);
         log_w(msg);
@@ -447,7 +480,7 @@ static void upgrade_bl(Document &root, char *res) {
         uint32_t crc_calc = 0xFFFFFFFF;
         const uint32_t CRC_CALC_LEN = 8 * 1024;
         auto buf = std::make_unique<uint8_t[]>(CRC_CALC_LEN);
-        for (uint32_t i = 0; i < (size_t)len; i += CRC_CALC_LEN) {
+        for (uint32_t i = 0; i < (size_t) len; i += CRC_CALC_LEN) {
             auto calc_len = std::min(CRC_CALC_LEN, len - i);
             fal_partition_read(bl_b_part, i, buf.get(), calc_len);
             crc_calc = CRC_CalcArray_Software(buf.get(), calc_len, crc_calc);
@@ -466,7 +499,7 @@ static void upgrade_bl(Document &root, char *res) {
         auto buf = std::make_unique<uint8_t[]>(COPY_LEN);
         fal_partition_erase(bl_part, 0, bl_part->len);
         for (size_t i = 0; i < bl_part->len; i += COPY_LEN) {
-            auto copy_len = std::min(COPY_LEN, (uint32_t)(bl_part->len - i));
+            auto copy_len = std::min(COPY_LEN, (uint32_t) (bl_part->len - i));
             log_d("copy from 0x%X to 0x%X, size 0x%X",
                   i + bl_b_part->offset,
                   i + bl_part->offset,
@@ -481,7 +514,7 @@ static void upgrade_bl(Document &root, char *res) {
         auto buf_1 = std::make_unique<uint8_t[]>(COMP_LEN);
         auto buf_2 = std::make_unique<uint8_t[]>(COMP_LEN);
         for (size_t i = 0; i < bl_part->len; i += COMP_LEN) {
-            auto comp_len = std::min(COMP_LEN, (uint32_t)(bl_part->len - i));
+            auto comp_len = std::min(COMP_LEN, (uint32_t) (bl_part->len - i));
             fal_partition_read(bl_b_part, i, buf_1.get(), comp_len);
             fal_partition_read(bl_part, i, buf_2.get(), comp_len);
             if (memcmp(buf_1.get(), buf_2.get(), comp_len) != 0) {
@@ -505,17 +538,20 @@ static void upgrade_bl(Document &root, char *res) {
     HSP_Reboot();
 }
 
-static void HID_Write(const std::string &res) {
+static void HID_Write(const std::string &res)
+{
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res.c_str());
 }
 
-static void HID_Write(const char *res) {
+static void HID_Write(const char *res)
+{
     std::strcpy(reinterpret_cast<char *>(HID_write_buffer + 1), res);
 }
 
 using HID_Command_t = std::function<void(Document &, char *res)>;
 
-void HID_Handle() {
+void HID_Handle()
+{
     if (HID_ReadState == HID_STATE_BUSY) {
         return; // 接收中，不处理
     }
@@ -538,7 +574,8 @@ void HID_Handle() {
     Document root;
     const auto parse = reinterpret_cast<char *>(HID_read_buffer + 1);
     root.Parse(parse);
-    [&]() {
+    [&]()
+    {
         if (root.HasParseError()
             || root.HasMember("name") == false
                 ) {
