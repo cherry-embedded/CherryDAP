@@ -2,14 +2,11 @@ name: 部署文档
 
 on:
   push:
+    branches:
+      - master
     paths:
       - '.github/workflows/deploy-docs.yml'
       - 'docs/**'
-  pull_request:
-    paths:
-      - '.github/workflows/deploy-docs.yml'
-      - 'docs/**'
-
 
 permissions:
   contents: write
