@@ -14,15 +14,15 @@ void PORT_SWD_SETUP(void)
 void SWJ_Sequence(uint32_t count, const uint8_t *data)
 {
     if (DAP_Data.debug_port == DAP_PORT_JTAG) {
-        gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR),
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR),
                        1); // SWDIO 输出
         PIN_SWDIO_TMS_SET();
         // 切换为GPIO控制器
         HPM_IOC->PAD[PIN_TCK].FUNC_CTL =
                 IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0) | IOC_PAD_FUNC_CTL_LOOP_BACK_MASK; /* as gpio*/
         HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
-        gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
-        gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+        gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
+        gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
         IO_SWJ_Sequence(count, data);
 
         if (HSLink_Setting.jtag_port_mode == PORT_MODE_SPI) {
