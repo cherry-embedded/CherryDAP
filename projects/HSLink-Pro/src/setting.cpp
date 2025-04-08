@@ -12,6 +12,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "usb2uart.h"
 
 using namespace rapidjson;
 
@@ -46,11 +47,51 @@ HSLink_Setting_t HSLink_Setting = {
 ATTR_PLACE_AT(".bl_setting")
 BL_Setting_t bl_setting;
 
-static void store_settings(void);
+template<>
+auto get_json_value<bool>(const rapidjson::Value &val, const char *key, bool value) -> bool {
+    if (val.HasMember(key)) {
+        return val[key].GetBool();
+    }
+    return value;
+}
 
-static void load_settings(void);
+template<>
+auto get_json_value<int>(const rapidjson::Value &val, const char *key, int value) -> int {
+    if (val.HasMember(key)) {
+        return val[key].GetInt();
+    }
+    return value;
+}
 
-static void update_settings(void);
+template<>
+auto get_json_value<unsigned int>(const rapidjson::Value &val, const char *key, unsigned int value) -> unsigned int {
+    if (val.HasMember(key)) {
+        return val[key].GetUint();
+    }
+    return value;
+}
+
+template<>
+auto get_json_value<double>(const rapidjson::Value &val, const char *key, double value) -> double {
+    if (val.HasMember(key)) {
+        return val[key].GetDouble();
+    }
+    return value;
+}
+
+template<>
+auto get_json_value<const char*>(const rapidjson::Value &val, const char *key, const char* value) -> const char* {
+    if (val.HasMember(key)) {
+        return val[key].GetString();
+    }
+    return value;
+}
+
+static void store_settings();
+
+static void load_settings();
+
+static void update_settings();
 
 static std::string stringify_settings()
 {
@@ -103,6 +144,9 @@ static std::string stringify_settings()
     writer.Key("led_brightness");
     writer.Uint(HSLink_Setting.led_brightness);
 
+    writer.Key("jtag_20pin_compatible");
+    writer.Bool(HSLink_Setting.jtag_20pin_compatible);
+
     writer.EndObject();
     return std::string{buffer.GetString(), buffer.GetSize()};
 }
@@ -120,19 +164,9 @@ static void parse_settings(std::string_view json)
         return PORT_MODE_GPIO;
     };
 
-    // 判断是否存在某个键，如果有返回那个键，没有的话返回默认值,bool类型
-    auto get_value_bool = [&](const Value &val, const char *key, bool default_value) -> bool
-    {
-        if (val.HasMember(key)) {
-            printf("key: %s, value: %d\n", key, val[key].GetBool());
-            return val[key].GetBool();
-        }
-        return default_value;
-    };
-
     HSLink_Setting.swd_port_mode = mode(root["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(root["jtag_port_mode"].GetString());
-    HSLink_Setting.jtag_single_bit_mode = get_value_bool(root, "jtag_single_bit_mode", false);
+    HSLink_Setting.jtag_single_bit_mode = get_json_value(root, "jtag_single_bit_mode", false);
 
     const Value &power = root["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
@@ -152,9 +186,10 @@ static void parse_settings(std::string_view json)
 
     HSLink_Setting.led = root["led"].GetBool();
     HSLink_Setting.led_brightness = root["led_brightness"].GetUint();
+    HSLink_Setting.jtag_20pin_compatible = get_json_value(root, "jtag_20pin_compatible", false);
 }
 
-static void load_settings(void)
+static void load_settings()
 {
     char *settings_json_c_str = fdb_kv_get(&env_db, "settings");
     if (settings_json_c_str == NULL) {
@@ -168,18 +203,20 @@ static void load_settings(void)
     log_d("settings loaded %s", settings_json_str.c_str());
 }
 
-static void store_settings(void)
+static void store_settings()
 {
     auto settings_json_str = stringify_settings();
     fdb_kv_set(&env_db, "settings", settings_json_str.c_str());
     log_d("settings stored %s", settings_json_str.c_str());
 }
 
-static void update_settings(void)
+static void update_settings()
 {
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
     LED_SetEnable(HSLink_Setting.led);
+
+    uartx_io_init();
 }
 
 void Setting_Init(void)

@@ -37,6 +37,7 @@ typedef struct {
     uint8_t reset; //这是一个Bitmap，用来存储多种设置，每一位的功能见Setting_ResetBit_t
     bool led;
     uint8_t led_brightness;
+    bool jtag_20pin_compatible;
 
     char nickname[128];
 } HSLink_Setting_t;
@@ -47,6 +48,25 @@ extern HSLink_Setting_t HSLink_Setting;
 extern BL_Setting_t bl_setting;
 
 #ifdef __cplusplus
+#include "rapidjson/document.h"
+
+template<typename T>
+auto get_json_value(const rapidjson::Value &val, const char *key, T value) -> T;
+
+template<>
+auto get_json_value<bool>(const rapidjson::Value &val, const char *key, bool value) -> bool;
+
+template<>
+auto get_json_value<int>(const rapidjson::Value &val, const char *key, int value) -> int;
+
+template<>
+auto get_json_value<unsigned int>(const rapidjson::Value &val, const char *key, unsigned int value) -> unsigned int;
+
+template<>
+auto get_json_value<double>(const rapidjson::Value &val, const char *key, double value) -> double;
+
+template<>
+auto get_json_value<const char*>(const rapidjson::Value &val, const char *key, const char* value) -> const char*;
 extern "C"
 {
 #endif

@@ -9,6 +9,8 @@ extern "C"
 {
 #endif
 
+void uartx_io_init(void);
+
 void uartx_preinit(void);
 
 void usb2uart_handler(void);
