@@ -39,7 +39,8 @@ static hpm_stat_t board_uart_dma_config(void);
 static uint32_t PIN_UART_DTR = 0;
 static uint32_t PIN_UART_RTS = 0;
 
-static void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data) {
+static void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_data)
+{
     (void) ptr;
     (void) channel;
     (void) user_data;
@@ -61,7 +62,8 @@ static void dma_channel_tc_callback(DMA_Type *ptr, uint32_t channel, void *user_
     }
 }
 
-void uart_isr(void) {
+void uart_isr(void)
+{
     uint32_t uart_received_data_count;
     uint32_t i;
     dma_resource_t *rx_resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
@@ -86,7 +88,8 @@ void uart_isr(void) {
 
 SDK_DECLARE_EXT_ISR_M(UART_IRQ, uart_isr)
 
-void usb2uart_handler(void) {
+void usb2uart_handler(void)
+{
     dma_resource_t *rx_resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
     const uint32_t rx_desc_size = (sizeof(rx_descriptors) / sizeof(dma_linked_descriptor_t));
     uint32_t uart_received_data_count =
@@ -115,8 +118,8 @@ void usb2uart_handler(void) {
     }
 }
 
-void uartx_preinit(void) {
-    // board_init_uart(UART_BASE);
+void uartx_io_init(void)
+{
     if (CheckHardwareVersion(1, 2, 0xFF)) {
         PIN_UART_DTR = IOC_PAD_PA06;
         PIN_UART_RTS = IOC_PAD_PA05;
@@ -124,8 +127,25 @@ void uartx_preinit(void) {
         PIN_UART_DTR = IOC_PAD_PA06;
         PIN_UART_RTS = IOC_PAD_PA07;
     }
-    HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
-    HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
+
+    // 开启20p兼容模式之后，将会把串口设置为GPIO模式，并输出低电平
+    if (!HSLink_Setting.jtag_20pin_compatible) {
+        HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
+        HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
+
+    } else {
+        HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);;
+        HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+        gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_RX), GPIO_GET_PIN_INDEX(PIN_UART_RX),
+                                 gpiom_soc_gpio0);
+        gpio_set_pin_input(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RX), GPIO_GET_PIN_INDEX(PIN_UART_RX)); // RX 默认输入
+
+        gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_TX), GPIO_GET_PIN_INDEX(PIN_UART_TX),
+                                 gpiom_soc_gpio0);
+        gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_TX), GPIO_GET_PIN_INDEX(PIN_UART_TX));
+
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_TX), GPIO_GET_PIN_INDEX(PIN_UART_TX), 0);
+    }
 
     HPM_IOC->PAD[PIN_UART_DTR].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
     HPM_IOC->PAD[PIN_UART_RTS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
@@ -133,12 +153,24 @@ void uartx_preinit(void) {
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR),
                              gpiom_soc_gpio0);
     gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR));
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), 1); // 默认输出高电平
+
 
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS),
                              gpiom_soc_gpio0);
     gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS));
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), 1); // 默认输出高电平
+
+    if (!HSLink_Setting.jtag_20pin_compatible) {
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), 1); // 默认输出高电平
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), 1);
+    } else {
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), 0); // 默认输出低电平
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), 0);
+    }
+}
+
+void uartx_preinit(void)
+{
+    uartx_io_init();
 
     clock_set_source_divider(UART_CLK_NAME, clk_src_pll1_clk0, 8);
     clock_add_to_group(UART_CLK_NAME, 0);
@@ -149,7 +181,8 @@ void uartx_preinit(void) {
     }
 }
 
-void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding) {
+void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
+{
     uart_config_t config = {0};
     uart_default_config(UART_BASE, &config);
     config.baudrate = line_coding->dwDTERate;
@@ -171,7 +204,8 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     uart_reset_tx_fifo(UART_BASE);
 }
 
-void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len) {
+void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
+{
     uint32_t buf_addr;
     dma_resource_t *tx_resource = &dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX];
     if (len <= 0) {
@@ -184,7 +218,8 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len) {
     dma_mgr_enable_channel(tx_resource);
 }
 
-static hpm_stat_t board_uart_dma_config(void) {
+static hpm_stat_t board_uart_dma_config(void)
+{
     dma_mgr_chn_conf_t chg_config;
     dma_resource_t *resource = NULL;
     uint32_t i = 0;
@@ -249,14 +284,20 @@ static hpm_stat_t board_uart_dma_config(void) {
     return status_success;
 }
 
-void usbd_cdc_acm_set_dtr(uint8_t busid, uint8_t intf, bool dtr) {
+void usbd_cdc_acm_set_dtr(uint8_t busid, uint8_t intf, bool dtr)
+{
     (void) busid;
     (void) intf;
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), !dtr);
+    if (!HSLink_Setting.jtag_20pin_compatible) {
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_DTR), GPIO_GET_PIN_INDEX(PIN_UART_DTR), !dtr);
+    }
 }
 
-void usbd_cdc_acm_set_rts(uint8_t busid, uint8_t intf, bool rts) {
+void usbd_cdc_acm_set_rts(uint8_t busid, uint8_t intf, bool rts)
+{
     (void) busid;
     (void) intf;
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), !rts);
+    if (!HSLink_Setting.jtag_20pin_compatible) {
+        gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(PIN_UART_RTS), GPIO_GET_PIN_INDEX(PIN_UART_RTS), !rts);
+    }
 }

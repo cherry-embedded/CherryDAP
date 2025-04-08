@@ -216,15 +216,6 @@ static void settings(Document &root, char *res)
         return;
     }
 
-    auto get_value_bool = [&](const Value &val, const char *key, bool default_value) -> bool
-    {
-        if (val.HasMember(key)) {
-            printf("key: %s, value: %d\n", key, val[key].GetBool());
-            return val[key].GetBool();
-        }
-        return default_value;
-    };
-
     const Value &data = root["data"].GetObject();
 
     if (!data.HasMember("boost")) {
@@ -243,7 +234,7 @@ static void settings(Document &root, char *res)
     };
     HSLink_Setting.swd_port_mode = mode(data["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
-    HSLink_Setting.jtag_single_bit_mode = get_value_bool(data, "jtag_single_bit_mode", false);
+    HSLink_Setting.jtag_single_bit_mode = get_json_value(data, "jtag_single_bit_mode", false);
 
     const Value &power = data["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
@@ -263,6 +254,8 @@ static void settings(Document &root, char *res)
 
     HSLink_Setting.led = data["led"].GetBool();
     HSLink_Setting.led_brightness = data["led_brightness"].GetUint();
+
+    HSLink_Setting.jtag_20pin_compatible = get_json_value(data, "jtag_20pin_compatible", false);
 
     Setting_Save();
 
@@ -384,6 +377,9 @@ static void get_setting(Document &root, char *res)
 
     writer.Key("led_brightness");
     writer.Uint(HSLink_Setting.led_brightness);
+
+    writer.Key("jtag_20pin_compatible");
+    writer.Bool(HSLink_Setting.jtag_20pin_compatible);
 
     writer.EndObject();
 
