@@ -43,7 +43,7 @@
 
 // JTAG Macros
 
-#define PIN_JTAG_GPIO          HPM_GPIO0
+#define PIN_JTAG_GPIO          HPM_FGPIO
 
 #define JTAG_SPI_DMA                HPM_HDMA
 #define JTAG_SPI_DMAMUX             HPM_DMAMUX
@@ -120,7 +120,7 @@ void SPI_PORT_JTAG_SETUP(void)
     gpio_set_pin_output(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS),
                         GPIO_GET_PIN_INDEX(PIN_SINGLE_SPI_JTAG_TMS));
 
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR),
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR),
                    1); // TMS引脚在JTAG下始终为输出
 
     if (HSLink_Setting.jtag_single_bit_mode) {

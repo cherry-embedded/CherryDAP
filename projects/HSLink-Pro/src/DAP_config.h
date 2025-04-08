@@ -307,8 +307,8 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define SWD_SPI_BASE_CLOCK_NAME    clock_spi1
 
 #define PIN_GPIOM_BASE    HPM_GPIOM
-#define PIN_GPIO          HPM_GPIO0
-#define PIN_SWDIO_DIR_GPIO HPM_GPIO0
+#define PIN_GPIO          HPM_FGPIO
+#define PIN_GPIOM         gpiom_core0_fast
 
 #if defined(USE_HPM_BOARD_JTAG_GPIO) && (USE_HPM_BOARD_JTAG_GPIO == 1)
 #define PIN_TCK                         IOC_PAD_PA06
@@ -368,9 +368,9 @@ Configures the DAP Hardware I/O pins for JTAG mode:
 __STATIC_INLINE void gpiom_configure_pin_control_setting(uint16_t gpio_index)
 {
     gpiom_set_pin_controller(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index),
-                             gpiom_soc_gpio0);
+                             PIN_GPIOM);
     gpiom_enable_pin_visibility(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index),
-                                gpiom_soc_gpio0);
+                                PIN_GPIOM);
 //    gpiom_lock_pin(PIN_GPIOM_BASE, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
@@ -412,32 +412,32 @@ __STATIC_INLINE void PORT_OFF(void)
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27));
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(IOC_PAD_PA27), GPIO_GET_PIN_INDEX(IOC_PAD_PA27),
-                             gpiom_soc_gpio0);
+                             PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), gpiom_soc_gpio0);
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST));
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST),
-                             gpiom_soc_gpio0);
+                             PIN_GPIOM);
 }
 
 
@@ -479,7 +479,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
     uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     __asm volatile("fence io, io");
     return sta;
@@ -490,7 +490,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), true);
     __asm volatile("fence io, io");
 }
@@ -500,7 +500,7 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), false);
     __asm volatile("fence io, io");
 }
@@ -510,7 +510,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
     uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     __asm volatile("fence io, io");
     return sta;
@@ -521,7 +521,7 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     if (bit & 0x01) {
         gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), true);
     } else {
@@ -536,7 +536,7 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
     gpiom_configure_pin_control_setting(PIN_TMS);
@@ -549,7 +549,7 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-    gpio_write_pin(PIN_SWDIO_DIR_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
