@@ -191,7 +191,7 @@ static double Get_VREF_Voltage(void) {
     static uint8_t i = 0;
     sum += this_adc - buf[i];
     buf[i] = this_adc;
-    i = (i + 1) % 7;
+    i = (i + 1) % 8;
     return (double) (sum >> 3) * ADC_REF / 65535 * 2;
 }
 
