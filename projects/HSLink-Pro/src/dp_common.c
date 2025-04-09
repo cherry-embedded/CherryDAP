@@ -120,8 +120,8 @@ void por_reset(void)
 {
     if ((!VREF_ENABLE && HSLink_Setting.power.power_on)
         || VREF_ENABLE) {
-        Power_Turn_Off();
+        Power_Turn(false);
         board_delay_ms(10);
-        Power_Turn_On();
+        Power_Turn(true);
     }
 }

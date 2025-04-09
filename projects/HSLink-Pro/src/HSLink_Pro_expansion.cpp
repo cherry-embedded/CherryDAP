@@ -14,6 +14,7 @@
 #include <hpm_ewdg_drv.h>
 #include <hpm_spi.h>
 #include "HSLink_Pro_expansion.h"
+#include <led_extern.h>
 #include "board.h"
 #include "hpm_gptmr_drv.h"
 #include "hpm_gpio_drv.h"
@@ -31,14 +32,29 @@ const uint8_t PWM_CHANNEL = 2;
 ADC16_Type *const USER_ADC = HPM_ADC0;
 
 const uint32_t DEFAULT_PWM_FREQ = 100000;
-const uint8_t DEFAULT_PWM_DUTY = 50;
+const uint8_t DEFAULT_PWM_DUTY = 85;
 
 const uint8_t DEFAULT_ADC_RUN_MODE = adc16_conv_mode_oneshot;
 const uint8_t DEFAULT_ADC_CYCLE = 20;
 
 static uint32_t pwm_current_reload;
 
-static const uint32_t CONFIG_P_EN = IOC_PAD_PA31;
+static uint32_t GPIO_Power_EN = IOC_PAD_PA31;
+static uint32_t GPIO_Port_EN = IOC_PAD_PA04;
+static uint32_t GPIO_BTN = IOC_PAD_PA03;
+
+static void IONum_Init() {
+    if (CheckHardwareVersion(0, 0, 0) or
+        CheckHardwareVersion(1, 2, 0xFF)) {
+        GPIO_Power_EN = IOC_PAD_PA31;
+        GPIO_Port_EN = IOC_PAD_PA04;
+        GPIO_BTN = IOC_PAD_PA03;
+    } else if (CheckHardwareVersion(1, 3, 0xFF)) {
+        GPIO_Power_EN = IOC_PAD_PY00;
+        GPIO_Port_EN = IOC_PAD_PA31;
+        GPIO_BTN = IOC_PAD_PA03;
+    }
+}
 
 static void set_pwm_waveform_edge_aligned_frequency(uint32_t freq) {
     gptmr_channel_config_t config;
@@ -64,29 +80,11 @@ static void set_pwm_waveform_edge_aligned_duty(uint8_t duty) {
     gptmr_update_cmp(USER_PWM, PWM_CHANNEL, 0, cmp);
 }
 
-static void Power_Enable_Init(void) {
-    HPM_IOC->PAD[CONFIG_P_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-
-    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN),
-                             gpiom_soc_gpio0);
-    gpio_set_pin_output(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN));
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN),
-                   HSLink_Setting.power.power_on);
-}
-
-void Power_Turn_On(void) {
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 1);
-}
-
-void Power_Turn_Off(void) {
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), 0);
-}
-
 static void Power_PWM_Init(void) {
     // PA10 100k PWM，占空比50%
     HPM_IOC->PAD[IOC_PAD_PA10].FUNC_CTL = IOC_PA10_FUNC_CTL_GPTMR0_COMP_2;
     set_pwm_waveform_edge_aligned_frequency(DEFAULT_PWM_FREQ);
-    set_pwm_waveform_edge_aligned_duty(DEFAULT_PWM_DUTY);
+    set_pwm_waveform_edge_aligned_duty(DEFAULT_PWM_DUTY); // 以目前的控制形式来看，电压越高，输出电压就越小，先给个较高的占空比
 }
 
 static void Power_Set_TVCC_Voltage(double voltage) {
@@ -94,7 +92,15 @@ static void Power_Set_TVCC_Voltage(double voltage) {
     // DAC = -voltage + (1974/395)
 
     // PWM DAC需要输出的电压
-    double dac = -voltage + (1974.0 / 395.0);
+    double dac;
+    if (CheckHardwareVersion(1, 3, 0)) {
+        dac = 1.23 / 15000 * 47000 + 2.46 - voltage;
+    } else if (CheckHardwareVersion(1, 3, 0xFF)) {
+        dac = 3.39064539007092 - 0.425531914893617 * voltage;
+    } else {
+        dac = -voltage + (1974.0 / 395.0);
+    }
+
     if (dac < 0) {
         dac = 0;
     } else if (dac > 3.3) {
@@ -178,9 +184,15 @@ static inline void TVCC_Init(void) {
     HPM_IOC->PAD[IOC_PAD_PB09].FUNC_CTL = IOC_PAD_FUNC_CTL_ANALOG_MASK;
 }
 
-ATTR_ALWAYS_INLINE
-static inline double Get_VREF_Voltage(void) {
-    return (double) Get_ADC_Value(USER_ADC_VREF_CHANNEL) * ADC_REF / 65535 * 2;
+static double Get_VREF_Voltage(void) {
+    const auto this_adc = Get_ADC_Value(USER_ADC_VREF_CHANNEL);
+    static uint32_t sum = 0;
+    static uint16_t buf[8] = {};
+    static uint8_t i = 0;
+    sum += this_adc - buf[i];
+    buf[i] = this_adc;
+    i = (i + 1) & 7;
+    return (double) (sum >> 3) * ADC_REF / 65535 * 2;
 }
 
 ATTR_ALWAYS_INLINE
@@ -188,51 +200,46 @@ static double inline Get_TVCC_Voltage(void) {
     return (double) Get_ADC_Value(USER_ADC_TVCC_CHANNEL) * ADC_REF / 65535 * 2;
 }
 
-ATTR_ALWAYS_INLINE
-static inline void BOOT_Init(void) {
-    // PA03
-    HPM_IOC->PAD[IOC_PAD_PA03].FUNC_CTL = IOC_PA03_FUNC_CTL_GPIO_A_03;
+static void Power_Enable_Init(void) {
+    HPM_IOC->PAD[GPIO_Power_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
-    gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 3, gpiom_soc_gpio0);
-    gpio_set_pin_input(HPM_GPIO0, GPIO_OE_GPIOA, 3);
-    gpio_disable_pin_interrupt(HPM_GPIO0, GPIO_IE_GPIOA, 3);
+    const auto port_index = GPIO_GET_PORT_INDEX(GPIO_Power_EN);
+    const auto pin_index = GPIO_GET_PIN_INDEX(GPIO_Power_EN);
+
+    gpiom_set_pin_controller(HPM_GPIOM, port_index, pin_index, gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, port_index, pin_index);
+    gpio_write_pin(HPM_GPIO0, port_index, pin_index, 0);
 }
 
 ATTR_ALWAYS_INLINE
 static inline void Port_Enable_Init(void) {
     // PA04
-    HPM_IOC->PAD[IOC_PAD_PA04].FUNC_CTL = IOC_PA04_FUNC_CTL_GPIO_A_04;
+    HPM_IOC->PAD[GPIO_Port_EN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
-    gpiom_set_pin_controller(HPM_GPIOM, GPIOM_ASSIGN_GPIOA, 4, gpiom_soc_gpio0);
-    gpio_set_pin_output(HPM_GPIO0, GPIO_OE_GPIOA, 4);
+    const auto port_index = GPIO_GET_PORT_INDEX(GPIO_Port_EN);
+    const auto pin_index = GPIO_GET_PIN_INDEX(GPIO_Port_EN);
 
-    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, HSLink_Setting.power.port_on);
+    gpiom_set_pin_controller(HPM_GPIOM, port_index, pin_index, gpiom_soc_gpio0);
+    gpio_set_pin_output(HPM_GPIO0, port_index, pin_index);
+    gpio_write_pin(HPM_GPIO0, port_index, pin_index, 0);
 }
 
-ATTR_ALWAYS_INLINE
-static inline void Port_Turn_Enable(void) {
-    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 1);
+void Power_Turn(bool on) {
+    const auto port_index = GPIO_GET_PORT_INDEX(GPIO_Power_EN);
+    const auto pin_index = GPIO_GET_PIN_INDEX(GPIO_Power_EN);
+    gpio_write_pin(HPM_GPIO0, port_index, pin_index, on);
 }
 
-ATTR_ALWAYS_INLINE
-static inline void Port_Turn_Disable(void) {
-    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, 0);
-}
-
-ATTR_ALWAYS_INLINE
-static inline void Power_Trun(bool on) {
-    gpio_write_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(CONFIG_P_EN), GPIO_GET_PIN_INDEX(CONFIG_P_EN), on);
-}
-
-ATTR_ALWAYS_INLINE
-static inline void Port_Turn(bool on) {
-    gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOA, 4, on);
+void Port_Turn(bool on) {
+    const auto port_index = GPIO_GET_PORT_INDEX(GPIO_Port_EN);
+    const auto pin_index = GPIO_GET_PIN_INDEX(GPIO_Port_EN);
+    gpio_write_pin(HPM_GPIO0, port_index, pin_index, on);
 }
 
 ATTR_RAMFUNC
 static void __WS2812_Config_Init(void *user_data) {
     HPM_IOC->PAD[IOC_PAD_PA02].FUNC_CTL = IOC_PA02_FUNC_CTL_GPIO_A_02;
-//    HPM_IOC->PAD[IOC_PAD_PA07].FUNC_CTL = IOC_PA07_FUNC_CTL_GPIO_A_07;
+    //    HPM_IOC->PAD[IOC_PAD_PA07].FUNC_CTL = IOC_PA07_FUNC_CTL_GPIO_A_07;
     gpio_set_pin_output(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
                         BOARD_LED_GPIO_PIN);
     gpio_write_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX,
@@ -275,7 +282,7 @@ static void WS2812_Init(void) {
         };
         _neopixel->SetInterfaceConfig(&config);
         neopixel = reinterpret_cast<NeoPixel *>(_neopixel);
-    } else if (CheckHardwareVersion(1, 2, 0xFF)) {
+    } else if (CheckHardwareVersion(1, 2, 0xFF) or CheckHardwareVersion(1, 3, 0xFF)) {
         auto _neopixel = new NeoPixel_SPI_Polling{1};
         NeoPixel_SPI_Polling::interface_config_t config = {
                 .init = [](void *) {
@@ -377,9 +384,18 @@ extern "C" void WS2812_ShowRainbow() {
 #endif
 
 static void Button_Init() {
+    // PA03
+    HPM_IOC->PAD[GPIO_BTN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    const auto port_index = GPIO_GET_PORT_INDEX(GPIO_BTN);
+    const auto pin_index = GPIO_GET_PIN_INDEX(GPIO_BTN);
+    gpiom_set_pin_controller(HPM_GPIOM, port_index, pin_index, gpiom_soc_gpio0);
+    gpio_set_pin_input(HPM_GPIO0, port_index, pin_index);
+    gpio_disable_pin_interrupt(HPM_GPIO0, port_index, pin_index);
+
     static Button btn;
     button_init(&btn, [](uint8_t) {
-        return gpio_read_pin(BOARD_BTN_GPIO_CTRL, BOARD_BTN_GPIO_INDEX, BOARD_BTN_GPIO_PIN);
+        return gpio_read_pin(HPM_GPIO0, GPIO_GET_PORT_INDEX(GPIO_BTN), GPIO_GET_PIN_INDEX(GPIO_BTN));
     }, BOARD_BTN_PRESSED_VALUE, 0);
     button_attach(&btn, SINGLE_CLICK, [](void *) {
         printf("single click, send reset to target\r\n");
@@ -387,18 +403,19 @@ static void Button_Init() {
     });
     button_attach(&btn, DOUBLE_CLICK, [](void *) {
         printf("double click, enter system Bootloader\n");
-        Power_Turn_Off();
+        Power_Turn(false);
         HSP_EntrySysBootloader();
     });
     button_attach(&btn, LONG_PRESS_START, [](void *) {
         printf("long press, enter Bootloader\n");
-        Power_Turn_Off();
+        Power_Turn(false);
         HSP_EnterHSLinkBootloader();
     });
     button_start(&btn);
 }
 
 extern "C" void HSP_Init(void) {
+    IONum_Init();
     // 初始化电源部分
     Power_Enable_Init();
     Port_Enable_Init();
@@ -407,9 +424,11 @@ extern "C" void HSP_Init(void) {
     ADC_Init();
     VREF_Init();
     TVCC_Init();
-    BOOT_Init();
     WS2812_Init();
     Button_Init();
+
+    Power_Turn(HSLink_Setting.power.power_on);
+    Power_Turn(HSLink_Setting.power.port_on);
 
 #ifdef WS2812_TEST
     printf("blue\r\n");
@@ -439,19 +458,23 @@ extern "C" void HSP_Init(void) {
 }
 
 extern "C" void HSP_Loop(void) {
-    // 检测VREF电压
-    double vref = Get_VREF_Voltage();
+    static uint32_t last_pwr_chk_time = 0;
+    if (millis() - last_pwr_chk_time > 5) {
+        last_pwr_chk_time = millis();
+        // 检测VREF电压
+        double vref = Get_VREF_Voltage();
 
-    if (vref > 1.6) {
-        Power_Set_TVCC_Voltage(vref);
-        Power_Turn_On();
-        Port_Turn_Enable();
-        VREF_ENABLE = true;
-    } else {
-        Power_Trun(HSLink_Setting.power.power_on);
-        Power_Set_TVCC_Voltage(HSLink_Setting.power.vref); // TVCC恢复默认设置
-        Port_Turn(HSLink_Setting.power.port_on);
-        VREF_ENABLE = false;
+        if (vref > 1.6) {
+            Power_Set_TVCC_Voltage(vref);
+            Power_Turn(true);
+            Port_Turn(true);
+            VREF_ENABLE = true;
+        } else {
+            Power_Turn(HSLink_Setting.power.power_on);
+            Power_Set_TVCC_Voltage(HSLink_Setting.power.vref); // TVCC恢复默认设置
+            Port_Turn(HSLink_Setting.power.port_on);
+            VREF_ENABLE = false;
+        }
     }
 
     static uint32_t last_btn_chk_time = 0;
@@ -463,8 +486,7 @@ extern "C" void HSP_Loop(void) {
 
 extern "C" void HSP_Reboot(void) {
     bl_setting.keep_bootloader = 0;
-    neopixel->SetPixel(0, 0, 0, 0);
-    neopixel->Flush();
+    led.SetEnable(false);
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);
@@ -484,8 +506,7 @@ extern "C" void HSP_Reboot(void) {
 
 extern "C" void HSP_EnterHSLinkBootloader(void) {
     bl_setting.keep_bootloader = 1;
-    neopixel->SetPixel(0, 0, 0, 0);
-    neopixel->Flush();
+    led.SetEnable(false);
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);
     disable_global_irq(CSR_MSTATUS_UIE_MASK);
@@ -504,8 +525,7 @@ extern "C" void HSP_EnterHSLinkBootloader(void) {
 }
 
 extern "C" void HSP_EntrySysBootloader(void) {
-    neopixel->SetPixel(0, 0, 0, 0);
-    neopixel->Flush();
+    led.SetEnable(false);
 
     disable_global_irq(CSR_MSTATUS_MIE_MASK);
     //disable_global_irq(CSR_MSTATUS_SIE_MASK);

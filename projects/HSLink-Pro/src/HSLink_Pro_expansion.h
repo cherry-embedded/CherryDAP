@@ -41,9 +41,9 @@ void HSP_EnterHSLinkBootloader(void);
 
 void HSP_EntrySysBootloader(void);
 
-void Power_Turn_On(void);
+void Power_Turn(bool on);
 
-void Power_Turn_Off(void);
+void Port_Turn(bool on);
 
 #ifdef __cplusplus
 }
