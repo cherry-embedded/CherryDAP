@@ -117,12 +117,14 @@ void usb2uart_handler(void) {
 
 void uartx_preinit(void) {
     // board_init_uart(UART_BASE);
-    if (CheckHardwareVersion(1, 2, 0xFF)) {
-        PIN_UART_DTR = IOC_PAD_PA06;
-        PIN_UART_RTS = IOC_PAD_PA05;
-    } else {
+    if (CheckHardwareVersion(0, 0, 0) ||
+        CheckHardwareVersion(1, 0, 0xFF) ||
+        CheckHardwareVersion(1, 1, 0xFF)) {
         PIN_UART_DTR = IOC_PAD_PA06;
         PIN_UART_RTS = IOC_PAD_PA07;
+    } else {
+        PIN_UART_DTR = IOC_PAD_PA06;
+        PIN_UART_RTS = IOC_PAD_PA05;
     }
     HPM_IOC->PAD[PIN_UART_RX].FUNC_CTL = IOC_PA09_FUNC_CTL_UART2_RXD;
     HPM_IOC->PAD[PIN_UART_TX].FUNC_CTL = IOC_PA08_FUNC_CTL_UART2_TXD;
