@@ -120,12 +120,13 @@ void usb2uart_handler(void)
 
 void uartx_io_init(void)
 {
-    if (CheckHardwareVersion(1, 2, 0xFF)) {
-        PIN_UART_DTR = IOC_PAD_PA06;
-        PIN_UART_RTS = IOC_PAD_PA05;
-    } else {
+    if (CheckHardwareVersion(0,0,0) || CheckHardwareVersion(1, 0, 0xFF)
+         || CheckHardwareVersion(1, 1, 0xFF)) {
         PIN_UART_DTR = IOC_PAD_PA06;
         PIN_UART_RTS = IOC_PAD_PA07;
+    } else {
+        PIN_UART_DTR = IOC_PAD_PA06;
+        PIN_UART_RTS = IOC_PAD_PA05;
     }
 
     // 开启20p兼容模式之后，将会把串口设置为GPIO模式，并输出低电平
