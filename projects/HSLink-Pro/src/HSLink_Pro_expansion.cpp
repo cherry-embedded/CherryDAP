@@ -429,7 +429,7 @@ extern "C" void HSP_Init(void) {
     Button_Init();
 
     Power_Turn(HSLink_Setting.power.power_on);
-    Power_Turn(HSLink_Setting.power.port_on);
+    Port_Turn(HSLink_Setting.power.port_on);
 
 #ifdef WS2812_TEST
     printf("blue\r\n");
