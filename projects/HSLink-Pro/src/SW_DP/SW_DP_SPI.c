@@ -45,8 +45,10 @@ void SPI_PORT_SWD_SETUP(void)
     gpiom_configure_pin_control_setting(PIN_SRST);
 
     static uint8_t SRST_Level = 1;
-    if (CheckHardwareVersion(1, 2, UINT8_MAX)) {
-        SRST_Level = 0;
+    if (CheckHardwareVersion(0, 0, 0) ||
+            CheckHardwareVersion(1, 0, 0xFF) ||
+            CheckHardwareVersion(1, 1, 0xFF)) {
+        SRST_Level = 1;
     }
 
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));

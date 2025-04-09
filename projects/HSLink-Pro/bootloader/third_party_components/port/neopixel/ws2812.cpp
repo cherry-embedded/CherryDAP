@@ -54,7 +54,7 @@ extern "C" void WS2812_Init() {
         };
         neopixel_gpio->SetInterfaceConfig(&config);
         neopixel = reinterpret_cast<NeoPixel *>(neopixel_gpio);
-    } else if (CheckHardwareVersion(1, 2, 0xFF)) {
+    } else if (CheckHardwareVersion(1, 2, 0xFF) or CheckHardwareVersion(1,3,0xFF)) {
         auto _neopixel = new NeoPixel_SPI_Polling{1};
         NeoPixel_SPI_Polling::interface_config_t config = {
                 .init = [](void *) {
