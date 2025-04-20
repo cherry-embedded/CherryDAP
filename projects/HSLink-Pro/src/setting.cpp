@@ -44,6 +44,8 @@ HSLink_Setting_t HSLink_Setting = {
         .led_brightness = 0,
 };
 
+HSLink_Lazy_t HSLink_Global;
+
 ATTR_PLACE_AT(".bl_setting")
 BL_Setting_t bl_setting;
 
@@ -230,6 +232,14 @@ void Setting_Init(void)
     load_settings();
 
     update_settings();
+
+    if (CheckHardwareVersion(0, 0, 0) ||
+        CheckHardwareVersion(1, 0, 0xFF) ||
+        CheckHardwareVersion(1, 1, 0xFF)) {
+        HSLink_Global.reset_level = 1;
+    } else {
+        HSLink_Global.reset_level = 0;
+    }
 }
 
 void Setting_Save(void)

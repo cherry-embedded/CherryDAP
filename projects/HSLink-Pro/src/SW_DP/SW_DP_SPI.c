@@ -44,15 +44,8 @@ void SPI_PORT_SWD_SETUP(void)
     HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
     gpiom_configure_pin_control_setting(PIN_SRST);
 
-    static uint8_t SRST_Level = 1;
-    if (CheckHardwareVersion(0, 0, 0) ||
-            CheckHardwareVersion(1, 0, 0xFF) ||
-            CheckHardwareVersion(1, 1, 0xFF)) {
-        SRST_Level = 1;
-    }
-
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), SRST_Level);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
 
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0); // 默认SWDIO为输入
 

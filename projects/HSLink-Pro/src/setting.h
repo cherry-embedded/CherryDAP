@@ -42,10 +42,16 @@ typedef struct {
     char nickname[128];
 } HSLink_Setting_t;
 
+typedef struct {
+    bool reset_level;
+} HSLink_Lazy_t;
+
 static const uint32_t SETTING_MAGIC = 0xB7B7B7B7;
 
 extern HSLink_Setting_t HSLink_Setting;
 extern BL_Setting_t bl_setting;
+
+extern HSLink_Lazy_t HSLink_Global;
 
 #ifdef __cplusplus
 #include "rapidjson/document.h"

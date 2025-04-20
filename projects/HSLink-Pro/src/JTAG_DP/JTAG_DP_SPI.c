@@ -107,15 +107,8 @@ void SPI_PORT_JTAG_SETUP(void)
     gpiom_configure_pin_control_setting(PIN_SRST);
     gpiom_configure_pin_control_setting(PIN_JTAG_TRST);
 
-    static uint8_t SRST_Level = 1;
-    if (CheckHardwareVersion(0, 0, 0) ||
-            CheckHardwareVersion(1, 0, 0xFF) ||
-            CheckHardwareVersion(1, 1, 0xFF)) {
-        SRST_Level = 1;
-    }
-
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
-    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), SRST_Level);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST));
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST), 1);
 
