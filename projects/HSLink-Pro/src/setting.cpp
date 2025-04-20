@@ -191,7 +191,8 @@ static void parse_settings(std::string_view json)
     HSLink_Setting.led_brightness = root["led_brightness"].GetUint();
     HSLink_Setting.jtag_20pin_compatible = get_json_value(root, "jtag_20pin_compatible", false);
 
-    std::strcpy(HSLink_Setting.nickname, get_json_value(root, "nickname", ""));
+    std::strncpy(HSLink_Setting.nickname, get_json_value(root, "nickname", ""), sizeof(HSLink_Setting.nickname) - 1);
+    HSLink_Setting.nickname[sizeof(HSLink_Setting.nickname) - 1] = '\0';
 }
 
 static void load_settings()
