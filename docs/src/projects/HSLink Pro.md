@@ -119,6 +119,10 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 
 如果Vref低于1.6V或悬空，默认并不会输出电源和信号。接入Vref后Tvcc自动生成一个相同的电压输出，信号电平也将调整为相同的电压。也可以通过上位机配置**上电开启电源输出**与**上电开启IO输出**，在Vref低于1.6V时使用配置的电压。
 
+### 读取不到MCU/需要抬高电压才能读到MCU/需要降低速度到很低的水平才能读到MCU
+
+可以尝试将SWD信号线以麻花辫的方式绞成一股。并排杜邦线的形式容易造成奇奇怪怪的干扰。
+
 ### 在下载时串口会有乱码？
 
 ![hslink_uart_messy](image/hslink_uart_messy.png)
