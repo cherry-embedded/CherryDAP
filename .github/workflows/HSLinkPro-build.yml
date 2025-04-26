@@ -31,7 +31,7 @@ jobs:
       - name: Install HPM SDK
         run: |
           cd ~
-          git clone --branch v1.8.0 https://github.com/hpmicro/hpm_sdk.git --recursive
+          git clone --branch v1.9.0 https://github.com/hpmicro/hpm_sdk.git --recursive
 
       - name: Create Python Venv
         run: |
