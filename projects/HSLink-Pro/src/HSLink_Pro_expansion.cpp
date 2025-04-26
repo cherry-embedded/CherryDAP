@@ -291,7 +291,7 @@ static void WS2812_Init(void) {
 
                     spi_initialize_config_t init_config;
                     hpm_spi_get_default_init_config(&init_config);
-                    init_config.direction = msb_first;
+                    init_config.direction = spi_msb_first;
                     init_config.mode = spi_master_mode;
                     init_config.clk_phase = spi_sclk_sampling_odd_clk_edges;
                     init_config.clk_polarity = spi_sclk_low_idle;
