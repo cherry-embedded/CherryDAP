@@ -155,3 +155,5 @@ HSLink Pro 的引脚定义满足 [20-pin J-Link Connector](https://wiki.segger.c
 上位机：[HSLink/HSLinkUpper](https://github.com/HSLink/HSLinkUpper)
 
 需求收集：[HSLink需求收集 · Issue #34 · cherry-embedded/CherryDAP](https://github.com/cherry-embedded/CherryDAP/issues/34)
+
+制作指南：[v1.3.1制作指南](https://github.com/HSLink/HSLink_Hardware/blob/main/HSLinkCompact_v1.3.1/ProductionGuide.md)
