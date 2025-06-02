@@ -24,4 +24,4 @@
 	url = https://github.com/armink/FlashDB.git
 [submodule "projects/HSLink-Pro/third_party_components/b64.c/b64.c"]
 	path = projects/HSLink-Pro/third_party_components/b64.c/b64.c
-	url = https://github.com/HSLink/b64.c.git
+	url = https://github.com/jwerle/b64.c.git
