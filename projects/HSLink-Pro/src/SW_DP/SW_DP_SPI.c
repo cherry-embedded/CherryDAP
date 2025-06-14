@@ -18,6 +18,9 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
+// #define LOG_TAG "SW_DP_SPI"
+// #include "elog.h"
+
 #define SWD_SPI_SCLK_FREQ          (20000000UL)
 
 #define SWD_SPI_DMA           BOARD_APP_HDMA
@@ -106,28 +109,29 @@ void SPI_SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
     if (count == 0U) {
         count = 64U;
     }
-//    printf("SWD_Sequence\n");
     SWD_SPI_BASE->CTRL |= SPI_CTRL_RXFIFORST_MASK | SPI_CTRL_TXFIFORST_MASK;
     while (SWD_SPI_BASE->STATUS & (SPI_CTRL_RXFIFORST_MASK | SPI_CTRL_TXFIFORST_MASK)) {
     };
     integer_val = (count / 8);
     remaind_val = (count % 8);
-    spi_set_data_bits(SWD_SPI_BASE, 8);
+    // log_d("SWD_Sequence info 0x%x integer_val %d, remaind_val %d", info, integer_val, remaind_val);
     if (info & SWD_SEQUENCE_DIN) {
-        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
-        spi_set_read_data_count(SWD_SPI_BASE, integer_val);
         spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_read_only);
-        SWD_SPI_BASE->CMD = 0xFF;
-        while ((SWD_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) == SPI_STATUS_RXEMPTY_MASK) {
-        };
-        while ((SWD_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) != SPI_STATUS_RXEMPTY_MASK) {
-            *(swdi + n) = SWD_SPI_BASE->DATA;
-            n++;
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+        if (integer_val) {
+            spi_set_read_data_count(SWD_SPI_BASE, integer_val);
+            spi_set_data_bits(SWD_SPI_BASE, 8);
+            SWD_SPI_BASE->CMD = 0xFF;
+            while ((SWD_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) == SPI_STATUS_RXEMPTY_MASK) {
+            };
+            while ((SWD_SPI_BASE->STATUS & SPI_STATUS_RXEMPTY_MASK) != SPI_STATUS_RXEMPTY_MASK) {
+                *(swdi + n) = SWD_SPI_BASE->DATA;
+                n++;
+            }
+            while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
+            };
         }
-        while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
-        };
-        if (remaind_val > 0) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+        if (remaind_val) {
             spi_set_read_data_count(SWD_SPI_BASE, 1);
             spi_set_data_bits(SWD_SPI_BASE, remaind_val);
             SWD_SPI_BASE->CMD = 0xFF;
@@ -138,19 +142,23 @@ void SPI_SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi)
             }
         }
     } else {
-        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
-        spi_set_write_data_count(SWD_SPI_BASE, integer_val);
         spi_set_transfer_mode(SWD_SPI_BASE, spi_trans_write_only);
-        SWD_SPI_BASE->CMD = 0xFF;
-        for (n = 0; n < integer_val; n++) {
-            SWD_SPI_BASE->DATA = *(swdo + n);
-        }
-        while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
-        };
-        if (remaind_val > 0) {
-            spi_set_data_bits(SWD_SPI_BASE, remaind_val);
-            SWD_SPI_BASE->DATA = *(swdo + integer_val);
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+        if (integer_val) {
+            spi_set_write_data_count(SWD_SPI_BASE, integer_val);
+            spi_set_data_bits(SWD_SPI_BASE, 8);
             SWD_SPI_BASE->CMD = 0xFF;
+            for (n = 0; n < integer_val; n++) {
+                SWD_SPI_BASE->DATA = *(swdo + n);
+            }
+            while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
+            };
+        }
+        if (remaind_val) {
+            spi_set_write_data_count(SWD_SPI_BASE, 1);
+            spi_set_data_bits(SWD_SPI_BASE, remaind_val);
+            SWD_SPI_BASE->CMD = 0xFF;
+            SWD_SPI_BASE->DATA = *(swdo + integer_val);
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
             };
         }
