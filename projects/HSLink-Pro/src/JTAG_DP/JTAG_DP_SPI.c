@@ -27,14 +27,11 @@
 
 #include "DAP_config.h"
 #include "DAP.h"
-#include "board.h"
 #include "hpm_spi_drv.h"
 #include "hpm_clock_drv.h"
 
 #ifdef HPMSOC_HAS_HPMSDK_DMAV2
-
 #include "hpm_dmav2_drv.h"
-
 #else
 #include "hpm_dma_drv.h"
 #endif
@@ -611,7 +608,7 @@ jtag_spi_transfer_fast(uint32_t request, uint32_t *data, uint8_t index_count, ui
 
     /* Capture Timestamp */
     if (request & DAP_TRANSFER_TIMESTAMP) {
-        // DAP_Data.timestamp = TIMESTAMP_GET(); 
+        // DAP_Data.timestamp = TIMESTAMP_GET();
     }
 
     gpio_write_pin(PIN_JTAG_GPIO, GPIO_GET_PORT_INDEX(PIN_SINGLE_SPI_JTAG_TMS),
