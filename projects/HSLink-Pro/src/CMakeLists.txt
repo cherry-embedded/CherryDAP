@@ -96,7 +96,7 @@ sdk_app_src(setting.cpp)
 sdk_app_src(led_extern.cpp)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
-sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
+sdk_compile_definitions(-DCONFIG_CHERRYDAP_USE_CUSTOM_HID=1)
 sdk_app_src(HSLink_Pro_expansion.cpp)
 
 file(GLOB_RECURSE HID_COMM_SRC
@@ -105,7 +105,6 @@ file(GLOB_RECURSE HID_COMM_SRC
 )
 sdk_app_src(${HID_COMM_SRC})
 sdk_app_inc(HID_COMM)
-sdk_app_src(usb_configuration.c)
 
 sdk_compile_options(-O2)
 

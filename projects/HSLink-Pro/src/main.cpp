@@ -4,7 +4,6 @@
 #include "dap_main.h"
 #include "setting.h"
 #include "usb2uart.h"
-#include "usb_configuration.h"
 #include <elog.h>
 #include <hid_comm.h>
 #include <hpm_dma_mgr.h>
@@ -73,7 +72,7 @@ int main() {
     HSP_Init();
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);
     uartx_preinit();
-    USB_Configuration();
+    chry_dap_init(0, HPM_USB0_BASE);
 
     led.SetNeoPixel(neopixel);
 
@@ -89,7 +88,7 @@ int main() {
         chry_dap_usb2uart_handle();
         usb2uart_handler();
         HSP_Loop();
-#ifdef CONFIG_USE_HID_CONFIG
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
         HID_Handle();
 #endif
         led.Handle();
