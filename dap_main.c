@@ -8,8 +8,9 @@
 #define HID_CUSTOM_REPORT_DESC_SIZE 53
 
 #define USBD_WINUSB_VENDOR_CODE 0x20
+#define USBD_WEBUSB_VENDOR_CODE 0x21
 
-#define USBD_WEBUSB_ENABLE 0
+#define USBD_WEBUSB_ENABLE 1
 #define USBD_BULK_ENABLE   1
 #define USBD_WINUSB_ENABLE 1
 
@@ -34,15 +35,17 @@
 
 #define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + \
                          CONFIG_CHERRYDAP_USE_CUSTOM_HID * CUSTOM_HID_LEN +      \
-                         CONFIG_CHERRYDAP_USE_MSC * MSC_DESCRIPTOR_LEN)
+                         CONFIG_CHERRYDAP_USE_MSC * MSC_DESCRIPTOR_LEN + USBD_WEBUSB_ENABLE * 9)
 
-#define INTF_NUM (1 + 2 + CONFIG_CHERRYDAP_USE_CUSTOM_HID + CONFIG_CHERRYDAP_USE_MSC)
+#define INTF_NUM (1 + 2 + CONFIG_CHERRYDAP_USE_CUSTOM_HID + CONFIG_CHERRYDAP_USE_MSC + USBD_WEBUSB_ENABLE)
 
-#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
-#define MSC_INTF_NUM 4
-#else
-#define MSC_INTF_NUM 3
-#endif
+#define MSC_INTF_NUM (3 + CONFIG_CHERRYDAP_USE_CUSTOM_HID)
+
+#define WEBUSB_INTF_NUM (3 + CONFIG_CHERRYDAP_USE_CUSTOM_HID + CONFIG_CHERRYDAP_USE_MSC)
+
+#define WEBUSB_URL_STRINGS                                 \
+    'g', 'i', 't', 'h', 'u', 'b', '.', 'c', 'o', 'm', '/', \
+        'c', 'h', 'e', 'r', 'r', 'y', '-', 'e', 'm', 'b', 'e', 'd', 'd', 'e', 'd', '/', 'C', 'h', 'e', 'r', 'r', 'y', 'D', 'A', 'P',
 
 __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
     WBVAL(WINUSB_DESCRIPTOR_SET_HEADER_SIZE), /* wLength */
@@ -52,7 +55,7 @@ __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
 #if (USBD_WEBUSB_ENABLE)
     WBVAL(WINUSB_FUNCTION_SUBSET_HEADER_SIZE), // wLength
     WBVAL(WINUSB_SUBSET_HEADER_FUNCTION_TYPE), // wDescriptorType
-    0,                                         // bFirstInterface USBD_WINUSB_IF_NUM
+    WEBUSB_INTF_NUM,                           // bFirstInterface USBD_WINUSB_IF_NUM
     0,                                         // bReserved
     WBVAL(FUNCTION_SUBSET_LEN),                // wSubsetLength
     WBVAL(WINUSB_FEATURE_COMPATIBLE_ID_SIZE),  // wLength
@@ -73,7 +76,7 @@ __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
     '4', 0, '6', 0, 'F', 0, 'E', 0, '-', 0,
     '9', 0, '3', 0, '3', 0, 'B', 0, '-',
     0, '3', 0, '1', 0, 'C', 0, 'B', 0, '9', 0, 'C', 0, '5', 0, 'A', 0, 'A', 0, '3', 0, 'B', 0, '9', 0,
-    '}', 0, 0, 0, 0, 0
+    '}', 0, 0, 0, 0, 0,
 #endif
 #if USBD_BULK_ENABLE
     WBVAL(WINUSB_FUNCTION_SUBSET_HEADER_SIZE), /* wLength */
@@ -118,8 +121,8 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
     0x8B, 0xFD, 0xA0, 0x76,
     0x88, 0x15, 0xB6, 0x65,
     WBVAL(0x0100), /* 1.00 */ /* bcdVersion */
-    USBD_WINUSB_VENDOR_CODE,  /* bVendorCode */
-    0,                        /* iLandingPage */
+    USBD_WEBUSB_VENDOR_CODE,  /* bVendorCode */
+    1,                        /* iLandingPage */
 #endif
 #if (USBD_WINUSB_ENABLE)
     USBD_WINUSB_DESC_LEN,           /* bLength */
@@ -135,6 +138,15 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
     USBD_WINUSB_VENDOR_CODE,                 /* bVendorCode */
     0,                                       /* bAltEnumCode */
 #endif
+};
+
+#define URL_DESCRIPTOR_LENGTH    (3 + 36)
+
+const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
+    URL_DESCRIPTOR_LENGTH,
+    WEBUSB_URL_TYPE,
+    WEBUSB_URL_SCHEME_HTTPS,
+    WEBUSB_URL_STRINGS
 };
 
 // clang-format off
@@ -188,8 +200,11 @@ static const uint8_t config_descriptor[] = {
 #ifdef CONFIG_CHERRYDAP_USE_CUSTOM_HID
     HID_DESC(),
 #endif
-#ifdef CONFIG_CHERRYDAP_USE_MSC
+#if CONFIG_CHERRYDAP_USE_MSC
     MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#endif
+#if USBD_WEBUSB_ENABLE
+    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00),
 #endif
 };
 
@@ -205,8 +220,11 @@ static const uint8_t other_speed_config_descriptor[] = {
 #ifdef CONFIG_CHERRYDAP_USE_CUSTOM_HID
     HID_DESC(),
 #endif
-#ifdef CONFIG_CHERRYDAP_USE_MSC
+#if CONFIG_CHERRYDAP_USE_MSC
     MSC_DESCRIPTOR_INIT(0x04, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
+#endif
+#if USBD_WEBUSB_ENABLE
+    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00),
 #endif
 };
 
@@ -484,6 +502,12 @@ struct usb_bos_descriptor bos_desc = {
     .string_len = USBD_BOS_WTOTALLENGTH
 };
 
+struct usb_webusb_descriptor webusb_url_desc = {
+    .vendor_code = USBD_WEBUSB_VENDOR_CODE,
+    .string = USBD_WebUSBURLDescriptor,
+    .string_len = USBD_WINUSB_DESC_SET_LEN
+};
+
 const struct usb_descriptor cmsisdap_descriptor = {
     .device_descriptor_callback = device_descriptor_callback,
     .config_descriptor_callback = config_descriptor_callback,
@@ -492,6 +516,7 @@ const struct usb_descriptor cmsisdap_descriptor = {
     .string_descriptor_callback = string_descriptor_callback,
     .bos_descriptor = &bos_desc,
     .msosv2_descriptor = &msosv2_desc,
+    .webusb_url_descriptor = &webusb_url_desc
 };
 
 void chry_dap_init(uint8_t busid, uint32_t reg_base)
