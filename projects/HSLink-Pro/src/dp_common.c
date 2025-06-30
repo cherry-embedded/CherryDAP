@@ -9,8 +9,6 @@
 #include "hpm_spi_drv.h"
 #include "hpm_clock_drv.h"
 #include "swd_host.h"
-#include "setting.h"
-#include <stdlib.h>
 #include "HSLink_Pro_expansion.h"
 
 #define SPI_MAX_SRC_CLOCK  (80000000U)
@@ -18,7 +16,31 @@
 #define SPI_MIN_SRC_CLOCK  (50000000U)
 #define SPI_MIN_SCLK_CLOCK (20000000U)
 
-void set_swj_clock_frequency(uint32_t clock)
+#define MAX_SWJ_CLOCK(delay_cycles) \
+  ((CPU_CLOCK/2U) / (IO_PORT_WRITE_CYCLES + delay_cycles))
+
+void IO_Set_Clock_Delay(uint32_t clock) {
+  uint32_t delay;
+
+  if (clock >= MAX_SWJ_CLOCK(DELAY_FAST_CYCLES)) {
+    DAP_Data.fast_clock  = 1U;
+    DAP_Data.clock_delay = 1U;
+  } else {
+    DAP_Data.fast_clock  = 0U;
+
+    delay = ((CPU_CLOCK/2U) + (clock - 1U)) / clock;
+    if (delay > IO_PORT_WRITE_CYCLES) {
+      delay -= IO_PORT_WRITE_CYCLES;
+      delay  = (delay + (DELAY_SLOW_CYCLES - 1U)) / DELAY_SLOW_CYCLES;
+    } else {
+      delay  = 1U;
+    }
+
+    DAP_Data.clock_delay = delay;
+  }
+}
+
+void SPI_Set_Clock_Delay(uint32_t clock)
 {
     int freq_list[clock_source_general_source_end] = {0};
     uint32_t div, sclk_div;
@@ -98,6 +120,15 @@ void set_swj_clock_frequency(uint32_t clock)
     clock_set_source_divider(clock_name, src_clock, div);
 }
 
+void Set_Clock_Delay(uint32_t clock)
+{
+    if (((HSLink_Setting.swd_port_mode == PORT_MODE_SPI) && (DAP_Data.debug_port == DAP_PORT_SWD)) ||
+        ((HSLink_Setting.jtag_port_mode == PORT_MODE_SPI) && (DAP_Data.debug_port == DAP_PORT_JTAG))) {
+        SPI_Set_Clock_Delay(clock);
+    } else {
+        IO_Set_Clock_Delay(clock);
+    }
+}
 // Use the CMSIS-Core definition if available.
 #if !defined(SCB_AIRCR_PRIGROUP_Pos)
 #define SCB_AIRCR_PRIGROUP_Pos              8U                                            /*!< SCB AIRCR: PRIGROUP Position */
