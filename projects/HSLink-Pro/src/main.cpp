@@ -23,8 +23,8 @@ static void serial_number_init(void) {
         uuid_words[word_idx++] = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(i);
     }
 
-    sprintf(serial_number, "%08X%08X%08X%08X", uuid_words[0], uuid_words[1], uuid_words[2], uuid_words[3]);
-    printf("Serial number: %s\n", serial_number);
+    sprintf(serial_number_dynamic, "%08X%08X%08X%08X", uuid_words[0], uuid_words[1], uuid_words[2], uuid_words[3]);
+    printf("Serial number: %s\n", serial_number_dynamic);
 }
 
 ATTR_ALWAYS_INLINE

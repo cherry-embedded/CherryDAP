@@ -159,7 +159,7 @@ static void Hello(Document &root, char *res)
     writer.StartObject();
 
     writer.Key("serial");
-    writer.String(serial_number);
+    writer.String(serial_number_dynamic);
 
     writer.Key("model");
     writer.String("HSLink-Pro");

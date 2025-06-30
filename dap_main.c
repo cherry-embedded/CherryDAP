@@ -130,6 +130,8 @@ static const uint8_t other_speed_config_descriptor[] = {
 #endif
 };
 
+char serial_number_dynamic[36] = "00000000000000000123456789ABCDEF"; // Dynamic serial number
+
 char *string_descriptors[] = {
         (char[]) {0x09, 0x04},             /* Langid */
         "CherryUSB",                        /* Manufacturer */
@@ -168,6 +170,10 @@ __WEAK const uint8_t *other_speed_config_descriptor_callback(uint8_t speed)
 __WEAK const char *string_descriptor_callback(uint8_t speed, uint8_t index)
 {
     (void) speed;
+
+    if(index == 3) {
+        return serial_number_dynamic;
+    }
 
     if (index >= (sizeof(string_descriptors) / sizeof(char *))) {
         return NULL;
@@ -458,7 +464,7 @@ void chry_dap_usb2uart_handle(void)
 
     /* why we use chry_ringbuffer_linear_read_setup?
      * becase we use dma and we do not want to use temp buffer to memcpy from ringbuffer
-     * 
+     *
     */
 
     /* uartrx to usb tx */

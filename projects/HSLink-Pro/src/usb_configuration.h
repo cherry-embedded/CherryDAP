@@ -11,8 +11,6 @@ extern "C"
  */
 void USB_Configuration(void);
 
-extern char serial_number[];
-
 #ifdef __cplusplus
 }
 #endif

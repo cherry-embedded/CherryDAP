@@ -86,6 +86,7 @@ extern const struct usb_descriptor cmsisdap_descriptor;
 extern __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[];
 extern __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[];
 extern char *string_descriptors[];
+extern char serial_number_dynamic[36];
 
 extern struct usbd_interface dap_intf;
 extern struct usbd_interface intf1;
