@@ -1,8 +1,6 @@
 #include "hid_comm.h"
-#include "usbd_core.h"
 #include "dap_main.h"
 #include "setting.h"
-#include "usb_configuration.h"
 #include "HSLink_Pro_expansion.h"
 #include "fal.h"
 #include "fal_cfg.h"
@@ -13,7 +11,7 @@
 
 #include "elog.h"
 
-#ifdef CONFIG_USE_HID_CONFIG
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -46,39 +44,23 @@ std::string_view filed_miss_msg = "Some fields are missing";
 
 static volatile HID_State_t HID_ReadState = HID_STATE_BUSY;
 
-/*!< custom hid report descriptor */
-const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
-        /* USER CODE BEGIN 0 */
-        0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
-        0x09, 0x01, /* USAGE (Vendor Usage 1) */
-        0xa1, 0x01, /* COLLECTION (Application) */
-        0x85, 0x02, /*   REPORT ID (0x02) */
-        0x09, 0x02, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0x81, 0x02, /*   INPUT (Data,Var,Abs) */
-        /* <___________________________________________________> */
-        0x85, 0x01, /*   REPORT ID (0x01) */
-        0x09, 0x03, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0x91, 0x02, /*   OUTPUT (Data,Var,Abs) */
+void hid_custom_notify_handler(uint8_t busid, uint8_t event, void *arg)
+{
+    (void)arg;
 
-        /* <___________________________________________________> */
-        0x85, 0x03, /*   REPORT ID (0x03) */
-        0x09, 0x04, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0xb1, 0x02, /*   FEATURE (Data,Var,Abs) */
-        /* USER CODE END 0 */
-        0xC0 /*     END_COLLECTION	             */
-};
+    switch (event) {
+        case USBD_EVENT_CONFIGURED:
+            usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);
+            break;
+        case USBD_EVENT_RESET:
+            memset(HID_write_buffer, 0, HID_PACKET_SIZE);
+            memset(HID_read_buffer, 0, HID_PACKET_SIZE);
+            HID_write_buffer[0] = 0x02;
+            break;
+        default:
+            break;
+    }
+}
 
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
@@ -94,16 +76,6 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     HID_ReadState = HID_STATE_DONE;
     // usbd_ep_start_read(0, HID_OUT_EP, HID_read_buffer, HID_PACKET_SIZE);// 重新开启读取
 }
-
-struct usbd_endpoint hid_custom_in_ep = {
-        .ep_addr = HID_IN_EP,
-        .ep_cb = usbd_hid_custom_in_callback,
-};
-
-struct usbd_endpoint hid_custom_out_ep = {
-        .ep_addr = HID_OUT_EP,
-        .ep_cb = usbd_hid_custom_out_callback,
-};
 
 static bool CheckField(const Value &object, std::pair<std::string_view, Type> field)
 {
