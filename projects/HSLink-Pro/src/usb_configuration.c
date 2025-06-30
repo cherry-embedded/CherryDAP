@@ -4,8 +4,6 @@
 #include "dap_main.h"
 #include "hid_comm.h"
 
-char serial_number[33];
-
 #define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + CONFIG_MSC_DESCRIPTOR_LEN + CONFIG_HID_DESCRIPTOR_LEN)
 #define INTF_NUM        (2 + 1 + CONFIG_MSC_INTF_NUM + CONFIG_HID_INTF_NUM)
 
@@ -72,25 +70,6 @@ static void _usbd_event_handler(uint8_t busid, uint8_t event)
     }
     extern void usbd_event_handler(uint8_t busid, uint8_t event);
     usbd_event_handler(busid, event);
-}
-
-const char *desc[] = {
-    (char[]) {0x09, 0x04},             /* Langid */
-    "CherryUSB",                        /* Manufacturer */
-    "CherryUSB CMSIS-DAP",              /* Product */
-};
-
-const char *string_descriptor_callback(uint8_t speed, uint8_t index)
-{
-    (void)speed;
-    if (index == 3)
-    {
-        return (const char *)serial_number;
-    }
-    else if (index >= (sizeof(desc) / sizeof(char *))) {
-        return NULL;
-    }
-    return desc[index];
 }
 
 void USB_Configuration(void)
