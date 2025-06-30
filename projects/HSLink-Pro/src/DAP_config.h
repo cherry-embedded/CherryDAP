@@ -310,10 +310,17 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString(char *str)
 #define PIN_GPIO          HPM_FGPIO
 #define PIN_GPIOM         gpiom_core0_fast
 
+#if defined(USE_HPM_BOARD_JTAG_GPIO) && (USE_HPM_BOARD_JTAG_GPIO == 1)
+#define PIN_TCK                         IOC_PAD_PA06
+#define PIN_TMS                         IOC_PAD_PA07
+#define PIN_TDI                         IOC_PAD_PA05
+#define PIN_TDO                         IOC_PAD_PA04
+#else
 #define PIN_TCK           IOC_PAD_PB11
 #define PIN_TMS           IOC_PAD_PA29
 #define PIN_TDI           IOC_PAD_PB13
 #define PIN_TDO           IOC_PAD_PB12
+#endif
 
 //**************************************************************************************************
 /**

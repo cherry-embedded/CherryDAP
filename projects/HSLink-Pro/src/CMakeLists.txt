@@ -3,6 +3,10 @@
 
 cmake_minimum_required(VERSION 3.13)
 
+option(CONFIG_HSLINK_PRO_EXPANSION "Enable HSLink Pro expansion" OFF)
+
+option(CONFIG_SWDIO_DIR "SWDIO direction" OFF)
+
 set(APP_NAME "HSLink-Pro")
 set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 
@@ -15,6 +19,14 @@ set(CONFIG_USE_ELOG 1)
 set(CUSTOM_GCC_LINKER_FILE
         ${CMAKE_CURRENT_SOURCE_DIR}/flash_uf2.ld
 )
+
+# CONFIG_USE_HPM_BOARD_JTAG_GPIO is for 20p output SWD+JTAG signal of hpm5301evklite
+set(CONFIG_USE_HPM_BOARD_JTAG_GPIO 0)
+
+if (NOT DEFINED CONFIG_USE_HPM_BOARD_JTAG_GPIO OR (CONFIG_USE_HPM_BOARD_JTAG_GPIO EQUAL "0"))
+    set(CONFIG_USE_SPI_SWD 1)
+    set(CONFIG_USE_SPI_JTAG 1)
+endif ()
 
 #set(CONFIG_EEPROM_EMULATION 1)
 set(STACK_SIZE 0x5000)
@@ -33,6 +45,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
 endif ()
 
 # for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
+sdk_compile_definitions(-DCONFIG_USB_HS)
 sdk_inc(../../../CherryUSB/common)
 sdk_inc(../../../CherryUSB/core)
 sdk_inc(../../../CherryUSB/class/cdc)
@@ -45,12 +58,21 @@ sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
 
 sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
 sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
+
 sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
+
+if (DEFINED CONFIG_USE_SPI_SWD AND (CONFIG_USE_SPI_SWD EQUAL "1"))
+    sdk_compile_definitions(-DUSE_SPI_SWD=1)
+endif ()
 
 sdk_app_inc(SW_DP)
 sdk_app_src(SW_DP/SW_DP.c)
 sdk_app_src(SW_DP/SW_DP_SPI.c)
 sdk_app_src(SW_DP/SW_DP_IO.c)
+
+if (DEFINED CONFIG_USE_SPI_JTAG AND (CONFIG_USE_SPI_JTAG EQUAL "1"))
+    sdk_compile_definitions(-DUSE_SPI_JTAG=1)
+endif ()
 
 sdk_app_inc(JTAG_DP)
 sdk_app_src(JTAG_DP/JTAG_DP.c)
