@@ -32,51 +32,6 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
     set(CONFIG_BUILD_VERSION ${BUILD_VERSION})
 endif ()
 
-# for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
-sdk_compile_definitions(-DCONFIG_USB_HS)
-sdk_inc(../../../CherryUSB/common)
-sdk_inc(../../../CherryUSB/core)
-sdk_inc(../../../CherryUSB/class/cdc)
-sdk_inc(../../../CherryUSB/class/msc)
-sdk_inc(../../../CherryUSB/class/hid)
-sdk_src(../../../CherryUSB/core/usbd_core.c)
-sdk_src(../../../CherryUSB/port/hpm/usb_dc_hpm.c)
-sdk_src(../../../CherryUSB/class/cdc/usbd_cdc_acm.c)
-sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
-
-sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
-sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
-
-sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
-
-sdk_app_inc(SW_DP)
-sdk_app_src(SW_DP/SW_DP.c)
-sdk_app_src(SW_DP/SW_DP_SPI.c)
-sdk_app_src(SW_DP/SW_DP_IO.c)
-
-sdk_app_inc(JTAG_DP)
-sdk_app_src(JTAG_DP/JTAG_DP.c)
-sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
-sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
-
-sdk_inc(.)
-sdk_inc(../../..)
-sdk_inc(../../../CherryRB)
-sdk_inc(../../../DAP/Include)
-
-sdk_inc(../common)
-
-sdk_app_src(../../../dap_main.c)
-sdk_app_src(../../../DAP/Source/DAP_vendor.c)
-sdk_app_src(../../../DAP/Source/DAP.c)
-
-sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
-
-sdk_app_src(main.cpp)
-sdk_app_src(dp_common.c)
-sdk_app_src(setting.cpp)
-sdk_app_src(led_extern.cpp)
-
 if (CONFIG_BUILD_VERSION)
     sdk_compile_definitions(-DCONFIG_BUILD_VERSION="${CONFIG_BUILD_VERSION}")
     string(REGEX REPLACE "([0-9]+)\\..*" "\\1" VERSION_MAJOR ${CONFIG_BUILD_VERSION})
@@ -92,10 +47,53 @@ else ()
     sdk_compile_definitions(-DCONFIG_BUILD_VERSION_PATCH=0xFF)
 endif ()
 
+# for sync, use cherryusb from cherryDAP instead of hpm sdk middleware
+sdk_inc(../../../CherryUSB/common)
+sdk_inc(../../../CherryUSB/core)
+sdk_inc(../../../CherryUSB/class/cdc)
+sdk_inc(../../../CherryUSB/class/msc)
+sdk_inc(../../../CherryUSB/class/hid)
+sdk_src(../../../CherryUSB/core/usbd_core.c)
+sdk_src(../../../CherryUSB/port/hpm/usb_dc_hpm.c)
+sdk_src(../../../CherryUSB/class/cdc/usbd_cdc_acm.c)
+sdk_src(../../../CherryUSB/class/hid/usbd_hid.c)
+
+sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
+sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
+sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
+
+sdk_app_inc(SW_DP)
+sdk_app_src(SW_DP/SW_DP.c)
+sdk_app_src(SW_DP/SW_DP_SPI.c)
+sdk_app_src(SW_DP/SW_DP_IO.c)
+
+sdk_app_inc(JTAG_DP)
+sdk_app_src(JTAG_DP/JTAG_DP.c)
+sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
+sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
+
 sdk_app_src(swd_host/swd_host.c)
 sdk_app_inc(swd_host)
 sdk_app_src(USB2UART/usb2uart.c)
 sdk_app_inc(USB2UART)
+
+sdk_inc(.)
+sdk_inc(../../..)
+sdk_inc(../../../CherryRB)
+sdk_inc(../../../DAP/Include)
+
+sdk_app_src(../../../dap_main.c)
+sdk_app_src(../../../DAP/Source/DAP_vendor.c)
+sdk_app_src(../../../DAP/Source/DAP.c)
+
+sdk_app_src(../../../CherryRB/chry_ringbuffer.c)
+
+sdk_inc(../common)
+
+sdk_app_src(main.cpp)
+sdk_app_src(dp_common.c)
+sdk_app_src(setting.cpp)
+sdk_app_src(led_extern.cpp)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Pro")
 sdk_compile_definitions(-DCONFIG_USE_HID_CONFIG=1)
