@@ -44,8 +44,7 @@
 #define WEBUSB_INTF_NUM (3 + CONFIG_CHERRYDAP_USE_CUSTOM_HID + CONFIG_CHERRYDAP_USE_MSC)
 
 #define WEBUSB_URL_STRINGS                                 \
-    'g', 'i', 't', 'h', 'u', 'b', '.', 'c', 'o', 'm', '/', \
-        'c', 'h', 'e', 'r', 'r', 'y', '-', 'e', 'm', 'b', 'e', 'd', 'd', 'e', 'd', '/', 'C', 'h', 'e', 'r', 'r', 'y', 'D', 'A', 'P',
+    'c', 'h', 'e', 'r', 'r', 'y', 'd', 'a', 'p', '.', 'c', 'h', 'e', 'r', 'r', 'y', '-', 'e', 'm', 'b', 'e', 'd', 'd', 'e', 'd', '.', 'o', 'r', 'g',
 
 __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
     WBVAL(WINUSB_DESCRIPTOR_SET_HEADER_SIZE), /* wLength */
@@ -140,7 +139,7 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
 #endif
 };
 
-#define URL_DESCRIPTOR_LENGTH    (3 + 36)
+#define URL_DESCRIPTOR_LENGTH    (3 + 29)
 
 const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
     URL_DESCRIPTOR_LENGTH,
@@ -505,7 +504,7 @@ struct usb_bos_descriptor bos_desc = {
 struct usb_webusb_descriptor webusb_url_desc = {
     .vendor_code = USBD_WEBUSB_VENDOR_CODE,
     .string = USBD_WebUSBURLDescriptor,
-    .string_len = USBD_WINUSB_DESC_SET_LEN
+    .string_len = URL_DESCRIPTOR_LENGTH
 };
 
 const struct usb_descriptor cmsisdap_descriptor = {
