@@ -25,3 +25,6 @@
 [submodule "projects/HSLink-Pro/third_party_components/b64.c/b64.c"]
 	path = projects/HSLink-Pro/third_party_components/b64.c/b64.c
 	url = https://github.com/jwerle/b64.c.git
+[submodule "projects/HSLink-Pro/third_party_components/MultiTimer/MultiTimer"]
+	path = projects/HSLink-Pro/third_party_components/MultiTimer/MultiTimer
+	url = https://github.com/HSLink/MultiTimer.git
