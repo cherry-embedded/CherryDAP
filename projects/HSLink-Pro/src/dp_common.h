@@ -7,7 +7,6 @@
 
 #include <stdint.h>
 
-uint8_t software_reset(void);
-void por_reset(void);
+
 
 #endif //HSLINK_PRO_DP_COMMON_H

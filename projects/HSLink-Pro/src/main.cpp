@@ -11,6 +11,7 @@
 #include <hpm_gpio_drv.h>
 #include <hpm_gpiom_drv.h>
 #include <hpm_romapi.h>
+#include "MultiTimer.h"
 
 static void serial_number_init(void) {
 #define OTP_CHIP_UUID_IDX_START (88U)
@@ -68,6 +69,9 @@ int main() {
     SWDIO_DIR_Init();
 
     Setting_Init();
+
+    multiTimerInstall(millis);  // warning: timer cb all called in isr, and timer gap should align to 5ms
+    board_timer_create(5, []() {multiTimerYield();});
 
     HSP_Init();
     intc_set_irq_priority(CONFIG_HPM_USBD_IRQn, 5);

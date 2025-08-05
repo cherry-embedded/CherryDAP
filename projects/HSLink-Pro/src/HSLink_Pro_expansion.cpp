@@ -17,11 +17,17 @@
 
 #include <dp_common.h>
 #include <led_extern.h>
+#include <MultiTimer.h>
+
 #include "board.h"
 #include "hpm_gptmr_drv.h"
 #include "hpm_gpio_drv.h"
 #include "hpm_adc16_drv.h"
 #include "setting.h"
+
+#define LOG_TAG "HSP"
+#include <elog.h>
+#include <reset_way.h>
 
 volatile bool VREF_ENABLE = false;
 
@@ -403,19 +409,7 @@ static void Button_Init() {
     button_attach(&btn, SINGLE_CLICK, [](void *) {
         printf("single click, send reset to target\r\n");
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(
-                HPM_FGPIO,
-                GPIO_GET_PORT_INDEX(PIN_SRST),
-                GPIO_GET_PIN_INDEX(PIN_SRST),
-                !HSLink_Global.reset_level
-                );
-            board_delay_ms(50);
-            gpio_write_pin(
-                 HPM_FGPIO,
-                 GPIO_GET_PORT_INDEX(PIN_SRST),
-                 GPIO_GET_PIN_INDEX(PIN_SRST),
-                 HSLink_Global.reset_level
-                 );
+            srst_reset();
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
             software_reset();
@@ -435,6 +429,13 @@ static void Button_Init() {
         HSP_EnterHSLinkBootloader();
     });
     button_start(&btn);
+
+    static MultiTimer timer_btn;
+    static auto button_ticks_ = [](MultiTimer* timer, void *user_data) {
+        button_ticks();
+    };
+
+    multiTimerStart(&timer_btn, 10, true, button_ticks_, NULL);
 }
 
 extern "C" void HSP_Init(void) {
@@ -498,12 +499,6 @@ extern "C" void HSP_Loop(void) {
             Port_Turn(HSLink_Setting.power.port_on);
             VREF_ENABLE = false;
         }
-    }
-
-    static uint32_t last_btn_chk_time = 0;
-    if (millis() - last_btn_chk_time > TICKS_INTERVAL) {
-        last_btn_chk_time = millis();
-        button_ticks();
     }
 }
 
