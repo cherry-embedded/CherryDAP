@@ -14,6 +14,8 @@
 #include <hpm_ewdg_drv.h>
 #include <hpm_spi.h>
 #include "HSLink_Pro_expansion.h"
+
+#include <dp_common.h>
 #include <led_extern.h>
 #include "board.h"
 #include "hpm_gptmr_drv.h"
@@ -400,7 +402,27 @@ static void Button_Init() {
     }, BOARD_BTN_PRESSED_VALUE, 0);
     button_attach(&btn, SINGLE_CLICK, [](void *) {
         printf("single click, send reset to target\r\n");
-        // TODO
+        if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
+            gpio_write_pin(
+                HPM_FGPIO,
+                GPIO_GET_PORT_INDEX(PIN_SRST),
+                GPIO_GET_PIN_INDEX(PIN_SRST),
+                !HSLink_Global.reset_level
+                );
+            board_delay_ms(50);
+            gpio_write_pin(
+                 HPM_FGPIO,
+                 GPIO_GET_PORT_INDEX(PIN_SRST),
+                 GPIO_GET_PIN_INDEX(PIN_SRST),
+                 HSLink_Global.reset_level
+                 );
+        }
+        if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
+            software_reset();
+        }
+        if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_POR)) {
+            por_reset();
+        }
     });
     button_attach(&btn, DOUBLE_CLICK, [](void *) {
         printf("double click, enter system Bootloader\n");
