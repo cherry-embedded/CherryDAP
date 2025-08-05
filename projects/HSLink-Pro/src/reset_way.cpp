@@ -33,10 +33,12 @@ uint8_t software_reset(void) {
 void por_reset(void) {
     if ((!VREF_ENABLE && HSLink_Setting.power.power_on)
         || VREF_ENABLE) {
-        Power_Turn(false);
+        // we change the settings temporarily to turn off the power
+        // TODO this is temporarily solution and cannot control when using vref
+        HSLink_Setting.power.power_on = false;
         static MultiTimer timer_;
         static auto timer_cb = [](MultiTimer *timer, void *user_data) {
-            Power_Turn(true);
+            HSLink_Setting.power.power_on = true;
         };
         multiTimerStart(&timer_, 50, false, timer_cb, NULL);
     }
