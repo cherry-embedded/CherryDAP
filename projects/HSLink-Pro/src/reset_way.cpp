@@ -38,7 +38,7 @@ void por_reset(void) {
         static auto timer_cb = [](MultiTimer *timer, void *user_data) {
             Power_Turn(true);
         };
-        multiTimerStart(&timer_, 10, false, timer_cb, NULL);
+        multiTimerStart(&timer_, 50, false, timer_cb, NULL);
     }
 }
 
@@ -47,7 +47,7 @@ void srst_reset(void) {
         HPM_FGPIO,
         GPIO_GET_PORT_INDEX(PIN_SRST),
         GPIO_GET_PIN_INDEX(PIN_SRST),
-        !HSLink_Global.reset_level
+        HSLink_Global.reset_level
     );
     static MultiTimer timer_;
     static auto timer_cb = [](MultiTimer *timer, void *user_data) {
@@ -55,7 +55,7 @@ void srst_reset(void) {
             HPM_FGPIO,
             GPIO_GET_PORT_INDEX(PIN_SRST),
             GPIO_GET_PIN_INDEX(PIN_SRST),
-            HSLink_Global.reset_level
+            !HSLink_Global.reset_level
         );
     };
     multiTimerStart(&timer_, 50, false, timer_cb, NULL);
