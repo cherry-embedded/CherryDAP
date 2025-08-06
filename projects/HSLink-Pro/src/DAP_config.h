@@ -635,6 +635,7 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
            - 0: issue a device hardware reset.
            - 1: release device hardware reset.
 */
+#include "reset_way.h"
 __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 0x01) {

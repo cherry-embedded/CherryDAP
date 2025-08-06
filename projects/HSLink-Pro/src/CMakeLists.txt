@@ -92,6 +92,7 @@ sdk_inc(../common)
 
 sdk_app_src(main.cpp)
 sdk_app_src(dp_common.c)
+sdk_app_src(reset_way.cpp)
 sdk_app_src(setting.cpp)
 sdk_app_src(led_extern.cpp)
 

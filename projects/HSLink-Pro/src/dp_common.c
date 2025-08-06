@@ -129,30 +129,3 @@ void Set_Clock_Delay(uint32_t clock)
         IO_Set_Clock_Delay(clock);
     }
 }
-// Use the CMSIS-Core definition if available.
-#if !defined(SCB_AIRCR_PRIGROUP_Pos)
-#define SCB_AIRCR_PRIGROUP_Pos              8U                                            /*!< SCB AIRCR: PRIGROUP Position */
-#define SCB_AIRCR_PRIGROUP_Msk             (7UL << SCB_AIRCR_PRIGROUP_Pos)                /*!< SCB AIRCR: PRIGROUP Mask */
-#endif
-
-uint8_t software_reset(void)
-{
-    if (DAP_Data.debug_port != DAP_PORT_SWD) {
-        return 1;
-    }
-    uint8_t ret = 0;
-    uint32_t val;
-    ret |= swd_read_word(NVIC_AIRCR, &val);
-    ret |= swd_write_word(NVIC_AIRCR, VECTKEY | (val & SCB_AIRCR_PRIGROUP_Msk) | SYSRESETREQ);
-    return ret;
-}
-
-void por_reset(void)
-{
-    if ((!VREF_ENABLE && HSLink_Setting.power.power_on)
-        || VREF_ENABLE) {
-        Power_Turn(false);
-        board_delay_ms(10);
-        Power_Turn(true);
-    }
-}
