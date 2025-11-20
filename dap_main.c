@@ -203,7 +203,7 @@ static const uint8_t config_descriptor[] = {
     MSC_DESCRIPTOR_INIT(MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #endif
 #if USBD_WEBUSB_ENABLE
-    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00),
+    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x04),
 #endif
 };
 
@@ -223,7 +223,7 @@ static const uint8_t other_speed_config_descriptor[] = {
     MSC_DESCRIPTOR_INIT(0x04, MSC_OUT_EP, MSC_IN_EP, DAP_PACKET_SIZE, 0x00),
 #endif
 #if USBD_WEBUSB_ENABLE
-    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00),
+    USB_INTERFACE_DESCRIPTOR_INIT(WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x04),
 #endif
 };
 
@@ -268,6 +268,7 @@ char *string_descriptors[] = {
     "CherryUSB",                        /* Manufacturer */
     "CherryUSB CMSIS-DAP",              /* Product */
     "00000000000000000123456789ABCDEF", /* Serial Number */
+    "CherryUSB WebUSB",
 };
 
 static const uint8_t device_quality_descriptor[] = {
