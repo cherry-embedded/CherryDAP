@@ -638,11 +638,11 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 0x01) {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
+            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
         }
     } else {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
+            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
             software_reset();
