@@ -230,7 +230,7 @@ void Setting_Init(void)
     update_settings();
 
     if (CheckHardwareVersion(1, 2, 0xFF)) {
-        HSLink_Global.reset_level = 1;
+        HSLink_Global.reset_level = 0;
     } else {
         HSLink_Global.reset_level = 0; // level when reset is active
     }

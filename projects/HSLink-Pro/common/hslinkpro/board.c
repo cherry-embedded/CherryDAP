@@ -171,6 +171,7 @@ static void load_hardware_version(void)
         return;
     }
     uint32_t version = ROM_API_TABLE_ROOT->otp_driver_if->read_from_shadow(HARDWARE_VER_ADDR);
+    version = 0x01020100;
     HSLink_Hardware_Version.major = (version >> 24) & 0xFF;
     HSLink_Hardware_Version.minor = (version >> 16) & 0xFF;
     HSLink_Hardware_Version.patch = (version >> 8) & 0xFF;
