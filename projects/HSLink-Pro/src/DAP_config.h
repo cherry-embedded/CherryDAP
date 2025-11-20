@@ -292,13 +292,12 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString(char *str)
 ///@}
 
 #include "hpm_gpio_drv.h"
-#include "hpm_gpiom_regs.h"
 #include "hpm_gpiom_drv.h"
-#include "hpm_soc.h"
 #include "hpm_csr_drv.h"
 #include "hpm_clock_drv.h"
 #include "HSLink_Pro_expansion.h"
 #include "led_extern.h"
+#include "reset_way.h"
 
 #define JTAG_SPI_BASE               HPM_SPI2
 #define JTAG_SPI_BASE_CLOCK_NAME    clock_spi2
@@ -635,16 +634,15 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
            - 0: issue a device hardware reset.
            - 1: release device hardware reset.
 */
-#include "reset_way.h"
 __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 0x01) {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
         }
     } else {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
             software_reset();
