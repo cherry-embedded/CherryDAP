@@ -206,7 +206,6 @@ static void settings(Document &root, char *res)
     };
     HSLink_Setting.swd_port_mode = mode(data["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(data["jtag_port_mode"].GetString());
-    HSLink_Setting.jtag_single_bit_mode = get_json_value(data, "jtag_single_bit_mode", false);
 
     const Value &power = data["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
@@ -319,7 +318,7 @@ static void get_setting(Document &root, char *res)
     writer.String(HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
 
     writer.Key("jtag_single_bit_mode");
-    writer.Bool(HSLink_Setting.jtag_single_bit_mode);
+    writer.Bool(1);
 
     writer.Key("power");
     writer.StartObject();

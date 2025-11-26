@@ -96,16 +96,15 @@ void SPI_PORT_JTAG_SETUP(void)
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST), 1);
 
-    if (HSLink_Setting.jtag_single_bit_mode) {
-        gpiom_configure_pin_control_setting(PIN_TCK);
-        gpiom_configure_pin_control_setting(PIN_TDO);
-        gpiom_configure_pin_control_setting(PIN_TDI);
-        gpiom_configure_pin_control_setting(IOC_PAD_PB10);
-        gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PB10), GPIO_GET_PIN_INDEX(IOC_PAD_PB10));
-        gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
-        gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
-        gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
-    }
+    gpiom_configure_pin_control_setting(PIN_TCK);
+    gpiom_configure_pin_control_setting(PIN_TDO);
+    gpiom_configure_pin_control_setting(PIN_TDI);
+    gpiom_configure_pin_control_setting(IOC_PAD_PB10);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PB10), GPIO_GET_PIN_INDEX(IOC_PAD_PB10));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
+    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
+
     jtag_emulation_init();
 }
 
@@ -273,54 +272,29 @@ static void jtag_spi_sequece(uint32_t info, const uint8_t *tdi, uint8_t *tdo)
                        GPIO_GET_PIN_INDEX(PIN_TMS), false);
     }
     if (n == 1) {
-        if (HSLink_Setting.jtag_single_bit_mode) {
-
-            HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-            HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
-            PIN_JTAG_DELAY();
-            if ((*tdi) & 0x01) {
-                gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI),
-                               true);
-            } else {
-                gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI),
-                               false);
-            }
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), true);
-            // PIN_JTAG_DELAY();
-            if (info & JTAG_SEQUENCE_TDO) {
-                (*tdo) = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO),
-                                       GPIO_GET_PIN_INDEX(PIN_TDO));
-            }
-            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), false);
-            // PIN_JTAG_DELAY();
-            HPM_IOC->PAD[PIN_TCK].FUNC_CTL =
-                    IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5) | IOC_PAD_FUNC_CTL_LOOP_BACK_SET(1);
-            HPM_IOC->PAD[PIN_TDO].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5);
-            HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5);
-            return;
+        HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+        HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+        PIN_JTAG_DELAY();
+        if ((*tdi) & 0x01) {
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI),
+                            true);
         } else {
-            switch ((*tdi) & 0x01) {
-                case 1:
-                    JTAG_SPI_BASE->DIRECTIO = 0x1040400;
-                    JTAG_SPI_BASE->DIRECTIO = 0x1060600; /* diretion = 1, slck_oe = 1, mosi_oe = 1, sclk_o = 1, mosi_o = 1 */
-                    if (is_tdo == true) {
-                        *(uint8_t *) (tdo) = (uint8_t) (JTAG_SPI_BASE->DIRECTIO >> 3);
-                    }
-                    JTAG_SPI_BASE->DIRECTIO = 0x1060400; /* diretion = 1, slck_oe = 1, mosi_oe = 1, sclk_o = 0, mosi_o = 1*/
-                    break;
-                case 0:
-                    JTAG_SPI_BASE->DIRECTIO = 0x1040000;
-                    JTAG_SPI_BASE->DIRECTIO = 0x1060200; /* diretion = 1, slck_oe = 1, mosi_oe = 1, sclk_o = 1, mosi_o = 0 */
-                    if (is_tdo == true) {
-                        *(uint8_t *) (tdo) = (uint8_t) (JTAG_SPI_BASE->DIRECTIO >> 3);
-                    }
-                    JTAG_SPI_BASE->DIRECTIO = 0x1060000; /* diretion = 1, slck_oe = 1, mosi_oe = 1, sclk_o = 0, mosi_o = 0 */
-                default:
-                    break;
-            }
-            JTAG_SPI_BASE->DIRECTIO = 0; /* diretion = 0 */
-            return;
+            gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI),
+                            false);
         }
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), true);
+        // PIN_JTAG_DELAY();
+        if (info & JTAG_SEQUENCE_TDO) {
+            (*tdo) = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO),
+                                    GPIO_GET_PIN_INDEX(PIN_TDO));
+        }
+        gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), false);
+        // PIN_JTAG_DELAY();
+        HPM_IOC->PAD[PIN_TCK].FUNC_CTL =
+                IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5) | IOC_PAD_FUNC_CTL_LOOP_BACK_SET(1);
+        HPM_IOC->PAD[PIN_TDO].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5);
+        HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(5);
+        return;
     }
 
     jtag_reset();

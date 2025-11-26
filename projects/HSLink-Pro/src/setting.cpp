@@ -110,9 +110,6 @@ static std::string stringify_settings()
     writer.Key("jtag_port_mode");
     writer.String(HSLink_Setting.jtag_port_mode == PORT_MODE_SPI ? "spi" : "gpio");
 
-    writer.Key("jtag_single_bit_mode");
-    writer.Bool(HSLink_Setting.jtag_single_bit_mode);
-
     writer.Key("power");
     {
         writer.StartObject();
@@ -171,7 +168,6 @@ static void parse_settings(std::string_view json)
 
     HSLink_Setting.swd_port_mode = mode(root["swd_port_mode"].GetString());
     HSLink_Setting.jtag_port_mode = mode(root["jtag_port_mode"].GetString());
-    HSLink_Setting.jtag_single_bit_mode = get_json_value(root, "jtag_single_bit_mode", false);
 
     const Value &power = root["power"];
     HSLink_Setting.power.vref = power["vref"].GetDouble();
