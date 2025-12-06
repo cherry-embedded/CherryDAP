@@ -60,9 +60,9 @@ jobs:
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
-          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_xip -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=0 . -B=./build
+          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_uf2 -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=0 . -B=./build
           cmake --build ./build
-          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_xip -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=1 . -B=./build
+          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_uf2 -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=1 . -B=./build
           cmake --build ./build
 
       - name: Merge Bin
