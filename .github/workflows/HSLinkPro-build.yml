@@ -60,32 +60,42 @@ jobs:
           export HPM_SDK_TOOLCHAIN_VARIANT=gcc
           export PYTHON_EXECUTABLE=~/HPM_PYTHON/bin/python3
 
-          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_uf2 -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" . -B=./build
+          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_xip -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=0 . -B=./build
+          cmake --build ./build
+          cmake -GNinja -DBOARD=hslinkpro -DHPM_BUILD_TYPE=flash_xip -Dpython_exec="~/HPM_PYTHON/bin/python3" -DCUSTOM_TARGET_TRIPLET=riscv-none-elf -DRV_ARCH="rv32imac_zicsr_zifencei" -DCONFIG_HARDWARE_ISOLATED=1 . -B=./build
           cmake --build ./build
 
       - name: Merge Bin
         run: |
           cd projects/HSLink-Pro
-          cp bootloader/build/output/HSLink-Pro-Bootloader.bin Merger.bin
-          dd if=src/build/output/HSLink-Pro.bin of=Merger.bin bs=1024 seek=127 conv=notrunc
+          cp bootloader/build/output/HSLink-Pro-Bootloader.bin HSLink-Pro-Merger.bin
+          cp bootloader/build/output/HSLink-Pro-Bootloader.bin HSLink-Iso-Merger.bin
+          dd if=src/build/output/HSLink-Pro.bin of=HSLink-Pro-Merger.bin bs=1024 seek=127 conv=notrunc
+          dd if=src/build/output/HSLink-Iso.bin of=HSLink-Iso-Merger.bin bs=1024 seek=127 conv=notrunc
 
       - run: |
           mkdir -p releases
           cd releases
-          cp ../projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin HSLink-Pro-Bootloader.bin
+          cp ../projects/HSLink-Pro/bootloader/build/output/HSLink-Pro-Bootloader.bin HSLink-Bootloader.bin
           cp ../projects/HSLink-Pro/src/build/output/HSLink-Pro.uf2 HSLink-Pro.uf2
+          cp ../projects/HSLink-Pro/src/build/output/HSLink-Iso.uf2 HSLink-Iso.uf2
           cp ../projects/HSLink-Pro/src/build/output/HSLink-Pro.bin HSLink-Pro.bin
-          cp ../projects/HSLink-Pro/Merger.bin Merger.bin
+          cp ../projects/HSLink-Pro/src/build/output/HSLink-Iso.bin HSLink-Iso.bin
+          cp ../projects/HSLink-Pro/HSLink-Pro-Merger.bin HSLink-Pro-Merger.bin
+          cp ../projects/HSLink-Pro/HSLink-Iso-Merger.bin HSLink-Iso-Merger.bin
       
       - name: Upload file
         uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: |
-            releases/HSLink-Pro-Bootloader.bin
+            releases/HSLink-Bootloader.bin
             releases/HSLink-Pro.uf2
+            releases/HSLink-Iso.uf2
             releases/HSLink-Pro.bin
-            releases/Merger.bin
+            releases/HSLink-Iso.bin
+            releases/HSLink-Pro-Merger.bin
+            releases/HSLink-Iso-Merger.bin
       
   release:
     runs-on: ubuntu-latest
