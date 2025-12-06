@@ -389,6 +389,9 @@ __STATIC_INLINE void PORT_OFF(void)
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
+    HPM_IOC->PAD[PIN_TMS_IN].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
+    HPM_IOC->PAD[PIN_TMS_IN].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
     HPM_IOC->PAD[PIN_TDI].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
     HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
@@ -414,6 +417,10 @@ __STATIC_INLINE void PORT_OFF(void)
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), PIN_GPIOM);
+
+    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN));
+    gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN));
+    gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN), PIN_GPIOM);
 
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
@@ -472,7 +479,11 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-    uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+	#if HSLINK_ISOLATE
+    uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN));
+	#else
+	uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+	#endif
     __asm volatile("fence io, io");
     return sta;
 }
@@ -500,7 +511,11 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-    uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+	#if HSLINK_ISOLATE
+    uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN));
+	#else
+	uint32_t sta = gpio_read_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+	#endif
     __asm volatile("fence io, io");
     return sta;
 }
@@ -521,10 +536,12 @@ called prior \ref PIN_SWDIO_OUT function calls.
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
+#if !HSLINK_ISOLATE
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1);
     gpiom_configure_pin_control_setting(PIN_TMS);
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+#endif
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -534,11 +551,13 @@ called prior \ref PIN_SWDIO_IN function calls.
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
+#if !HSLINK_ISOLATE
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2);
     HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     gpio_disable_pin_interrupt(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
     gpiom_set_pin_controller(HPM_GPIOM, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), gpiom_soc_gpio0);
+#endif
 }
 
 

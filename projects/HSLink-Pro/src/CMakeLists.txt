@@ -3,7 +3,12 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(APP_NAME "HSLink-Pro")
+if (DEFINED CONFIG_HARDWARE_ISOLATED AND (CONFIG_HARDWARE_ISOLATED EQUAL "1"))
+    set(APP_NAME "HSLink-Iso")
+else ()
+    set(APP_NAME "HSLink-Pro")
+endif ()
+
 set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 
 set(CONFIG_USB_DEVICE 1)
@@ -30,6 +35,12 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.version)
     file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/.version BUILD_VERSION)
     string(STRIP ${BUILD_VERSION} BUILD_VERSION)
     set(CONFIG_BUILD_VERSION ${BUILD_VERSION})
+endif ()
+
+if (DEFINED CONFIG_HARDWARE_ISOLATED AND (CONFIG_HARDWARE_ISOLATED EQUAL "1"))
+    sdk_compile_definitions(-DHSLINK_ISOLATE=1)
+else()
+    sdk_compile_definitions(-DHSLINK_ISOLATE=0)
 endif ()
 
 if (CONFIG_BUILD_VERSION)
