@@ -122,6 +122,14 @@ void SPI_Set_Clock_Delay(uint32_t clock)
 
 void Set_Clock_Delay(uint32_t clock)
 {
+#if HSLINK_ISOLATE
+    // the isolator olny works below 20MHz
+    // so we set a limit avoid communication failure
+    if (clock > 20000000)
+    {
+        clock = 20000000;
+    }
+#endif
     if (((HSLink_Setting.swd_port_mode == PORT_MODE_SPI) && (DAP_Data.debug_port == DAP_PORT_SWD)) ||
         ((HSLink_Setting.jtag_port_mode == PORT_MODE_SPI) && (DAP_Data.debug_port == DAP_PORT_JTAG))) {
         SPI_Set_Clock_Delay(clock);
