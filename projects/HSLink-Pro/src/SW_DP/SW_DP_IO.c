@@ -87,10 +87,13 @@ void IO_PORT_SWD_SETUP (void) {
 
     gpiom_configure_pin_control_setting(PIN_TCK);
     gpiom_configure_pin_control_setting(PIN_TMS);
+    gpiom_configure_pin_control_setting(PIN_TMS_IN);
+    gpiom_configure_pin_control_setting(SWDIO_DIR);
     gpiom_configure_pin_control_setting(PIN_SRST);
 
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS_IN), GPIO_GET_PIN_INDEX(PIN_TMS_IN));
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
 
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0); // 默认SWDIO为输入

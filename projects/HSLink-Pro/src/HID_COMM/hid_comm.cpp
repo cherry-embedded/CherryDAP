@@ -134,7 +134,11 @@ static void Hello(Document &root, char *res)
     writer.String(serial_number_dynamic);
 
     writer.Key("model");
+#if HSLINK_ISOLATE
+    writer.String("HSLink-Iso");
+#else
     writer.String("HSLink-Pro");
+#endif
 
     writer.Key("version");
     char version[32];

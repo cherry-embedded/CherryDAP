@@ -42,7 +42,9 @@ void SPI_PORT_SWD_SETUP(void)
     board_init_spi_pins(SWD_SPI_BASE);
     HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_SR_MASK | IOC_PAD_PAD_CTL_SPD_SET(3);
     HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_SR_MASK | IOC_PAD_PAD_CTL_SPD_SET(3) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(0);
-
+#if HSLINK_ISOLATE
+    HPM_IOC->PAD[PIN_TMS_IN].PAD_CTL = IOC_PAD_PAD_CTL_SR_MASK | IOC_PAD_PAD_CTL_SPD_SET(3) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(0);
+#endif
     HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
     HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
     gpiom_configure_pin_control_setting(PIN_SRST);
@@ -235,7 +237,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
             /* Read data */
             gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
             SWD_SPI_BASE->TRANSCTRL = 0x2000000; /* only read mode*/
+		#if HSLINK_ISOLATE
+            SWD_SPI_BASE->TRANSFMT = 0x1F08; /* datalen = 32bit, mosibidir = 0, lsb=1 */
+		#else
             SWD_SPI_BASE->TRANSFMT = 0x1F18; /* datalen = 32bit, mosibidir = 1, lsb=1 */
+		#endif
             SWD_SPI_BASE->CMD = 0xFF;
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
             };
@@ -253,7 +259,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
             if (DAP_Data.swd_conf.turnaround > 0) {
                 gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
                 SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
+			#if HSLINK_ISOLATE
+                SWD_SPI_BASE->TRANSFMT = 0x0008; /* datalen = 1bit, mosibidir = 0, lsb=1 */
+			#else
                 SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+			#endif
                 spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.swd_conf.turnaround);
                 SWD_SPI_BASE->CMD = 0xFF;
                 SWD_SPI_BASE->DATA = 0;
@@ -274,7 +284,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
         } else {
             gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
             SWD_SPI_BASE->TRANSCTRL = 0x1000000; /* only write mode*/
+        #if HSLINK_ISOLATE
+            SWD_SPI_BASE->TRANSFMT = 0x1F08; /* datalen = 32bit, mosibidir = 0, lsb=1 */
+		#else
             SWD_SPI_BASE->TRANSFMT = 0x1F18; /* datalen = 32bit, mosibidir = 1, lsb=1 */
+		#endif
             SWD_SPI_BASE->CMD = 0xFF;
             SWD_SPI_BASE->DATA = (*data);
             while (SWD_SPI_BASE->STATUS & SPI_STATUS_SPIACTIVE_MASK) {
@@ -293,7 +307,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
         if (DAP_Data.transfer.idle_cycles > 0) {
             gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
             SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
+        #if HSLINK_ISOLATE
+            SWD_SPI_BASE->TRANSFMT = 0x0008; /* datalen = 1bit, mosibidir = 0, lsb=1 */
+		#else
             SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+		#endif
             spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.transfer.idle_cycles);
             SWD_SPI_BASE->CMD = 0xFF;
             for (int i = 0; i < DAP_Data.transfer.idle_cycles; i++) {
@@ -313,7 +331,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
     if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
         gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 0);
         SWD_SPI_BASE->TRANSCTRL = 0x02000000; /* only read mode*/
+    #if HSLINK_ISOLATE
+        SWD_SPI_BASE->TRANSFMT = 0x0008; /* datalen = 1bit, mosibidir = 0, lsb=1 */
+	#else
         SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+	#endif
         /* Dummy Read RDATA[0:31] + Parity */
         if (DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) != 0U)) {
             spi_set_write_data_count(SWD_SPI_BASE, 33);
@@ -328,7 +350,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
         if (DAP_Data.swd_conf.turnaround > 0) {
             gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
             SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
+        #if HSLINK_ISOLATE
+            SWD_SPI_BASE->TRANSFMT = 0x0008; /* datalen = 1bit, mosibidir = 0, lsb=1 */
+		#else
             SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+		#endif
             spi_set_write_data_count(SWD_SPI_BASE, DAP_Data.swd_conf.turnaround);
             SWD_SPI_BASE->CMD = 0xFF;
             SWD_SPI_BASE->DATA = 0;
@@ -341,7 +367,11 @@ uint8_t  SPI_SWD_Transfer(uint32_t request, uint32_t *data)
         if (DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) == 0U)) {
             gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1);
             SWD_SPI_BASE->TRANSCTRL = 0x01000000; /* only write mode*/
+       #if HSLINK_ISOLATE
+            SWD_SPI_BASE->TRANSFMT = 0x0008; /* datalen = 1bit, mosibidir = 0, lsb=1 */
+	   #else
             SWD_SPI_BASE->TRANSFMT = 0x0018; /* datalen = 1bit, mosibidir = 1, lsb=1 */
+	   #endif
             spi_set_write_data_count(SWD_SPI_BASE, 33);
             SWD_SPI_BASE->CMD = 0xFF;
             for (i = 0; i < 33; i++) {
@@ -398,7 +428,11 @@ static void swd_emulation_init(void)
     format_config.master_config.addr_len_in_bytes = 1U;
     format_config.common_config.data_len_in_bits = 1;
     format_config.common_config.data_merge = false;
+#if HSLINK_ISOLATE
+    format_config.common_config.mosi_bidir = false;
+#else
     format_config.common_config.mosi_bidir = true;
+#endif
     format_config.common_config.lsb = true;
     format_config.common_config.mode = spi_master_mode;
     format_config.common_config.cpol = spi_sclk_low_idle;
