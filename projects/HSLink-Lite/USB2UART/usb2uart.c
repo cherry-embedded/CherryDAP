@@ -8,21 +8,36 @@
 #include "usb2uart.h"
 #include "setting.h"
 
+#if defined(CONFIG_HPM5301EVKLITE) && (CONFIG_HPM5301EVKLITE == 1)
+#define PIN_UART_TX IOC_PAD_PB15
+#define PIN_UART_RX IOC_PAD_PB14
+
+#define UART_BASE                  HPM_UART3
+#define UART_IRQ                   IRQn_UART3
+#define UART_CLK_NAME              clock_uart3
+#define UART_RX_DMA                HPM_DMA_SRC_UART3_RX
+#define UART_TX_DMA                HPM_DMA_SRC_UART3_TX
+
+#else
+#define PIN_UART_TX IOC_PAD_PA08
+#define PIN_UART_RX IOC_PAD_PA09
+
 #define UART_BASE                  HPM_UART2
 #define UART_IRQ                   IRQn_UART2
 #define UART_CLK_NAME              clock_uart2
 #define UART_RX_DMA                HPM_DMA_SRC_UART2_RX
+#define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
+
+#endif
+
 #define UART_RX_DMA_RESOURCE_INDEX (0U)
+#define UART_TX_DMA_RESOURCE_INDEX (1U)
+
 #define UART_RX_DMA_BUFFER_SIZE    (8192U)
 #define UART_RX_DMA_BUFFER_COUNT   (3)
 
-#define UART_TX_DMA                HPM_DMA_SRC_UART2_TX
-#define UART_TX_DMA_RESOURCE_INDEX (1U)
-// #define UART_TX_DMA_BUFFER_SIZE    (8192U)
-
 static uint32_t rb_write_pos = 0;
-// ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
-// uint8_t uart_tx_buf[UART_TX_DMA_BUFFER_SIZE];
+
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(4)
 uint8_t uart_rx_buf[UART_RX_DMA_BUFFER_COUNT][UART_RX_DMA_BUFFER_SIZE];
 ATTR_PLACE_AT_NONCACHEABLE_BSS_WITH_ALIGNMENT(8)
