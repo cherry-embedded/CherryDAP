@@ -290,6 +290,9 @@ void IO_PORT_JTAG_SETUP (void) {
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_CONNECTED), GPIO_GET_PIN_INDEX(PIN_LED_CONNECTED));
 #endif
 
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA26);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA27);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA28);
     gpiom_configure_pin_control_setting(PIN_TCK);
     gpiom_configure_pin_control_setting(PIN_TMS);
     gpiom_configure_pin_control_setting(PIN_TDI);

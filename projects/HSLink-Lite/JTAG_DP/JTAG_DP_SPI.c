@@ -73,6 +73,9 @@ void SPI_PORT_JTAG_SETUP(void)
     HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
     HPM_IOC->PAD[PIN_JTAG_TRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
 
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA26);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA27);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA28);
     gpiom_configure_pin_control_setting(PIN_TCK);
     gpiom_configure_pin_control_setting(PIN_TDO);
     gpiom_configure_pin_control_setting(PIN_TDI);
