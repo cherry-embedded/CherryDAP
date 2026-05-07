@@ -114,8 +114,8 @@ int main(void)
     HSLink_Setting.reset = RESET_NRST;
     HSLink_Setting.jtag_20pin_compatible = false;
     HSLink_Setting.boost = false;
-    HSLink_Setting.swd_port_mode = PORT_MODE_SPI;
-    HSLink_Setting.jtag_port_mode = PORT_MODE_SPI;
+    HSLink_Setting.swd_port_mode = PORT_MODE_GPIO;
+    HSLink_Setting.jtag_port_mode = PORT_MODE_GPIO;
 
     serial_number_init();
     dma_mgr_init();
