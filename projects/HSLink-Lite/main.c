@@ -32,12 +32,19 @@ static inline void SWDIO_DIR_Init(void)
 }
 
 static inline void Port_Enable_Init(void) {
-    // PA04
     HPM_IOC->PAD[IOC_PAD_PA04].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
 
     gpiom_configure_pin_control_setting(IOC_PAD_PA04);
     gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA04), GPIO_GET_PIN_INDEX(IOC_PAD_PA04));
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA04), GPIO_GET_PIN_INDEX(IOC_PAD_PA04), 1);
+}
+
+static void Power_Enable_Init(void) {
+    HPM_IOC->PAD[IOC_PAD_PA31].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    gpiom_configure_pin_control_setting(IOC_PAD_PA31);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA31), GPIO_GET_PIN_INDEX(IOC_PAD_PA31));
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(IOC_PAD_PA31), GPIO_GET_PIN_INDEX(IOC_PAD_PA31), 1);
 }
 
 GPTMR_Type *const USER_PWM = HPM_GPTMR0;
@@ -123,7 +130,9 @@ int main(void)
     SWDIO_DIR_Init();
 
     Port_Enable_Init();
+    Power_Enable_Init();
     Power_PWM_Init();
+    Power_Set_TVCC_Voltage(3.3);
 
     uartx_preinit();
     chry_dap_init(0, HPM_USB0_BASE);
@@ -132,7 +141,6 @@ int main(void)
         chry_dap_handle();
         chry_dap_usb2uart_handle();
         usb2uart_handler();
-        Power_Set_TVCC_Voltage(3.3);
     }
 
     return 0;
