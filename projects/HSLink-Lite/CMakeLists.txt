@@ -84,6 +84,7 @@ sdk_app_src(dp_common.c)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Lite")
 sdk_compile_definitions(-DCONFIG_CHERRYDAP_USE_CUSTOM_HID=0)
+#sdk_compile_definitions(-DCONFIG_HPM5301EVKLITE=1)
 
 sdk_compile_options(-O2)
 
