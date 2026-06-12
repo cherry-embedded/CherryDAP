@@ -84,9 +84,11 @@ sdk_app_src(dp_common.c)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Lite")
 sdk_compile_definitions(-DCONFIG_CHERRYDAP_USE_CUSTOM_HID=0)
-#sdk_compile_definitions(-DCONFIG_HPM5301EVKLITE=1)
+sdk_compile_definitions(-DUSE_NONVECTOR_MODE=1)
+sdk_compile_definitions(-DDISABLE_IRQ_PREEMPTIVE=1)
+# sdk_compile_definitions(-DCONFIG_HPM5301EVKLITE=1)
 
-sdk_compile_options(-O2)
+sdk_compile_options(-O3)
 
 # 执行完之后转换为uf2
 # add_custom_command(
