@@ -353,6 +353,7 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
             usbtx_idle_flag = 0;
             uarttx_idle_flag = 0;
             config_uart_transfer = 0;
+            memset((void *)&g_cdc_lincoding, 0, sizeof(g_cdc_lincoding));
             break;
         case USBD_EVENT_CONNECTED:
             break;
