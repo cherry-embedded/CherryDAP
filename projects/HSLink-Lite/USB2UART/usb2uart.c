@@ -164,8 +164,57 @@ void uartx_preinit(void)
 void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
 {
     uart_config_t config = { 0 };
+    dma_mgr_chn_conf_t chg_config;
+    dma_resource_t *resource = NULL;
 
     intc_m_disable_irq(UART_IRQ);
+    dma_mgr_disable_dma_irq(&dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX]);
+    dma_mgr_disable_dma_irq(&dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX]);
+    dma_mgr_disable_channel(&dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX]);
+    dma_mgr_disable_channel(&dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX]);
+
+    resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
+
+    dma_mgr_get_default_chn_config(&chg_config);
+    chg_config.src_width = DMA_MGR_TRANSFER_WIDTH_BYTE;
+    chg_config.dst_width = DMA_MGR_TRANSFER_WIDTH_BYTE;
+
+    chg_config.src_mode = DMA_MGR_HANDSHAKE_MODE_HANDSHAKE;
+    chg_config.src_addr_ctrl = DMA_ADDRESS_CONTROL_FIXED;
+    chg_config.src_addr = (uint32_t)&UART_BASE->RBR;
+    chg_config.dst_mode = DMA_MGR_HANDSHAKE_MODE_NORMAL;
+    chg_config.dst_addr_ctrl = DMA_MGR_ADDRESS_CONTROL_INCREMENT;
+    chg_config.size_in_byte = UART_RX_DMA_BUFFER_SIZE;
+    chg_config.en_dmamux = true;
+    chg_config.dmamux_src = UART_RX_DMA;
+    chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf);
+    chg_config.linked_ptr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptor);
+    chg_config.interrupt_mask &= ~(DMA_MGR_INTERRUPT_MASK_HALF_TC | DMA_MGR_INTERRUPT_MASK_TC);
+    if (dma_mgr_config_linked_descriptor(resource, &chg_config, (dma_mgr_linked_descriptor_t *)&rx_descriptor) != status_success) {
+        printf("generate dma desc fail\n");
+    }
+
+    dma_mgr_setup_channel(resource, &chg_config);
+    dma_mgr_enable_channel(resource);
+    dma_mgr_install_chn_half_tc_callback(resource, dma_channel_tc_callback, NULL);
+    dma_mgr_install_chn_tc_callback(resource, dma_channel_tc_callback, NULL);
+    dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_HALF_TC | DMA_MGR_INTERRUPT_MASK_TC);
+    dma_mgr_enable_dma_irq_with_priority(resource, 1);
+
+    resource = &dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX];
+
+    chg_config.src_mode = DMA_MGR_HANDSHAKE_MODE_NORMAL;
+    chg_config.src_addr_ctrl = DMA_MGR_ADDRESS_CONTROL_INCREMENT;
+    chg_config.dst_mode = DMA_MGR_HANDSHAKE_MODE_HANDSHAKE;
+    chg_config.dst_addr_ctrl = DMA_ADDRESS_CONTROL_FIXED;
+    chg_config.dst_addr = (uint32_t)&UART_BASE->THR;
+    chg_config.en_dmamux = true;
+    chg_config.dmamux_src = UART_TX_DMA;
+    chg_config.linked_ptr = (uint32_t)NULL;
+    dma_mgr_setup_channel(resource, &chg_config);
+    dma_mgr_install_chn_tc_callback(resource, dma_channel_tc_callback, NULL);
+    dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_TC);
+    dma_mgr_enable_dma_irq_with_priority(resource, 1);
 
     uart_default_config(UART_BASE, &config);
     config.baudrate = line_coding->dwDTERate;
@@ -185,6 +234,7 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     uart_clear_rxline_idle_flag(UART_BASE);
     uart_reset_rx_fifo(UART_BASE);
     uart_reset_tx_fifo(UART_BASE);
+
     intc_m_enable_irq_with_priority(UART_IRQ, 2);
 }
 
@@ -197,6 +247,8 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
     }
     g_uart_tx_transfer_length = len;
     buf_addr = core_local_mem_to_sys_address(HPM_CORE0, (uint32_t)data);
+
+    dma_mgr_disable_channel(tx_resource);
     dma_mgr_set_chn_src_addr(tx_resource, buf_addr);
     dma_mgr_set_chn_transize(tx_resource, len);
     dma_mgr_enable_channel(tx_resource);
@@ -204,53 +256,15 @@ void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
 
 static hpm_stat_t board_uart_dma_config(void)
 {
-    dma_mgr_chn_conf_t chg_config;
     dma_resource_t *resource = NULL;
 
-    dma_mgr_get_default_chn_config(&chg_config);
-    chg_config.src_width = DMA_MGR_TRANSFER_WIDTH_BYTE;
-    chg_config.dst_width = DMA_MGR_TRANSFER_WIDTH_BYTE;
     /* uart rx dma config */
     resource = &dma_resource_pools[UART_RX_DMA_RESOURCE_INDEX];
     if (dma_mgr_request_resource(resource) == status_success) {
-        chg_config.src_mode = DMA_MGR_HANDSHAKE_MODE_HANDSHAKE;
-        chg_config.src_addr_ctrl = DMA_ADDRESS_CONTROL_FIXED;
-        chg_config.src_addr = (uint32_t)&UART_BASE->RBR;
-        chg_config.dst_mode = DMA_MGR_HANDSHAKE_MODE_NORMAL;
-        chg_config.dst_addr_ctrl = DMA_MGR_ADDRESS_CONTROL_INCREMENT;
-        chg_config.size_in_byte = UART_RX_DMA_BUFFER_SIZE;
-        chg_config.en_dmamux = true;
-        chg_config.dmamux_src = UART_RX_DMA;
-        chg_config.dst_addr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)uart_rx_buf);
-        chg_config.linked_ptr = core_local_mem_to_sys_address(BOARD_RUNNING_CORE, (uint32_t)&rx_descriptor);
-        chg_config.interrupt_mask &= ~(DMA_MGR_INTERRUPT_MASK_HALF_TC | DMA_MGR_INTERRUPT_MASK_TC);
-        if (dma_mgr_config_linked_descriptor(resource, &chg_config, (dma_mgr_linked_descriptor_t *)&rx_descriptor) != status_success) {
-            printf("generate dma desc fail\n");
-            return status_fail;
-        }
-
-        dma_mgr_setup_channel(resource, &chg_config);
-        dma_mgr_enable_channel(resource);
-        dma_mgr_install_chn_half_tc_callback(resource, dma_channel_tc_callback, NULL);
-        dma_mgr_install_chn_tc_callback(resource, dma_channel_tc_callback, NULL);
-        dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_HALF_TC | DMA_MGR_INTERRUPT_MASK_TC);
-        dma_mgr_enable_dma_irq_with_priority(resource, 1);
     }
     /* uart tx dma config */
     resource = &dma_resource_pools[UART_TX_DMA_RESOURCE_INDEX];
     if (dma_mgr_request_resource(resource) == status_success) {
-        chg_config.src_mode = DMA_MGR_HANDSHAKE_MODE_NORMAL;
-        chg_config.src_addr_ctrl = DMA_MGR_ADDRESS_CONTROL_INCREMENT;
-        chg_config.dst_mode = DMA_MGR_HANDSHAKE_MODE_HANDSHAKE;
-        chg_config.dst_addr_ctrl = DMA_ADDRESS_CONTROL_FIXED;
-        chg_config.dst_addr = (uint32_t)&UART_BASE->THR;
-        chg_config.en_dmamux = true;
-        chg_config.dmamux_src = UART_TX_DMA;
-        chg_config.linked_ptr = (uint32_t)NULL;
-        dma_mgr_setup_channel(resource, &chg_config);
-        dma_mgr_install_chn_tc_callback(resource, dma_channel_tc_callback, NULL);
-        dma_mgr_enable_chn_irq(resource, DMA_MGR_INTERRUPT_MASK_TC);
-        dma_mgr_enable_dma_irq_with_priority(resource, 1);
     }
     return status_success;
 }
