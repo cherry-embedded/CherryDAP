@@ -619,11 +619,10 @@ void chry_dap_handle(void)
 void usbd_cdc_acm_set_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding)
 {
     (void)busid;
-    if (memcmp(line_coding, (uint8_t *)&g_cdc_lincoding, sizeof(struct cdc_line_coding)) != 0) {
-        memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
-        config_uart = 1;
-        config_uart_transfer = 0;
-    }
+
+    memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
+    config_uart = 1;
+    config_uart_transfer = 0;
 }
 
 void usbd_cdc_acm_get_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding)
