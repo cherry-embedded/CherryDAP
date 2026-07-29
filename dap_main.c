@@ -43,7 +43,7 @@
 
 #define WEBUSB_INTF_NUM (3 + CONFIG_CHERRYDAP_USE_CUSTOM_HID + CONFIG_CHERRYDAP_USE_MSC)
 
-#define WEBUSB_URL_STRINGS                                 \
+#define WEBUSB_URL_STRINGS \
     'c', 'h', 'e', 'r', 'r', 'y', 'd', 'a', 'p', '.', 'c', 'h', 'e', 'r', 'r', 'y', '-', 'e', 'm', 'b', 'e', 'd', 'd', 'e', 'd', '.', 'o', 'r', 'g',
 
 __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
@@ -139,7 +139,7 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
 #endif
 };
 
-#define URL_DESCRIPTOR_LENGTH    (3 + 29)
+#define URL_DESCRIPTOR_LENGTH (3 + 29)
 
 const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
     URL_DESCRIPTOR_LENGTH,
@@ -229,36 +229,36 @@ static const uint8_t other_speed_config_descriptor[] = {
 
 /*!< custom hid report descriptor */
 const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
-        /* USER CODE BEGIN 0 */
-        0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
-        0x09, 0x01, /* USAGE (Vendor Usage 1) */
-        0xa1, 0x01, /* COLLECTION (Application) */
-        0x85, 0x02, /*   REPORT ID (0x02) */
-        0x09, 0x02, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0x81, 0x02, /*   INPUT (Data,Var,Abs) */
-        /* <___________________________________________________> */
-        0x85, 0x01, /*   REPORT ID (0x01) */
-        0x09, 0x03, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0x91, 0x02, /*   OUTPUT (Data,Var,Abs) */
+    /* USER CODE BEGIN 0 */
+    0x06, 0x00, 0xff, /* USAGE_PAGE (Vendor Defined Page 1) */
+    0x09, 0x01,       /* USAGE (Vendor Usage 1) */
+    0xa1, 0x01,       /* COLLECTION (Application) */
+    0x85, 0x02,       /*   REPORT ID (0x02) */
+    0x09, 0x02,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0x81, 0x02,       /*   INPUT (Data,Var,Abs) */
+    /* <___________________________________________________> */
+    0x85, 0x01,       /*   REPORT ID (0x01) */
+    0x09, 0x03,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0x91, 0x02,       /*   OUTPUT (Data,Var,Abs) */
 
-        /* <___________________________________________________> */
-        0x85, 0x03, /*   REPORT ID (0x03) */
-        0x09, 0x04, /*   USAGE (Vendor Usage 1) */
-        0x15, 0x00, /*   LOGICAL_MINIMUM (0) */
-        0x25, 0xff, /*   LOGICAL_MAXIMUM (255) */
-        0x75, 0x08, /*   REPORT_SIZE (8) */
-        0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
-        0xb1, 0x02, /*   FEATURE (Data,Var,Abs) */
-        /* USER CODE END 0 */
-        0xC0 /*     END_COLLECTION	             */
+    /* <___________________________________________________> */
+    0x85, 0x03,       /*   REPORT ID (0x03) */
+    0x09, 0x04,       /*   USAGE (Vendor Usage 1) */
+    0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
+    0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
+    0x75, 0x08,       /*   REPORT_SIZE (8) */
+    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0xb1, 0x02,       /*   FEATURE (Data,Var,Abs) */
+    /* USER CODE END 0 */
+    0xC0 /*     END_COLLECTION	             */
 };
 
 char serial_number_dynamic[36] = "00000000000000000123456789ABCDEF"; // Dynamic serial number
@@ -329,17 +329,16 @@ static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t USB_Request[DAP_PACKET_COU
 static USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t USB_Response[DAP_PACKET_COUNT][DAP_PACKET_SIZE]; // Response Buffer
 static uint16_t USB_RespSize[DAP_PACKET_COUNT];                                                        // Response Size
 
-volatile struct cdc_line_coding g_cdc_lincoding;
-volatile uint8_t config_uart = 0;
-volatile uint8_t config_uart_transfer = 0;
-
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t uartrx_ringbuffer[CONFIG_UARTRX_RINGBUF_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usbrx_ringbuffer[CONFIG_USBRX_RINGBUF_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usb_tmpbuffer[DAP_PACKET_SIZE];
 
+static volatile struct cdc_line_coding g_cdc_lincoding;
+static volatile uint8_t config_uart = 0;
+static volatile uint8_t config_uart_transfer = 0;
 static volatile uint8_t usbrx_idle_flag = 0;
-static volatile uint8_t usbtx_idle_flag = 0;
-static volatile uint8_t uarttx_idle_flag = 0;
+static volatile uint8_t usbtx_idle_flag = 1;
+static volatile uint8_t uarttx_idle_flag = 1;
 
 USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_uartrx;
 USB_NOCACHE_RAM_SECTION chry_ringbuffer_t g_usbrx;
@@ -350,10 +349,6 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
     switch (event) {
         case USBD_EVENT_RESET:
             usbrx_idle_flag = 0;
-            usbtx_idle_flag = 0;
-            uarttx_idle_flag = 0;
-            config_uart_transfer = 0;
-            memset((void *)&g_cdc_lincoding, 0, sizeof(g_cdc_lincoding));
             break;
         case USBD_EVENT_CONNECTED:
             break;
@@ -432,20 +427,13 @@ void usbd_cdc_acm_bulk_out(uint8_t busid, uint8_t ep, uint32_t nbytes)
 void usbd_cdc_acm_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void)busid;
-    uint32_t size;
-    uint8_t *buffer;
 
     chry_ringbuffer_linear_read_done(&g_uartrx, nbytes);
     if ((nbytes % DAP_PACKET_SIZE) == 0 && nbytes) {
         /* send zlp */
         usbd_ep_start_write(0, CDC_IN_EP, NULL, 0);
     } else {
-        if (chry_ringbuffer_get_used(&g_uartrx)) {
-            buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
-            usbd_ep_start_write(0, CDC_IN_EP, buffer, size);
-        } else {
-            usbtx_idle_flag = 1;
-        }
+        usbtx_idle_flag = 1;
     }
 }
 
@@ -471,13 +459,13 @@ struct usbd_endpoint cdc_in_ep = {
 
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
 struct usbd_endpoint hid_custom_in_ep = {
-        .ep_addr = HID_IN_EP,
-        .ep_cb = usbd_hid_custom_in_callback,
+    .ep_addr = HID_IN_EP,
+    .ep_cb = usbd_hid_custom_in_callback,
 };
 
 struct usbd_endpoint hid_custom_out_ep = {
-        .ep_addr = HID_OUT_EP,
-        .ep_cb = usbd_hid_custom_out_callback,
+    .ep_addr = HID_OUT_EP,
+    .ep_cb = usbd_hid_custom_out_callback,
 };
 #endif
 
@@ -620,9 +608,11 @@ void usbd_cdc_acm_set_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_c
 {
     (void)busid;
 
-    memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
-    config_uart = 1;
-    config_uart_transfer = 0;
+    if (memcmp((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding)) != 0 && line_coding->dwDTERate != 0) {
+        memcpy((uint8_t *)&g_cdc_lincoding, line_coding, sizeof(struct cdc_line_coding));
+        config_uart = 1;
+        config_uart_transfer = 0;
+    }
 }
 
 void usbd_cdc_acm_get_line_coding(uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding)
@@ -635,6 +625,10 @@ void chry_dap_usb2uart_handle(void)
 {
     uint32_t size;
     uint8_t *buffer;
+
+    if (usb_device_is_configured(0) == 0) {
+        return;
+    }
 
     if (config_uart) {
         /* disable irq here */
@@ -694,16 +688,9 @@ __WEAK void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_
 /* called by user */
 void chry_dap_usb2uart_uart_send_complete(uint32_t size)
 {
-    uint8_t *buffer;
-
     chry_ringbuffer_linear_read_done(&g_usbrx, size);
 
-    if (chry_ringbuffer_get_used(&g_usbrx)) {
-        buffer = chry_ringbuffer_linear_read_setup(&g_usbrx, &size);
-        chry_dap_usb2uart_uart_send_bydma(buffer, size);
-    } else {
-        uarttx_idle_flag = 1;
-    }
+    uarttx_idle_flag = 1;
 }
 
 /* implment by user */
