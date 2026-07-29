@@ -235,6 +235,7 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     uart_reset_rx_fifo(UART_BASE);
     uart_reset_tx_fifo(UART_BASE);
 
+    rb_write_pos = 0;
     intc_m_enable_irq_with_priority(UART_IRQ, 2);
 }
 
