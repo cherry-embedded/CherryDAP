@@ -19,5 +19,5 @@ CherryDAP is a DAPLink template based on [CherryUSB](https://github.com/sakumisu
 
 - [bl616](projects/bl616/README.md)
 - [esp32s3](projects/esp32s3/README.md)
-- [hpm5301evklite](projects/hpm5301evklite/README.md)
+- [HSLink-Lite](projects/HSLink-Lite/README.md)
 - [HSLink-Pro](projects/HSLink-Pro/README.md)
