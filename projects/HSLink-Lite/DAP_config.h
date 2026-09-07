@@ -93,6 +93,8 @@ This information includes:
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define DAP_JTAG                1               ///< JTAG Mode: 1 = available, 0 = not available.
 
+#define DAP_CJTAG               1               ///< CJTAG Mode: 1 = available, 0 = not available.
+
 /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
 /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
 #define DAP_JTAG_DEV_CNT        8U              ///< Maximum number of JTAG devices on scan chain.
@@ -390,6 +392,9 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 void PORT_SWD_SETUP(void);
 
+void PORT_CJTAG_SETUP(void);
+bool debug_port_is_cjtag(void);
+
 /** Disable JTAG/SWD I/O Pins.
 Disables the DAP Hardware I/O pins which configures:
  - TCK/SWCLK, TMS/SWDIO, TDI, TDO, nTRST, nRESET to High-Z mode.
@@ -425,6 +430,10 @@ Set the SWCLK/TCK DAP hardware I/O pin to high level.;
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
 {
+    if (debug_port_is_cjtag() == true) {
+        return;
+    }
+
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), true);
     __asm volatile("fence io, io");
 }
@@ -434,6 +443,10 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
+    if (debug_port_is_cjtag() == true) {
+        return;
+    }
+
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK), false);
     __asm volatile("fence io, io");
 }
@@ -456,6 +469,10 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
+    if (debug_port_is_cjtag() == true) {
+        return;
+    }
+
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), true);
     __asm volatile("fence io, io");
 }
@@ -465,6 +482,10 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
+    if (debug_port_is_cjtag() == true) {
+        return;
+    }
+
     gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS), false);
     __asm volatile("fence io, io");
 }

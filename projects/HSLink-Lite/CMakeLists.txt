@@ -9,6 +9,8 @@ set(BOARD_SEARCH_PATH ${CMAKE_CURRENT_SOURCE_DIR}/boards)
 set(CONFIG_USB_DEVICE 1)
 set(CONFIG_DMA_MGR 1)
 set(CONFIG_HPM_SPI 1)
+set(CONFIG_CHERRYSH_INTERFACE "uart")
+set(CONFIG_CHERRYSH 1)
 
 find_package(hpm-sdk REQUIRED HINTS $ENV{HPM_SDK_BASE})
 
@@ -61,6 +63,9 @@ sdk_app_src(JTAG_DP/JTAG_DP.c)
 sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
 sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
 
+sdk_app_inc(CJTAG_DP)
+sdk_app_src(CJTAG_DP/CJTAG_DP.c)
+
 sdk_app_src(swd_host/swd_host.c)
 sdk_app_inc(swd_host)
 sdk_app_src(USB2UART/usb2uart.c)
@@ -75,7 +80,7 @@ sdk_app_src(../../dap_main.c)
 sdk_app_src(../../DAP/Source/DAP_vendor.c)
 sdk_app_src(../../DAP/Source/DAP.c)
 
-sdk_app_src(../../CherryRB/chry_ringbuffer.c)
+# sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 
 sdk_inc(../common)
 
@@ -91,10 +96,10 @@ sdk_compile_definitions(-DDISABLE_IRQ_PREEMPTIVE=1)
 sdk_compile_options(-O3)
 
 # 执行完之后转换为uf2
-# add_custom_command(
-#         TARGET ${APP_ELF_NAME} POST_BUILD
-#         COMMAND ${python_exec} ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/uf2conv.py -f 0x0A4D5048 -b 0x80020000 -c ${CMAKE_BINARY_DIR}/output/${APP_BIN_NAME} -o ${CMAKE_BINARY_DIR}/output/${APP_NAME}.uf2
-#         COMMENT "Convert to UF2"
-# )
+add_custom_command(
+        TARGET ${APP_ELF_NAME} POST_BUILD
+        COMMAND ${python_exec} ${CMAKE_CURRENT_SOURCE_DIR}/boot/tinyuf2/uf2conv.py -f 0x0A4D5048 -b 0x80020000 -c ${CMAKE_BINARY_DIR}/output/${APP_BIN_NAME} -o ${CMAKE_BINARY_DIR}/output/${APP_NAME}.uf2
+        COMMENT "Convert to UF2"
+)
 
-generate_ide_projects()
+# generate_ide_projects()

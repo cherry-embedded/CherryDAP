@@ -24,7 +24,12 @@
  * Title:        DAP.h Definitions
  *
  *---------------------------------------------------------------------------*/
-
+/*
+ * Copyright (c) 2025 runcheng,lu
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
 #ifndef __DAP_H__
 #define __DAP_H__
 
@@ -141,6 +146,7 @@
 #define DAP_PORT_DISABLED               0U      // Port Disabled (I/O pins in High-Z)
 #define DAP_PORT_SWD                    1U      // SWD Port (SWCLK, SWDIO) + nRESET
 #define DAP_PORT_JTAG                   2U      // JTAG Port (TCK, TMS, TDI, TDO, nTRST) + nRESET
+#define DAP_PORT_CJTAG                  3U      // CJTAG Port (TCK, TMS) + nRESET
 
 // DAP SWJ Pins
 #define DAP_SWJ_SWCLK_TCK               0       // SWCLK/TCK
@@ -325,6 +331,12 @@ extern uint32_t DAP_ExecuteCommand       (const uint8_t *request, uint8_t *respo
 extern void     DAP_Setup (void);
 
 void Set_Clock_Delay(uint32_t clock);
+
+extern void CJTAG_Sequence(uint32_t info, const uint8_t *tdi, uint8_t *tdo);
+extern uint32_t CJTAG_ReadIDCode (void);
+extern void CJTAG_IR (uint32_t ir);
+extern uint8_t CJTAG_Transfer(uint32_t request, uint32_t *data);
+extern void CJTAG_WriteAbort (uint32_t data);
 
 // Configurable delay for clock generation
 #ifndef DELAY_SLOW_CYCLES

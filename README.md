@@ -5,7 +5,7 @@ CherryDAP is a DAPLink template based on [CherryUSB](https://github.com/sakumisu
 # Feature
 
 - CMSIS DAP version 2.1, only support winusb
-- Support SWD + JTAG
+- Support SWD + JTAG + CJTAG
 - Support USB2UART
 - Support webusb
 - Support custom hid
@@ -13,6 +13,7 @@ CherryDAP is a DAPLink template based on [CherryUSB](https://github.com/sakumisu
 ![cherrydap1](./assets/cherrydap1.png)
 ![cherrydap2](./assets/cherrydap2.png)
 ![ses_debug_hpm](./assets/ses_debug_hpm.png)
+![cherrydap3](./assets/cherrydap3.png)
 
 # Projects
 

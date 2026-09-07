@@ -1,0 +1,46 @@
+name: Build HSLink-Lite
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_hpmicro:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+
+      - name: Download hpm_sdk
+        run: |
+          cd ~
+          git clone https://github.com/hpmicro/hpm_sdk.git
+
+      - name: Download RISC-V toolchain
+        run: |
+          cd ~
+          wget https://github.com/hpmicro/riscv-gnu-toolchain/releases/download/2023.10.18/rv32imac_zicsr_zifencei_multilib_b_ext-linux.tar.gz
+          tar -xzf rv32imac_zicsr_zifencei_multilib_b_ext-linux.tar.gz
+
+      - name: Build demo
+        run: |
+          export HPM_SDK_BASE=~/hpm_sdk
+          export GNURISCV_TOOLCHAIN_PATH=~/rv32imac_zicsr_zifencei_multilib_b_ext-linux
+          export HPM_SDK_TOOLCHAIN_VARIANT=
+          cd projects/HSLink-Lite
+          ./build.sh
+
+      - name: Upload file
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: |
+            projects/HSLink-Lite/HSLink-Lite.bin
+            projects/HSLink-Lite/build/output/HSLink-Lite.uf2
