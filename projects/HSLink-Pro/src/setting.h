@@ -37,6 +37,7 @@ typedef struct {
     bool led;
     uint8_t led_brightness;
     bool jtag_20pin_compatible;
+    bool webusb_popup;
 
     char nickname[128];
 } HSLink_Setting_t;

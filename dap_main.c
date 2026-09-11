@@ -105,7 +105,8 @@ __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
 #endif
 };
 
-__ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
+/* not const: iLandingPage is patched at runtime by chry_dap_webusb_popup_apply() */
+__ALIGN_BEGIN uint8_t USBD_BinaryObjectStoreDescriptor[] = {
     0x05,                         /* bLength */
     0x0f,                         /* bDescriptorType */
     WBVAL(USBD_BOS_WTOTALLENGTH), /* wTotalLength */
@@ -147,6 +148,22 @@ const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
     WEBUSB_URL_SCHEME_HTTPS,
     WEBUSB_URL_STRINGS
 };
+
+/* offset of iLandingPage in USBD_BinaryObjectStoreDescriptor:
+ * BOS header (5 bytes) + WebUSB device capability fields before iLandingPage (23 bytes) */
+#define USBD_WEBUSB_ILANDINGPAGE_OFFSET (5 + 23)
+
+/* implement by user to disable the WebUSB landing page popup */
+__WEAK bool chry_dap_webusb_popup_enabled(void)
+{
+    return true;
+}
+
+void chry_dap_webusb_popup_apply(void)
+{
+    /* iLandingPage == 0 stops browsers from popping up the landing page notification */
+    USBD_BinaryObjectStoreDescriptor[USBD_WEBUSB_ILANDINGPAGE_OFFSET] = chry_dap_webusb_popup_enabled() ? 1 : 0;
+}
 
 // clang-format off
 #define HID_DESC()                                                                                                                       \
@@ -514,6 +531,8 @@ void chry_dap_init(uint8_t busid, uint32_t reg_base)
     chry_ringbuffer_init(&g_usbrx, usbrx_ringbuffer, CONFIG_USBRX_RINGBUF_SIZE);
 
     DAP_Setup();
+
+    chry_dap_webusb_popup_apply();
 
     usbd_desc_register(0, &cmsisdap_descriptor);
 

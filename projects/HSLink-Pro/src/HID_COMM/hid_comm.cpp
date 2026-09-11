@@ -228,6 +228,8 @@ static void settings(Document &root, char *res)
 
     HSLink_Setting.jtag_20pin_compatible = get_json_value(data, "jtag_20pin_compatible", false);
 
+    HSLink_Setting.webusb_popup = get_json_value(data, "webusb_popup", true);
+
     Setting_Save();
 
     FillStatus(HID_RESPONSE_SUCCESS, res);
@@ -351,6 +353,9 @@ static void get_setting(Document &root, char *res)
 
     writer.Key("jtag_20pin_compatible");
     writer.Bool(HSLink_Setting.jtag_20pin_compatible);
+
+    writer.Key("webusb_popup");
+    writer.Bool(HSLink_Setting.webusb_popup);
 
     writer.EndObject();
 

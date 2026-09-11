@@ -13,6 +13,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "usb2uart.h"
+#include "dap_main.h"
 
 using namespace rapidjson;
 
@@ -28,6 +29,7 @@ const HSLink_Setting_t default_setting = {
         .reset = 1 << RESET_NRST,
         .led = true,
         .led_brightness = 10,
+        .webusb_popup = true,
 };
 
 HSLink_Setting_t HSLink_Setting = {
@@ -42,7 +44,12 @@ HSLink_Setting_t HSLink_Setting = {
         .reset = 0,
         .led = false,
         .led_brightness = 0,
+        .webusb_popup = true,
 };
+
+extern "C" bool chry_dap_webusb_popup_enabled(void) {
+    return HSLink_Setting.webusb_popup;
+}
 
 HSLink_Lazy_t HSLink_Global;
 
@@ -146,6 +153,9 @@ static std::string stringify_settings()
     writer.Key("jtag_20pin_compatible");
     writer.Bool(HSLink_Setting.jtag_20pin_compatible);
 
+    writer.Key("webusb_popup");
+    writer.Bool(HSLink_Setting.webusb_popup);
+
     writer.Key("nickname");
     writer.String(HSLink_Setting.nickname);
 
@@ -189,6 +199,8 @@ static void parse_settings(std::string_view json)
     HSLink_Setting.led_brightness = root["led_brightness"].GetUint();
     HSLink_Setting.jtag_20pin_compatible = get_json_value(root, "jtag_20pin_compatible", false);
 
+    HSLink_Setting.webusb_popup = get_json_value(root, "webusb_popup", true);
+
     std::strncpy(HSLink_Setting.nickname, get_json_value(root, "nickname", ""), sizeof(HSLink_Setting.nickname) - 1);
     HSLink_Setting.nickname[sizeof(HSLink_Setting.nickname) - 1] = '\0';
 }
@@ -219,6 +231,8 @@ static void update_settings()
     LED_SetBrightness(HSLink_Setting.led_brightness);
     LED_SetBoost(HSLink_Setting.boost);
     LED_SetEnable(HSLink_Setting.led);
+
+    chry_dap_webusb_popup_apply();
 
     uartx_io_init();
 }
