@@ -70,6 +70,12 @@ void chry_dap_init(uint8_t busid, uint32_t reg_base);
 
 void chry_dap_handle(void);
 
+/* implment by user to control the WebUSB landing page popup, default enabled */
+extern bool chry_dap_webusb_popup_enabled(void);
+
+/* apply chry_dap_webusb_popup_enabled() to the BOS descriptor */
+void chry_dap_webusb_popup_apply(void);
+
 void chry_dap_usb2uart_handle(void);
 
 /* implment by user */
