@@ -48,10 +48,6 @@
 #error "Maximum Packet Count is 255!"
 #endif
 
-#ifndef DAP_CJTAG
-#define DAP_CJTAG 0
-#endif
-
 // Clock Macros
 #define MAX_SWJ_CLOCK(delay_cycles) \
   ((CPU_CLOCK/2U) / (IO_PORT_WRITE_CYCLES + delay_cycles))
@@ -558,7 +554,7 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
   uint32_t response_count;
   uint32_t count;
 
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
   *response++ = DAP_OK;
 #else
   *response++ = DAP_ERROR;
@@ -579,7 +575,7 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
         JTAG_Sequence(sequence_info, request, response);
     }
 #endif
-#if (DAP_JTAG != 0)
+#if (DAP_CJTAG != 0)
     if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
         CJTAG_Sequence(sequence_info, request, response);
     }
@@ -587,7 +583,7 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
 
     request += count;
     request_count += count + 1U;
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
     if ((sequence_info & JTAG_SEQUENCE_TDO) != 0U) {
       response += count;
       response_count += count;
@@ -606,7 +602,7 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_JTAG_Configure(const uint8_t *request, uint8_t *response) {
   uint32_t count;
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
   uint32_t length;
   uint32_t bits;
   uint32_t n;
@@ -642,11 +638,20 @@ static uint32_t DAP_JTAG_Configure(const uint8_t *request, uint8_t *response) {
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
   uint32_t data;
 
-  if ((DAP_Data.debug_port != DAP_PORT_JTAG) && (DAP_Data.debug_port != DAP_PORT_CJTAG)) {
-    goto id_error;
+  switch (DAP_Data.debug_port) {
+#if (DAP_JTAG != 0)
+    case DAP_PORT_JTAG:
+      break;
+#endif
+#if (DAP_CJTAG != 0)
+    case DAP_PORT_CJTAG:
+      break;
+#endif
+    default:
+      goto id_error;
   }
 
   // Device index (JTAP TAP)
@@ -664,7 +669,7 @@ static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
     data = JTAG_ReadIDCode();
   }
 #endif
-#if (DAP_JTAG != 0)
+#if (DAP_CJTAG != 0)
   if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
     // Select CJTAG chain
     CJTAG_IR(JTAG_IDCODE);
@@ -1212,7 +1217,16 @@ static uint32_t DAP_JTAG_Transfer(const uint8_t *request, uint8_t *response) {
         // Select JTAG chain
         if (ir != JTAG_DPACC) {
           ir = JTAG_DPACC;
-          JTAG_IR(ir);
+#if (DAP_JTAG != 0)
+          if (DAP_Data.debug_port == DAP_PORT_JTAG) {
+            JTAG_IR(ir);
+          }
+#endif
+#if (DAP_CJTAG != 0)
+          if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
+            CJTAG_IR(ir);
+          }
+#endif
         }
         // Read previous data
         retry = DAP_Data.transfer.retry_count;
@@ -1252,7 +1266,16 @@ static uint32_t DAP_JTAG_Transfer(const uint8_t *request, uint8_t *response) {
         // Select JTAG chain
         if (ir != request_ir) {
           ir = request_ir;
-          JTAG_IR(ir);
+#if (DAP_JTAG != 0)
+          if (DAP_Data.debug_port == DAP_PORT_JTAG) {
+            JTAG_IR(ir);
+          }
+#endif
+#if (DAP_CJTAG != 0)
+          if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
+            CJTAG_IR(ir);
+          }
+#endif
         }
         // Write DP/AP register
         retry = DAP_Data.transfer.retry_count;
@@ -1308,7 +1331,16 @@ static uint32_t DAP_JTAG_Transfer(const uint8_t *request, uint8_t *response) {
     // Select JTAG chain
     if (ir != JTAG_DPACC) {
       ir = JTAG_DPACC;
-      JTAG_IR(ir);
+#if (DAP_JTAG != 0)
+      if (DAP_Data.debug_port == DAP_PORT_JTAG) {
+        JTAG_IR(ir);
+      }
+#endif
+#if (DAP_CJTAG != 0)
+      if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
+        CJTAG_IR(ir);
+      }
+#endif
     }
     if (post_read) {
       // Read previous data
@@ -2039,7 +2071,7 @@ void DAP_Setup(void) {
   DAP_Data.swd_conf.turnaround  = 1U;
   DAP_Data.swd_conf.data_phase  = 0U;
 #endif
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
   DAP_Data.jtag_dev.count = 0U;
 #endif
 

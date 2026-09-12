@@ -238,6 +238,18 @@
 #include <stdint.h>
 // #include "cmsis_compiler.h"
 
+#ifndef DAP_SWD
+#define DAP_SWD 0
+#endif
+
+#ifndef DAP_JTAG
+#define DAP_JTAG 0
+#endif
+
+#ifndef DAP_CJTAG
+#define DAP_CJTAG 0
+#endif
+
 // DAP Data structure
 typedef struct {
   uint8_t     debug_port;                       // Debug Port
@@ -258,7 +270,7 @@ typedef struct {
     uint8_t    data_phase;                      // Always generate Data Phase
   } swd_conf;
 #endif
-#if (DAP_JTAG != 0)
+#if ((DAP_JTAG != 0) || (DAP_CJTAG != 0))
   struct {                                      // JTAG Device Chain
     uint8_t   count;                            // Number of devices
     uint8_t   index;                            // Device index (device at TDO has index 0)
