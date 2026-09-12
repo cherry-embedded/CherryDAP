@@ -608,6 +608,10 @@ static uint32_t DAP_JTAG_Configure(const uint8_t *request, uint8_t *response) {
   uint32_t n;
 
   count = *request++;
+  if (count > DAP_JTAG_DEV_CNT) {
+    *response = DAP_ERROR;
+    return (((count + 1U) << 16) | 1U);
+  }
   DAP_Data.jtag_dev.count = (uint8_t)count;
 
   bits = 0U;

@@ -250,6 +250,10 @@
 #define DAP_CJTAG 0
 #endif
 
+#if (((DAP_JTAG != 0) || (DAP_CJTAG != 0)) && (DAP_JTAG_DEV_CNT < 1))
+#error "DAP_JTAG_DEV_CNT must be at least 1 when JTAG or cJTAG is enabled"
+#endif
+
 // DAP Data structure
 typedef struct {
   uint8_t     debug_port;                       // Debug Port
