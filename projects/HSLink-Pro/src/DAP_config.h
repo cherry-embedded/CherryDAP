@@ -86,6 +86,9 @@ This information includes:
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define DAP_JTAG                1               ///< JTAG Mode: 1 = available, 0 = not available.
 
+// TODO: don't support cJTAG at this time
+#define DAP_CJTAG               0
+
 /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
 /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
 #define DAP_JTAG_DEV_CNT        8U              ///< Maximum number of JTAG devices on scan chain.
