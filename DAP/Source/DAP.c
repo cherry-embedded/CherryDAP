@@ -52,6 +52,10 @@
 #define DAP_CJTAG 0
 #endif
 
+#if DAP_CJTAG && !(DAP_JTAG)
+#error "CMSIS-DAP CJTAG requires JTAG support!"
+#endif
+
 // Clock Macros
 #define MAX_SWJ_CLOCK(delay_cycles) \
   ((CPU_CLOCK/2U) / (IO_PORT_WRITE_CYCLES + delay_cycles))
@@ -579,7 +583,7 @@ static uint32_t DAP_JTAG_Sequence(const uint8_t *request, uint8_t *response) {
         JTAG_Sequence(sequence_info, request, response);
     }
 #endif
-#if (DAP_JTAG != 0)
+#if (DAP_CJTAG != 0)
     if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
         CJTAG_Sequence(sequence_info, request, response);
     }
@@ -642,13 +646,13 @@ static uint32_t DAP_JTAG_Configure(const uint8_t *request, uint8_t *response) {
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
-#if (DAP_JTAG != 0)
   uint32_t data;
 
   if ((DAP_Data.debug_port != DAP_PORT_JTAG) && (DAP_Data.debug_port != DAP_PORT_CJTAG)) {
     goto id_error;
   }
 
+#if (DAP_JTAG != 0)
   // Device index (JTAP TAP)
   DAP_Data.jtag_dev.index = *request;
   if (DAP_Data.jtag_dev.index >= DAP_Data.jtag_dev.count) {
@@ -664,7 +668,7 @@ static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
     data = JTAG_ReadIDCode();
   }
 #endif
-#if (DAP_JTAG != 0)
+#if (DAP_CJTAG != 0)
   if (DAP_Data.debug_port == DAP_PORT_CJTAG) {
     // Select CJTAG chain
     CJTAG_IR(JTAG_IDCODE);
