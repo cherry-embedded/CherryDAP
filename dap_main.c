@@ -625,6 +625,7 @@ void chry_dap_usb2uart_handle(void)
 {
     uint32_t size;
     uint8_t *buffer;
+    static uint8_t align_buffer[CONFIG_USB_ALIGN_SIZE] __attribute__((aligned(CONFIG_USB_ALIGN_SIZE)));
 
     if (usb_device_is_configured(0) == 0) {
         return;
@@ -657,6 +658,13 @@ void chry_dap_usb2uart_handle(void)
             usbtx_idle_flag = 0;
             /* start first transfer */
             buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
+
+            if ((uintptr_t)buffer & (CONFIG_USB_ALIGN_SIZE - 1)) {
+                uint8_t misalign = CONFIG_USB_ALIGN_SIZE - ((uintptr_t)buffer & (CONFIG_USB_ALIGN_SIZE - 1));
+                size = (size > misalign) ? misalign : size;
+                memcpy(align_buffer, buffer, size);
+                buffer = align_buffer;
+            }
             usbd_ep_start_write(0, CDC_IN_EP, buffer, size);
         }
     }
