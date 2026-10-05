@@ -30,6 +30,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
+#include <stdbool.h>
 #include <string.h>
 #include "DAP_config.h"
 #include "DAP.h"
@@ -646,13 +647,13 @@ static uint32_t DAP_JTAG_Configure(const uint8_t *request, uint8_t *response) {
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
+#if (DAP_JTAG != 0)
   uint32_t data;
 
   if ((DAP_Data.debug_port != DAP_PORT_JTAG) && (DAP_Data.debug_port != DAP_PORT_CJTAG)) {
     goto id_error;
   }
 
-#if (DAP_JTAG != 0)
   // Device index (JTAP TAP)
   DAP_Data.jtag_dev.index = *request;
   if (DAP_Data.jtag_dev.index >= DAP_Data.jtag_dev.count) {
@@ -688,6 +689,8 @@ static uint32_t DAP_JTAG_IDCode(const uint8_t *request, uint8_t *response) {
   return ((1U << 16) | 5U);
 
 id_error:
+#else
+  (void)request;
 #endif
   *response = DAP_ERROR;
   return ((1U << 16) | 1U);
