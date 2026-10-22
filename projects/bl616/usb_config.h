@@ -272,4 +272,8 @@
 // #define CONFIG_USB_MUSB_SUNXI
 
 #define CONFIG_USBDEV_ADVANCE_DESC
+
+#define USBD_VID           0x0D28
+#define USBD_PID           0x0204
+
 #endif

@@ -294,4 +294,6 @@
 #else
 #error "Unsupported SoC"
 #endif
-// #define CONFIG_USBDEV_ADVANCE_DESC 1
+#define CONFIG_USBDEV_ADVANCE_DESC 1
+#define USBD_VID           0x0D28
+#define USBD_PID           0x0204

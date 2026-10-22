@@ -306,4 +306,7 @@
 #define usb_ramaddr2phyaddr(addr) sys_address_to_core_local_mem(BOARD_RUNNING_CORE, addr)
 #endif
 
+#define USBD_VID           0x34B7
+#define USBD_PID           0x8001
+
 #endif
