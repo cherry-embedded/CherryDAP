@@ -53,16 +53,6 @@ sdk_compile_definitions(-DPIN_JTAG_TRST=IOC_PAD_PB14)
 sdk_compile_definitions(-DPIN_SRST=IOC_PAD_PB15)
 sdk_compile_definitions(-DSWDIO_DIR=IOC_PAD_PA30)
 
-sdk_app_inc(SW_DP)
-sdk_app_src(SW_DP/SW_DP.c)
-sdk_app_src(SW_DP/SW_DP_SPI.c)
-sdk_app_src(SW_DP/SW_DP_IO.c)
-
-sdk_app_inc(JTAG_DP)
-sdk_app_src(JTAG_DP/JTAG_DP.c)
-sdk_app_src(JTAG_DP/JTAG_DP_SPI.c)
-sdk_app_src(JTAG_DP/JTAG_DP_IO.c)
-
 sdk_app_inc(CJTAG_DP)
 sdk_app_src(CJTAG_DP/CJTAG_DP.c)
 
@@ -79,13 +69,13 @@ sdk_inc(../../DAP/Include)
 sdk_app_src(../../dap_main.c)
 sdk_app_src(../../DAP/Source/DAP_vendor.c)
 sdk_app_src(../../DAP/Source/DAP.c)
-
+sdk_app_src(../../DAP/Source/JTAG_DP.c)
+sdk_app_src(../../DAP/Source/SW_DP.c)
 # sdk_app_src(../../CherryRB/chry_ringbuffer.c)
 
 sdk_inc(../common)
 
 sdk_app_src(main.c)
-sdk_app_src(dp_common.c)
 
 sdk_compile_definitions(-DPRODUCT_STRING="HSLink Lite")
 sdk_compile_definitions(-DCONFIG_CHERRYDAP_USE_CUSTOM_HID=0)

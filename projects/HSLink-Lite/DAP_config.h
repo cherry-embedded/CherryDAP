@@ -383,14 +383,97 @@ __STATIC_INLINE void gpiom_configure_pin_control_setting_reset(uint16_t gpio_ind
     gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(gpio_index), GPIO_GET_PIN_INDEX(gpio_index));
 }
 
-void PORT_JTAG_SETUP(void);
+__STATIC_INLINE void PORT_JTAG_SETUP (void) {
+    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_TDI].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_TDO].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_JTAG_TRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+
+    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TDI].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TDO].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_JTAG_TRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+
+#ifdef PIN_LED_RUNNING
+    HPM_IOC->PAD[PIN_LED_RUNNING].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_LED_RUNNING].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    gpiom_configure_pin_control_setting(PIN_LED_RUNNING);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_RUNNING), GPIO_GET_PIN_INDEX(PIN_LED_RUNNING));
+#endif
+
+#ifdef PIN_LED_CONNECTED
+    HPM_IOC->PAD[PIN_LED_CONNECTED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    gpiom_configure_pin_control_setting(PIN_LED_CONNECTED);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_CONNECTED), GPIO_GET_PIN_INDEX(PIN_LED_CONNECTED));
+#endif
+
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA26);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA27);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA28);
+    gpiom_configure_pin_control_setting(PIN_TCK);
+    gpiom_configure_pin_control_setting(PIN_TMS);
+    gpiom_configure_pin_control_setting(PIN_TDI);
+    gpiom_configure_pin_control_setting(PIN_TDO);
+    gpiom_configure_pin_control_setting(PIN_JTAG_TRST);
+    gpiom_configure_pin_control_setting(PIN_SRST);
+
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDI), GPIO_GET_PIN_INDEX(PIN_TDI));
+    gpio_set_pin_input(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TDO), GPIO_GET_PIN_INDEX(PIN_TDO));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
+
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), 1);
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_JTAG_TRST), GPIO_GET_PIN_INDEX(PIN_JTAG_TRST), 1);
+
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1); // JTAG模式下SWDIO_DIR为高
+}
 
 /** Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
 Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
  - SWCLK, SWDIO, nRESET to output mode and set to default high level.
  - TDI, nTRST to HighZ mode (pins are unused in SWD mode).
 */
-void PORT_SWD_SETUP(void);
+__STATIC_INLINE void PORT_SWD_SETUP (void) {
+    HPM_IOC->PAD[PIN_TCK].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_TMS].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0); /* as gpio*/
+    HPM_IOC->PAD[PIN_SRST].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_TCK].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_TMS].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    HPM_IOC->PAD[PIN_SRST].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+
+#ifdef PIN_LED_RUNNING
+    HPM_IOC->PAD[PIN_LED_RUNNING].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    HPM_IOC->PAD[PIN_LED_RUNNING].PAD_CTL = IOC_PAD_PAD_CTL_PRS_SET(2) | IOC_PAD_PAD_CTL_PE_SET(1) | IOC_PAD_PAD_CTL_PS_SET(1) | IOC_PAD_PAD_CTL_SPD_SET(3);
+    gpiom_configure_pin_control_setting(PIN_LED_RUNNING);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_RUNNING), GPIO_GET_PIN_INDEX(PIN_LED_RUNNING));
+#endif
+
+#ifdef PIN_LED_CONNECTED
+    HPM_IOC->PAD[PIN_LED_CONNECTED].FUNC_CTL = IOC_PAD_FUNC_CTL_ALT_SELECT_SET(0);
+    gpiom_configure_pin_control_setting(PIN_LED_CONNECTED);
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_LED_CONNECTED), GPIO_GET_PIN_INDEX(PIN_LED_CONNECTED));
+#endif
+
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA26);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA27);
+    gpiom_configure_pin_control_setting_reset(IOC_PAD_PA28);
+    gpiom_configure_pin_control_setting(PIN_TCK);
+    gpiom_configure_pin_control_setting(PIN_TMS);
+    gpiom_configure_pin_control_setting(PIN_SRST);
+
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TCK), GPIO_GET_PIN_INDEX(PIN_TCK));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_TMS), GPIO_GET_PIN_INDEX(PIN_TMS));
+    gpio_set_pin_output(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST));
+
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(SWDIO_DIR), GPIO_GET_PIN_INDEX(SWDIO_DIR), 1); // 默认SWDIO为输出
+    gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), 1);
+}
 
 void PORT_CJTAG_SETUP(void);
 bool debug_port_is_cjtag(void);
@@ -628,11 +711,11 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
     if (bit & 0x01) {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), !HSLink_Global.reset_level);
+            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), 1);
         }
     } else {
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_NRST)) {
-            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), HSLink_Global.reset_level);
+            //gpio_write_pin(PIN_GPIO, GPIO_GET_PORT_INDEX(PIN_SRST), GPIO_GET_PIN_INDEX(PIN_SRST), 0);
         }
         if (SETTING_GET_RESET_MODE(HSLink_Setting.reset, RESET_ARM_SWD_SOFT)) {
             software_reset();
